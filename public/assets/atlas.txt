@@ -1,0 +1,15 @@
+blockface = 0 0 200 200
+blockside = 201 0 200 200
+buttongreen = 404 402 85 27
+buttongreenclicked = 404 430 85 27
+cloth = 0 402 100 100
+fence = 0 201 200 200
+grass = 101 402 100 100
+ground = 201 201 200 200
+paper = 202 402 100 100
+rock = 303 402 100 100
+sky = 402 0 200 200
+s-off = 402 201 200 200
+s-on = 603 0 200 200
+sun = 804 0 166 167
+wood = 603 201 100 100

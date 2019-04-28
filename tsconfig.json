@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "outDir": "typings",
+    "rootDir": "src",
+    "declaration": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny" : true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noErrorTruncation": true,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true
+  },
+  "include": ["src"],
+  "exclude": ["node", "node_modules", "public", "build"]
+}
