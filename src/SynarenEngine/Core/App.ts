@@ -10,7 +10,6 @@ import { EngineEvent } from "../Core/Events";
 import SubscriberPool, { Subscription } from "./Common/SubscriberPool";
 
 export class WebGLContainer {
-  /**	* Single instance app interface to load the game	*/
   canvas: HTMLCanvasElement;
   constructor(
     elementId: string,

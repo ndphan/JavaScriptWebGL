@@ -265,6 +265,9 @@ export default class Events {
   };
 
   handleEventDown = (evt: MouseEvent) => {
+    if(evt.which !== 1) {
+      return;
+    }
     this.eventDown = true;
     this.eventDownX = evt.offsetX;
     this.eventDownY = evt.offsetY;
