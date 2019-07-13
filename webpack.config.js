@@ -22,22 +22,19 @@ module.exports = {
     filename: "[name].js"
   },
   module: {
-    rules: [
-      {
+    rules: [{
         test: /\.tsx?$/,
         loaders: ["babel-loader"],
         exclude: [/node_modules/, nodeModulesPath]
       },
       {
         test: /\.tsx?$/,
-        use: [
-          {
-            loader: "ts-loader",
-            options: {
-              // transpileOnly: true
-            }
+        use: [{
+          loader: "ts-loader",
+          options: {
+            // transpileOnly: true
           }
-        ],
+        }],
         exclude: [/node_modules/, nodeModulesPath]
       },
       {
@@ -57,11 +54,12 @@ module.exports = {
   },
   externals: {},
   plugins: [
-			new CleanWebpackPlugin(),
-			new CopyPlugin([
-      { from: 'public', to: '' }
-    ])
-		],
+    new CleanWebpackPlugin(),
+    new CopyPlugin([{
+      from: 'public',
+      to: ''
+    }])
+  ],
   resolve: {
     modules: ["src", "node_modules"],
     extensions: ["*", ".js", ".jsx", ".ts", ".tsx"]
