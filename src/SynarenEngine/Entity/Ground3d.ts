@@ -9,7 +9,6 @@ import Camera from "../Core/Camera";
 
 export default class Ground3d extends EntityManager {
   uv: number[];
-  entities: Plane3d[];
   textureSource: string;
   camera: Camera;
 
@@ -31,12 +30,12 @@ export default class Ground3d extends EntityManager {
         const element = this.entities[key];
         const isInside = CollisionDetection.isPointInPlane3d(
           this.camera,
-          element,
+          element as Plane3d,
           coordinate.x,
           coordinate.y
         );
         if (isInside) {
-          insideElement = element;
+          insideElement = element as Plane3d;
           break;
         }
       }
