@@ -66,6 +66,5 @@ export default class BaseProgram {
   _bindProgram(program: WebGLProgram) {
     this.ctx.useProgram(program);
   }
-  _unbindProgram() {
-  }
+  _unbindProgram() {}
 }

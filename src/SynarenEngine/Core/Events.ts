@@ -265,7 +265,7 @@ export default class Events {
   };
 
   handleEventDown = (evt: MouseEvent) => {
-    if(evt.which !== 1) {
+    if (evt.which !== 1) {
       return;
     }
     this.eventDown = true;
