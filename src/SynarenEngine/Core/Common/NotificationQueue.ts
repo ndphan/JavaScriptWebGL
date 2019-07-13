@@ -21,8 +21,17 @@ export class NotificationPayload extends Notification {
   }
 }
 
+class LinkedList {
+  next?: LinkedList;
+  data: NotificationPayload;
+
+  constructor(data: NotificationPayload) {
+    this.data = data;
+  }
+}
+
 class NotificationQueue {
-  queueMap: { [key: string]: NotificationPayload[] };
+  queueMap: { [key: string]: { bottom?: LinkedList; top?: LinkedList } };
 
   constructor() {
     this.queueMap = {};
@@ -34,15 +43,25 @@ class NotificationQueue {
 
   pushPayload(notification: NotificationPayload) {
     const key = notification.key;
-    if (!this.queueMap[key]) {
-      this.queueMap[key] = [];
+    let nodes = this.queueMap[key];
+    if (!nodes) {
+      this.queueMap[key] = { bottom: undefined, top: undefined };
+      nodes = this.queueMap[key];
     }
-    this.queueMap[key].push(notification);
+    if (!nodes.bottom) {
+      nodes.bottom = new LinkedList(notification);
+      nodes.top = nodes.bottom;
+    } else if (nodes.top) {
+      nodes.top.next = new LinkedList(notification);
+      nodes.top = nodes.top.next;
+    } else {
+      throw new Error("Unexpected state for notification push payload");
+    }
   }
 
   push(notification: Notification, data?: any) {
     if (notification instanceof NotificationPayload) {
-      console.error("please use pushPayload");
+      console.error("Please use pushPayload");
     }
     this.pushPayload(
       new NotificationPayload(notification.key, notification.action, data)
@@ -53,14 +72,41 @@ class NotificationQueue {
     this.push(new Notification(key, action));
   }
 
-  take(key: string): NotificationPayload[] {
-    const notification = this.queueMap[key];
-    delete this.queueMap[key];
-    return notification || [];
+  take(key: string): NotificationPayload | undefined {
+    const bottom = this.getBottom(key);
+    if (!bottom) {
+      return undefined;
+    }
+    const data = this.peak(key);
+    if (!data) {
+      throw new Error(
+        "Expected data to appear when reading data from notification"
+      );
+    }
+    this.shiftQueue(key);
+    return data;
   }
 
-  peak(key: string): NotificationPayload[] {
-    return this.queueMap[key] || [];
+  shiftQueue(key: string) {
+    const nodes = this.queueMap[key];
+    const bottom = nodes.bottom;
+    if (bottom) {
+      nodes.bottom = bottom.next;
+      if (!nodes.bottom) {
+        nodes.top = undefined;
+      }
+    } else {
+      throw new Error("Trying to shift queue with bottom undefined");
+    }
+  }
+
+  getBottom(key: string): LinkedList | undefined {
+    return this.queueMap[key] ? this.queueMap[key].bottom : undefined;
+  }
+
+  peak(key: string): NotificationPayload | undefined {
+    const bottom = this.getBottom(key);
+    return (bottom && bottom.data) || undefined;
   }
 }
 

@@ -38,8 +38,6 @@ class VertexModel {
   registerModel(engineHelper: EngineHelper) {
     if (!this.vertexBufferId) {
       this.vertexBufferId = engineHelper.addBufferCache(this.createModel());
-    } else {
-      engineHelper.updateBufferCache(this.createModel(), this.vertexBufferId);
     }
   }
 }

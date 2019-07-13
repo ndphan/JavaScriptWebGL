@@ -1,5 +1,5 @@
 import Font from "./Font/Font";
-import { RendererNotification } from "./Renderer";
+import { RendererNotification, RendererSubscription } from "./Renderer";
 import VertexModel from "./Data/VertexModel";
 import EngineObjectHelper from "./EngineEntity/EngineObjectHelper";
 import ModelData from "./Data/ModelData";
@@ -48,17 +48,13 @@ export default class EngineHelper {
   }
 
   setLighting(light: Light) {
-    this.notificationQueue.pushPayload(
-      RendererNotification.setLightingNotification(light)
-    );
+    this.notificationQueue.pushPayload(RendererNotification.setLighting(light));
   }
 
   createTexture(object: ShaderEntity) {
-    this.notificationQueue.pushPayload(
-      RendererNotification.createTextureNotification(
-        object,
-        this.resourcesLoading
-      )
+    this.subscriberPool.publish(
+      RendererSubscription.CREATE_TEXTURE,
+      RendererSubscription.createTexturePayload(object, this.resourcesLoading)
     );
   }
 
@@ -153,16 +149,19 @@ export default class EngineHelper {
       object.vertexModel.createModel(),
       object.vertexModel.vertexBufferId
     );
-    const notification = RendererNotification.updateBufferNotification(
+    const notification = RendererNotification.updateBuffer(
       object,
       this.getBuffer(object)
     );
     this.notificationQueue.pushPayload(notification);
   }
 
+  getBufferModelData(object: ShaderEntity): ModelData {
+    return this.bufferCache[object.getVertexBufferId()];
+  }
+
   getBuffer(object: ShaderEntity): number[] {
-    const bufferId = object.getVertexBufferId();
-    const buffer: number[] = this.bufferCache[bufferId].vertices;
+    const buffer: number[] = this.getBufferModelData(object).vertices;
     if (!buffer) {
       throw new Error("No buffer was found for this entity");
     }
@@ -170,11 +169,13 @@ export default class EngineHelper {
   }
 
   registerEntity(object: ShaderEntity) {
-    const notification = RendererNotification.registerEntityNotification(
-      object,
-      this.getBuffer(object)
+    this.subscriberPool.publish(
+      RendererSubscription.REGISTER_ENTITY,
+      RendererSubscription.registerEntityPayload(
+        object,
+        this.getBufferModelData(object)
+      )
     );
-    this.notificationQueue.pushPayload(notification);
   }
 
   initFont() {

@@ -15,21 +15,24 @@ import { ShaderEntity } from "./EngineEntity/ShaderEntity";
 import EngineHelper from "./EngineHelper";
 import Light from "./Data/Light";
 import { WebGLContainer } from "./App";
+import SubscriberPool, { Subscription } from "./Common/SubscriberPool";
+import ModelData from "./Data/ModelData";
 
-function unique(list: any[], key: string) {
-  if (!list || list.length === 0) {
-    return [];
-  }
-  const set: { [key: string]: boolean } = {};
-  return list.filter(element => {
-    return !set[element[key]] && (set[element[key]] = true);
-  });
-}
-
-function values(object: any) {
-  return Object.keys(object)
-    .filter(k => object.hasOwnProperty(k))
-    .map(k => object[k]);
+export class RendererSubscription {
+  static CREATE_TEXTURE: Subscription = new Subscription(
+    "Renderer#CreateTexture"
+  );
+  static REGISTER_ENTITY: Subscription = new Subscription(
+    "Renderer#RegisterEntity"
+  );
+  static createTexturePayload = (
+    object: ShaderEntity,
+    resourcesLoading: Promise<any>[]
+  ) => [object, resourcesLoading];
+  static registerEntityPayload = (entity: ShaderEntity, buffer: ModelData) => [
+    entity,
+    buffer
+  ];
 }
 
 export class RendererNotification {
@@ -52,24 +55,21 @@ export class RendererNotification {
     RendererNotification.NOTIFICATION_INIT_KEY,
     "REGISTER_ENTITY"
   );
-  static registerEntityNotification = (
-    entity: ShaderEntity,
-    buffer: number[]
-  ) =>
+  static registerEntity = (entity: ShaderEntity, modelData: ModelData) =>
     NotificationPayload.from(RendererNotification.REGISTER_ENTITY, [
       entity,
-      buffer
+      modelData
     ]);
   static UPDATE_BUFFER: Notification = new Notification(
     RendererNotification.NOTIFICATION_PRE_RENDER_KEY,
     "UPDATE_BUFFER"
   );
-  static updateBufferNotification = (entity: ShaderEntity, buffer: number[]) =>
+  static updateBuffer = (entity: ShaderEntity, buffer: number[]) =>
     NotificationPayload.from(RendererNotification.UPDATE_BUFFER, [
       entity,
       buffer
     ]);
-  static createTextureNotification = (
+  static createTexture = (
     object: ShaderEntity,
     resourcesLoading: Promise<any>[]
   ) =>
@@ -82,7 +82,7 @@ export class RendererNotification {
     RendererNotification.NOTIFICATION_PRE_RENDER_KEY,
     "SET_LIGHTING"
   );
-  static setLightingNotification = (light: Light) =>
+  static setLighting = (light: Light) =>
     NotificationPayload.from(RendererNotification.SET_LIGHTING, [light]);
 
   static RENDER_ENTITY: Notification = new Notification(
@@ -105,24 +105,37 @@ class Renderer {
   camera: Camera;
   _defRenderEntites: { [key: number]: any } = {};
   notificationQueue: NotificationQueue;
+  subscriberPool: SubscriberPool;
   glContext: WebGLContext;
+  cachedModelData: { [key: number]: number } = {};
 
   constructor(
     args: { [key: string]: any },
     webGLContainer: WebGLContainer,
     camera: Camera,
-    notificationQueue: NotificationQueue
+    notificationQueue: NotificationQueue,
+    subscriberPool: SubscriberPool
   ) {
     if (!args.world) {
       throw new Error("world not defined");
     }
     this.notificationQueue = notificationQueue;
+    this.subscriberPool = subscriberPool;
     this.camera = camera;
     this.world = args.world;
     this.webGLContainer = webGLContainer;
     this.ctx = this.webGLContainer.getCtx();
     this.glContext = new WebGLContext(this.ctx);
     this.glContext.setupDefault();
+
+    this.subscriberPool.listen(RendererSubscription.CREATE_TEXTURE, data => {
+      const [object, resourcesLoading] = data;
+      this.createTexture(object, resourcesLoading);
+    });
+    this.subscriberPool.listen(RendererSubscription.REGISTER_ENTITY, data => {
+      const [entity, buffer] = data;
+      this.registerEntity(entity, buffer);
+    });
   }
 
   resizeViewPort = () => {
@@ -139,7 +152,7 @@ class Renderer {
   };
 
   delete = () => {
-    values(this.textureReg).forEach((texReg: any) => {
+    Object.values(this.textureReg).forEach((texReg: any) => {
       const texture = texReg.texture;
       if (texture.texture) {
         this.glContext.deleteTexture(texture.texture);
@@ -239,9 +252,20 @@ class Renderer {
   };
 
   init() {
-    this.notificationQueue
-      .take(RendererNotification.NOTIFICATION_INIT_KEY)
-      .forEach(this.handleNotification);
+    this.readMessages(RendererNotification.NOTIFICATION_INIT_KEY);
+  }
+
+  readMessages(key: string, isUniqueAction: boolean = false) {
+    let message: NotificationPayload | undefined;
+    const unique: { [key: string]: boolean | undefined } = {};
+    while ((message = this.notificationQueue.take(key))) {
+      if (!isUniqueAction || unique[message.action] === undefined) {
+        this.handleNotification(message);
+        if (isUniqueAction) {
+          unique[message.action] = true;
+        }
+      }
+    }
   }
 
   _render = (entity: ShaderEntity) => {
@@ -296,11 +320,16 @@ class Renderer {
     }
   }
 
-  registerEntity(object: ShaderEntity, buffer: number[]) {
+  registerEntity(object: ShaderEntity, modelData: ModelData) {
     const opt = object.getOpt();
     this._lazyLoadProgram(opt);
     const program = this._getProgramOpt(opt);
-    program.registerEntity(object, buffer);
+    if (!this.cachedModelData[modelData.$id]) {
+      program.registerEntity(object, modelData.vertices);
+      this.cachedModelData[modelData.$id] = object.rendererBufferId!;
+    } else {
+      object.rendererBufferId = this.cachedModelData[modelData.$id];
+    }
   }
 
   _resetDefferred = () => {
@@ -350,10 +379,7 @@ class Renderer {
   render(time: number, engineHelper: EngineHelper) {
     this.glContext.clear();
 
-    const preRenderNotifications = this.notificationQueue.take(
-      RendererNotification.NOTIFICATION_PRE_RENDER_KEY
-    );
-    unique(preRenderNotifications, "action").forEach(this.handleNotification);
+    this.readMessages(RendererNotification.NOTIFICATION_PRE_RENDER_KEY, true);
 
     if (this.camera.requireUpdateViewMtrx) {
       this.camera.commitProjectionView();
@@ -366,9 +392,7 @@ class Renderer {
     this.world.render();
     engineHelper.renderFont();
 
-    this.notificationQueue
-      .take(RendererNotification.NOTIFICATION_RENDER_KEY)
-      .forEach(this.handleNotification);
+    this.readMessages(RendererNotification.NOTIFICATION_RENDER_KEY);
 
     this._defRender();
   }

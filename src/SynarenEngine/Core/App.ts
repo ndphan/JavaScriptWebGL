@@ -123,7 +123,8 @@ export default class App {
       args,
       this.webGLContainer,
       this.camera,
-      this.notificationQueue
+      this.notificationQueue,
+      this.subscriberPool
     );
 
     this.camera.setupCamera(args.camera, this.webGLContainer.canvas);
