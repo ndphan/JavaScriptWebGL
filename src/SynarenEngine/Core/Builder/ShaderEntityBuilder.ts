@@ -9,7 +9,7 @@ class ShaderEntityBuilder {
   textureSource?: string;
 
   vertexModel: VertexModel;
-  isCreateTexture: boolean;
+  hasTexture: boolean;
 
   constructor(engineHelper: EngineHelper) {
     this.engineHelper = engineHelper;
@@ -17,7 +17,7 @@ class ShaderEntityBuilder {
 
   createTexture(textureSource: string): ShaderEntityBuilder {
     this.textureSource = textureSource;
-    this.isCreateTexture = true;
+    this.hasTexture = true;
     return this;
   }
 
@@ -38,7 +38,7 @@ class ShaderEntityBuilder {
     entity.vertexModel = this.vertexModel;
     entity.vertexModel.registerModel(this.engineHelper);
     this.engineHelper.registerEntity(entity);
-    if (this.isCreateTexture) {
+    if (this.hasTexture) {
       entity.src = this.textureSource;
       this.engineHelper.createTexture(entity);
     }
