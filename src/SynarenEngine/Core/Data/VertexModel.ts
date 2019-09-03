@@ -34,7 +34,6 @@ class VertexModel {
     model.vertices = EngineObjectHelper.vertex.toArray(this.renderUnits);
     return model;
   }
-
   registerModel(engineHelper: EngineHelper) {
     if (!this.vertexBufferId) {
       this.vertexBufferId = engineHelper.addBufferCache(this.createModel());

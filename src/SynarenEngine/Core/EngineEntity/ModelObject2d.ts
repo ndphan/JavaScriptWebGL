@@ -8,7 +8,6 @@ import Rect2d from "../Data/Rect2d";
 
 export default class ModelObject2d extends EngineObject {
   vertexModel: VertexModel;
-
   shaderEntity: ShaderEntity;
   textureSource: string;
 
