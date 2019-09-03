@@ -212,8 +212,8 @@ export default class App {
   };
 
   initSystem = (): Promise<any> => {
-    this.world.init(this.engineHelper);
     this.initFont();
+    this.world.init(this.engineHelper);
     this.renderer.init();
     return this.engineHelper.getAllResourcesLoading();
   };
