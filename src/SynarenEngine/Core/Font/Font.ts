@@ -36,7 +36,7 @@ class RenderFont {
   static $id: number = 0;
 
   render(engineHelper: EngineHelper) {
-    if(this.shaderEntity) {
+    if (this.shaderEntity) {
       engineHelper.render(this.shaderEntity);
     }
   }
@@ -93,7 +93,7 @@ class FontManager extends EntityManager {
     this.renderFontPool = [];
   }
 
-  getFont(charCode : number): FontChar {
+  getFont(charCode: number): FontChar {
     return this.fonts[charCode];
   }
 

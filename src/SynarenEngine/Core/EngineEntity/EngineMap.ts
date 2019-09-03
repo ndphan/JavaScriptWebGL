@@ -12,7 +12,7 @@ class EngineMap extends EngineObject {
   get $hidden(): boolean {
     return false;
   }
-  set $hidden(_: boolean) { }
+  set $hidden(_: boolean) {}
   show: boolean = false;
   configBuilder?: ConfigMapBuilder;
 
@@ -21,7 +21,7 @@ class EngineMap extends EngineObject {
     this.$ref = {};
   }
 
-  beforeShow() { }
+  beforeShow() {}
 
   updatePosition(entity: EngineObject, position: Position) {
     if (this.$ref[entity.$id]) {
@@ -73,7 +73,6 @@ class EngineMap extends EngineObject {
         engineHelper.writeFont(fontRef.$cacheId!, fontRef)
       );
     }
-
   }
   render(engineHelper: EngineHelper) {
     if (!this.show) {

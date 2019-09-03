@@ -271,7 +271,7 @@ export default class EngineHelper {
     let fontCacheId: number;
     if (typeof fontId === "string") {
       fontCacheId = this.fontNameKeyReverse[fontId];
-    } else if(typeof fontId === "number") {
+    } else if (typeof fontId === "number") {
       fontCacheId = fontId;
     } else {
       throw new Error("fontId is not a number or string");
