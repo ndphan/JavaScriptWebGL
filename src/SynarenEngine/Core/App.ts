@@ -161,6 +161,7 @@ export default class App {
       this.notifyFrames();
       this.timer.start();
     } catch (error) {
+      console.error(error);
       clearInterval(this.interval);
       if (this.errorCallback) {
         this.errorCallback(error);
@@ -237,6 +238,7 @@ export default class App {
 
   onRunError = (error: Error) => {
     clearInterval(this.interval);
+    console.error(error);
     throw error;
   };
 
