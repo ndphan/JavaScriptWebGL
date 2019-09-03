@@ -15,6 +15,7 @@ export interface EngineEvent {
   orientationQuaternion: number[];
   code?: string;
   keyDown?: { [key: string]: boolean };
+  rawEvent?: Event;
 }
 
 export default class Events {
@@ -42,7 +43,8 @@ export default class Events {
     prevEventType: -1,
     timeStamp: 0,
     prevTimeStamp: 0,
-    orientationQuaternion: [0, 0, 0, 0]
+    orientationQuaternion: [0, 0, 0, 0],
+    rawEvent: undefined
   };
 
   static DOWN = 1;
@@ -189,7 +191,7 @@ export default class Events {
       const tempEventDownY = this.eventDownY;
       this.eventDownX = this.orientationQuaternion[0];
       this.eventDownY = this.orientationQuaternion[1];
-      this.callback(this.buildEvent(Events.ORIENTATION));
+      this.callback(this.buildEvent(event, Events.ORIENTATION));
       this.eventDownX = tempEventDownX;
       this.eventDownY = tempEventDownY;
 
@@ -213,7 +215,7 @@ export default class Events {
     this.orientationQuaternion[2] += eventQuaternion[2];
   };
 
-  buildEvent = (type: number): EngineEvent => {
+  buildEvent = (evt: Event, type: number): EngineEvent => {
     if (!this.webGLContainer.canvas) return this.NULL_EVENT;
     return {
       x: this.eventDownX / this.webGLContainer.canvas.offsetWidth,
@@ -226,12 +228,13 @@ export default class Events {
       prevEventType: this.prevEvent,
       timeStamp: this.timeStamp,
       prevTimeStamp: this.prevTimeStamp,
-      orientationQuaternion: this.orientationQuaternion
+      orientationQuaternion: this.orientationQuaternion,
+      rawEvent: evt
     };
   };
 
-  resize = () => {
-    this.callback(this.buildEvent(Events.RESIZE));
+  resize = (evt: Event) => {
+    this.callback(this.buildEvent(evt, Events.RESIZE));
   };
 
   buildEventKey = (evt: KeyboardEvent, type: number) => {
@@ -247,6 +250,15 @@ export default class Events {
   keyDown = (evt: KeyboardEvent) => {
     this.keyDownMap[evt.code] = true;
     this.callback(this.buildEventKey(evt, Events.KEY_DOWN));
+    switch (evt.keyCode) {
+      // prevent arrow keys from scrolling window
+      case 37:
+      case 39:
+      case 38:
+      case 40:
+        evt.preventDefault();
+        break;
+    }
   };
 
   keyUp = (evt: KeyboardEvent) => {
@@ -259,7 +271,7 @@ export default class Events {
     this.timeStamp = evt.timeStamp;
     this.eventDownX = evt.offsetX;
     this.eventDownY = evt.offsetY;
-    this.callback(this.buildEvent(Events.UP));
+    this.callback(this.buildEvent(evt, Events.UP));
     this.prevEvent = Events.UP;
     this.prevTimeStamp = evt.timeStamp;
   };
@@ -272,7 +284,7 @@ export default class Events {
     this.eventDownX = evt.offsetX;
     this.eventDownY = evt.offsetY;
     this.timeStamp = evt.timeStamp;
-    this.callback(this.buildEvent(Events.DOWN));
+    this.callback(this.buildEvent(evt, Events.DOWN));
     this.prevEvent = Events.DOWN;
     this.prevTimeStamp = evt.timeStamp;
   };
@@ -287,7 +299,7 @@ export default class Events {
       this.eventDownX = xUp;
       this.eventDownY = yUp;
       this.timeStamp = evt.timeStamp;
-      this.callback(this.buildEvent(Events.DRAG));
+      this.callback(this.buildEvent(evt, Events.DRAG));
       this.prevEvent = Events.DRAG;
       this.prevTimeStamp = evt.timeStamp;
     }
@@ -299,7 +311,7 @@ export default class Events {
       this.timeStamp = evt.timeStamp;
       this.eventDownX = evt.touches[0].clientX - evt.target.offsetLeft;
       this.eventDownY = evt.touches[0].clientY - evt.target.offsetTop;
-      this.callback(this.buildEvent(Events.UP));
+      this.callback(this.buildEvent(evt, Events.UP));
       this.prevEvent = Events.UP;
       this.prevTimeStamp = evt.timeStamp;
     }
@@ -311,7 +323,7 @@ export default class Events {
       this.eventDownX = evt.touches[0].clientX - evt.target.offsetLeft;
       this.eventDownY = evt.touches[0].clientY - evt.target.offsetTop;
       this.timeStamp = evt.timeStamp;
-      this.callback(this.buildEvent(Events.DOWN));
+      this.callback(this.buildEvent(evt, Events.DOWN));
       this.prevEvent = Events.DOWN;
       this.prevTimeStamp = evt.timeStamp;
     }
@@ -331,7 +343,7 @@ export default class Events {
       this.eventDownX = xUp;
       this.eventDownY = yUp;
       this.timeStamp = evt.timeStamp;
-      this.callback(this.buildEvent(Events.DRAG));
+      this.callback(this.buildEvent(evt, Events.DRAG));
       this.prevEvent = Events.DRAG;
       this.prevTimeStamp = evt.timeStamp;
     }
