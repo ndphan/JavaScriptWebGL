@@ -57,7 +57,7 @@ class EntityColourProgram {
 
     for (let index = 0; index < entities.length; index++) {
       const entity = entities[index];
-      const model = entity.getViewModel();
+      const model = entity.getModel();
       if (!entity.rendererBufferId) {
         throw new Error("Unregistered entity buffer" + entity);
       }

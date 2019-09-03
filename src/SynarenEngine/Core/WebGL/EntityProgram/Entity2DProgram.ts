@@ -10,6 +10,7 @@ class Entity2DProgram {
     this.ctx = ctx;
     this.program = new Shader2DProgram(ctx);
     this.updatePerspective();
+    this.updateViewModel(mat4.create());
   }
 
   delete() {
@@ -73,7 +74,7 @@ class Entity2DProgram {
 
       const texReg = textureReg[entity.rendererTextureRef];
       this.program.bindTexture(texReg.texture);
-      this.program.glSetModelViewMatrix(entity.getViewModel());
+      this.program.glSetModelMatrix(entity.getModel());
 
       if (!entity.rendererBufferId) {
         throw new Error("Unregistered entity buffer" + entity);
@@ -109,6 +110,11 @@ class Entity2DProgram {
     this.program.arrayBuffer.push(objBuffer, size);
     object.rendererBufferId = this.program.arrayBuffer.bufferRegId;
     this.program.arrayBuffer.bufferRegId++;
+  }
+
+  updateViewModel(model: mat4) {
+    this.program.bindProgram();
+    this.program.glSetViewMatrix(model);
   }
 
   updatePerspective() {

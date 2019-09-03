@@ -1,24 +1,24 @@
-import Font from "./Font/Font";
-import { RendererNotification, RendererSubscription } from "./Renderer";
-import VertexModel from "./Data/VertexModel";
-import EngineObjectHelper from "./EngineEntity/EngineObjectHelper";
-import ModelData from "./Data/ModelData";
-import FontMetaData from "./Data/FontMetaData";
+import { AppSubscription } from "./App";
 import Camera from "./Camera";
 import NotificationQueue from "./Common/NotificationQueue";
-import { ShaderEntity } from "./EngineEntity/ShaderEntity";
-import Light from "./Data/Light";
-import PlaneType from "./Data/PlaneType";
 import SubscriberPool from "./Common/SubscriberPool";
-import { AppSubscription } from "./App";
+import FontMetaData from "./Data/FontMetaData";
+import Light from "./Data/Light";
+import ModelData from "./Data/ModelData";
+import PlaneType from "./Data/PlaneType";
+import VertexModel from "./Data/VertexModel";
+import EngineObjectHelper from "./EngineEntity/EngineObjectHelper";
+import { ShaderEntity } from "./EngineEntity/ShaderEntity";
+import Font, { FontReference } from "./Font/Font";
+import { RendererNotification, RendererSubscription } from "./Renderer";
 
 export default class EngineHelper {
   notificationQueue: NotificationQueue;
   subscriberPool: SubscriberPool;
-
   resourcesLoading: Promise<any>[] = [];
   bufferCache: { [key: number]: ModelData } = {};
-  fontCache: { [key: string]: { meta: FontMetaData; font: Font } } = {};
+  fontCache: { [key: number]: { meta: FontMetaData; font: Font } } = {};
+  fontNameKeyReverse: { [key: string]: number } = {};
   uvCache: { [key: string]: number[] } = {};
   vertexUVCache: { [key: string]: number[] } = {};
   camera: Camera;
@@ -76,6 +76,22 @@ export default class EngineHelper {
     return this.camera.aspect;
   }
 
+  getTotalPixelHeight(): number {
+    return window.screen.height;
+  }
+
+  getTotalPixelWidth(): number {
+    return window.screen.width;
+  }
+
+  getScreenHeight(): number {
+    return this.camera.height;
+  }
+
+  getScreenWidth(): number {
+    return this.camera.width;
+  }
+
   setTime(time: number) {
     if (time) {
       this.time = time;
@@ -127,6 +143,7 @@ export default class EngineHelper {
                   meta: meta,
                   font: font
                 };
+                this.fontNameKeyReverse[src] = cacheId;
               }
             });
           } else {
@@ -208,6 +225,14 @@ export default class EngineHelper {
     }
   }
 
+  create2DPlaneVertexModelCacheId(cacheId: string): VertexModel {
+    const uv = this.getUVCache(cacheId);
+    const vertexModel = new VertexModel().createRenderUnits(4);
+    EngineObjectHelper.vertex.plane(vertexModel.renderUnits, PlaneType.YX);
+    EngineObjectHelper.vertex.planeUV(vertexModel.renderUnits, uv);
+    return vertexModel;
+  }
+
   createPlaneVertexModelCacheId(
     cacheId: string,
     plane: PlaneType
@@ -240,6 +265,19 @@ export default class EngineHelper {
 
   addVertexUvCache(name: string, vertexUv: number[]) {
     this.vertexUVCache[name] = vertexUv;
+  }
+
+  writeFont(fontId: number | string, fontRef: FontReference): FontReference {
+    let fontCacheId: number;
+    if (typeof fontId === "string") {
+      fontCacheId = this.fontNameKeyReverse[fontId];
+    } else if(typeof fontId === "number") {
+      fontCacheId = fontId;
+    } else {
+      throw new Error("fontId is not a number or string");
+    }
+    const font = this.fontCache[fontCacheId].font;
+    return font.writeRef(fontRef);
   }
 }
 

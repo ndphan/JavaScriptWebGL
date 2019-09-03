@@ -1,30 +1,9 @@
 import { quat, mat4, glMatrix } from "gl-matrix";
 import Rect3d from "../Data/Rect3d";
+import Position from "./Position";
 
 export default class ModelPosition {
-  position = {
-    x: 0,
-    y: 0,
-    z: 0,
-    ax: 0,
-    ay: 0,
-    az: 0,
-    nx: 0,
-    ny: 0,
-    nz: 0,
-    width: 0,
-    height: 0,
-    length: 0,
-    scaleX: 1,
-    scaleY: 1,
-    scaleZ: 1,
-    originX: 0,
-    originY: 0,
-    originZ: 0,
-    maxHeight: 0,
-    maxWidth: 0
-  };
-
+  position: Position = new Position();
   cachedModel: mat4;
   dirtyModel = true;
   quatRotationxyz: mat4;
@@ -42,6 +21,10 @@ export default class ModelPosition {
   initialMat4Temp = mat4.create();
   rotateQuatTemp = quat.create();
   rotateMat4Temp = mat4.create();
+
+  setPosition(position: Position) {
+    this.position = position;
+  }
 
   pos() {
     return [this.position.x, this.position.y, this.position.z];
@@ -127,8 +110,8 @@ export default class ModelPosition {
     this.position.scaleX = x;
     this.position.scaleY = y;
     this.position.scaleZ = z;
-    this.position.width = this.position.scaleX;
-    this.position.height = this.position.scaleY;
+    this.position.width = x;
+    this.position.height = y;
     this.dirtyScale = true;
     this.dirtyModel = true;
   }
@@ -137,8 +120,8 @@ export default class ModelPosition {
     this.position.scaleX = rect.width;
     this.position.scaleY = rect.height;
     this.position.scaleZ = rect.length;
-    this.position.width = this.position.scaleX;
-    this.position.height = this.position.scaleY;
+    this.position.width = rect.width;
+    this.position.height = rect.height;
     this.dirtyScale = true;
     this.dirtyModel = true;
   }
@@ -288,13 +271,13 @@ export default class ModelPosition {
     this.cachedModel = dest;
   }
 
-  getViewModel() {
+  getModel = () => {
     if (this.dirtyModel) {
       this.dirtyModel = false;
       this._buildModel();
     }
     return this.cachedModel;
-  }
+  };
 
   degreesToRadians(degrees: number) {
     return Math.round(glMatrix.toRadian(degrees) * 100) / 100;

@@ -53,7 +53,7 @@ export class CollisionDetection {
     const mvp = mat4.multiply(
       mat4.create(),
       camera.frustum,
-      mat4.multiply(mat4.create(), camera.viewMatrix, obj.getViewModel())
+      mat4.multiply(mat4.create(), camera.viewMatrix, obj.getModel())
     );
 
     const r1: vec4 = this.toClipSpace(

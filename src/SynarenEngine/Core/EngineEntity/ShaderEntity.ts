@@ -7,9 +7,10 @@ export class ShaderEntity {
   vertexModel: VertexModel = new VertexModel();
   rendererBufferId?: number;
   rendererTextureRef?: string;
+  src?: string;
 
   model: () => mat4;
-  src?: string;
+
   getVertexModel(): VertexModel {
     return this.vertexModel;
   }
@@ -19,7 +20,7 @@ export class ShaderEntity {
   getOpt(): RenderOption {
     return this.opt;
   }
-  getViewModel(): Float32List {
+  getModel(): Float32List {
     return this.model();
   }
   getTextureSource(): string | undefined {
@@ -27,5 +28,15 @@ export class ShaderEntity {
   }
   setTextureSource(src: string) {
     this.src = src;
+  }
+
+  shallowCopy(): ShaderEntity {
+    const newInstance = new ShaderEntity();
+    newInstance.opt = this.opt;
+    newInstance.vertexModel = this.vertexModel;
+    newInstance.rendererBufferId = this.rendererBufferId;
+    newInstance.rendererTextureRef = this.rendererTextureRef;
+    newInstance.src = this.src;
+    return newInstance;
   }
 }

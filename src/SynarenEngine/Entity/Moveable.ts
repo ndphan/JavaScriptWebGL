@@ -13,7 +13,10 @@ class Moveable extends EntityManager {
     isMoving: boolean;
     simulationId: number | undefined;
     jumpSimulationId: number | undefined;
+    collisionIteration: number;
+    collisionStopItThres: number;
   };
+  isMoveable: boolean;
   constructor() {
     super();
     this.physics = {
@@ -25,8 +28,11 @@ class Moveable extends EntityManager {
       dz: 0.0,
       isMoving: false,
       simulationId: undefined,
-      jumpSimulationId: undefined
+      jumpSimulationId: undefined,
+      collisionIteration: 0,
+      collisionStopItThres: 5
     };
+    this.isMoveable = true;
   }
   updatePhysicsPosition() {
     this.physics.tx = this.position.x;
@@ -78,11 +84,13 @@ class Moveable extends EntityManager {
     this.physics.tz += dz || 0;
     this.moveTo(velocity, this.physics.tx, this.physics.ty, this.physics.tz);
   }
-
-  shouldTranslate = (colliding: EngineObject[]): boolean => {
+  shouldTranslate(colliding: EngineObject[]): boolean {
     return colliding.length === 0;
-  };
+  }
   moveTo(velocity: number, x?: number, y?: number, z?: number) {
+    if (!this.isMoveable) {
+      return;
+    }
     const physics = this.physics;
     this.updateDeltaDistance(x, y, z);
     const distance = this.calcTotalDeltaDistance();
@@ -99,11 +107,24 @@ class Moveable extends EntityManager {
       physics.simulationId
     );
   }
-  completeSimulation() {
-    const physics = this.physics;
-    physics.isMoving = false;
-  }
-  moveSimulation(simulationId: number, time: number, totalRunTime: number) {
+  completeSimulation = () => {
+    this.resetPhysics();
+  };
+  resetPhysics = () => {
+    this.physics.tx = this.position.x;
+    this.physics.ty = this.position.y;
+    this.physics.tz = this.position.z;
+    this.physics.dx = 0;
+    this.physics.dy = 0;
+    this.physics.dz = 0;
+    this.physics.isMoving = false;
+    this.physics.collisionIteration = 0;
+  };
+  moveSimulation = (
+    simulationId: number,
+    time: number,
+    totalRunTime: number
+  ) => {
     const physics = this.physics;
     physics.isMoving = true;
     const propTime = time / totalRunTime;
@@ -114,7 +135,17 @@ class Moveable extends EntityManager {
     if (this.shouldTranslate(colliding)) {
       this.translate(dx, dy, dz);
       this.updateLocBoundToBoundary();
+      physics.collisionIteration = 0;
+    } else {
+      physics.collisionIteration++;
+      if (physics.collisionIteration > physics.collisionStopItThres) {
+        this.completeSimulation();
+        Physics.cancelSimulation(simulationId);
+      }
     }
+  };
+  setMoveable(isMoving: boolean) {
+    this.isMoveable = isMoving;
   }
 }
 

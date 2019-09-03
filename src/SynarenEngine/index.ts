@@ -3,6 +3,7 @@ export {
   CollisionDetection,
   Collision
 } from "./Core/Physics/CollisionDetection";
+export { default as Physics } from "./Core/Physics/Physics";
 export { default as Timer } from "./Core/Common/Timer";
 export { RenderType } from "./Core/Data/RenderOption";
 export { default as Light, LightOptions } from "./Core/Data/Light";
@@ -10,6 +11,7 @@ export { default as Rect3d } from "./Core/Data/Rect3d";
 export { default as PlaneType } from "./Core/Data/PlaneType";
 export { default as Colour } from "./Core/Data/Colour";
 export { default as Coordinate } from "./Core/Data/Coordinate";
+export { FontReference } from "./Core/Font/Font";
 export {
   default as FontMetaData,
   FontMeta,
@@ -38,6 +40,7 @@ export {
 export { default as BMFontReader } from "./AssetLoader/BMFontReader";
 export { default as VertexParser } from "./AssetLoader/VertexParser";
 export { default as Cube } from "./Entity/Cube";
+export { default as Button } from "./Entity/Button";
 export { default as Ground2d } from "./Entity/Ground2d";
 export { default as Ground3d } from "./Entity/Ground3d";
 export { default as Moveable } from "./Entity/Moveable";
@@ -48,4 +51,5 @@ export { default as PlaneColour } from "./Entity/PlaneColour";
 export { default as Sphere } from "./Entity/Sphere";
 export { default as SpriteModel } from "./Entity/SpriteModel";
 export { default as EngineHelper } from "./Core/EngineHelper";
+export { default as Position } from "./Core/EngineEntity/Position";
 export default App;

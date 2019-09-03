@@ -79,7 +79,7 @@ class EntityBasicProgram {
 
       const texReg = textureReg[entity.rendererTextureRef];
       this.program.bindTexture(texReg.texture);
-      this.program.glSetModelViewMatrix(entity.getViewModel());
+      this.program.glSetModelViewMatrix(entity.getModel());
 
       if (!entity.rendererBufferId) {
         throw new Error("Unregistered entity buffer" + entity);

@@ -63,7 +63,7 @@ class Entity3DProgram {
       const entity = entities[index];
       const opt = entity.getOpt();
 
-      this.program.glSetShadowModelMatrix(entity.getViewModel());
+      this.program.glSetShadowModelMatrix(entity.getModel());
 
       if (!entity.rendererBufferId) {
         throw new Error("Unregistered entity buffer" + entity);
@@ -128,7 +128,7 @@ class Entity3DProgram {
 
       const texReg = textureReg[entity.rendererTextureRef];
       this.program.bindTexture(texReg.texture);
-      this.program.glSetModelViewMatrix(entity.getViewModel());
+      this.program.glSetModelViewMatrix(entity.getModel());
 
       if (!entity.rendererBufferId) {
         throw new Error("Unregistered entity buffer" + entity);

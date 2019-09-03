@@ -21,14 +21,24 @@ export default class Physics {
   } = {};
   static simulationIdCurrent = 0;
   static simulationLoop: NodeJS.Timeout | undefined;
-  static physicsEntities: { [key: number]: EngineObject } = {};
+  static physicsEntities: {
+    [key: number]: { entity: EngineObject; enabled: boolean };
+  } = {};
   static physicsEntityIdCount = 0;
 
   static registerPhysics(entity: EngineObject) {
     if (!entity.$physicsId) {
       entity.$physicsId = Physics.physicsEntityIdCount++;
 
-      this.physicsEntities[entity.$physicsId] = entity;
+      this.physicsEntities[entity.$physicsId] = {
+        entity: entity,
+        enabled: true
+      };
+    }
+  }
+  static setEnabledPhysics(entity: EngineObject, enabled: boolean) {
+    if (this.physicsEntities[entity.$physicsId]) {
+      this.physicsEntities[entity.$physicsId].enabled = enabled;
     }
   }
   static isColliding2d(
@@ -42,20 +52,23 @@ export default class Physics {
     for (const key in this.physicsEntities) {
       if (this.physicsEntities.hasOwnProperty(key)) {
         const physicsEntity = this.physicsEntities[key];
-
-        if (physicsEntity.$physicsId !== entity.$physicsId) {
+        const pEntityRoot = physicsEntity.entity;
+        if (
+          physicsEntity.enabled &&
+          pEntityRoot.$physicsId !== entity.$physicsId
+        ) {
           const colliding = CollisionDetection.isCollidingRect(
-            physicsEntity.position.x,
-            physicsEntity.position.y,
-            physicsEntity.position.width,
-            physicsEntity.position.height,
+            pEntityRoot.position.x,
+            pEntityRoot.position.y,
+            pEntityRoot.position.width,
+            pEntityRoot.position.height,
             px,
             py,
             entity.position.width,
             entity.position.height
           );
           if (colliding) {
-            isColliding.push(physicsEntity);
+            isColliding.push(physicsEntity.entity);
           }
         }
       }
