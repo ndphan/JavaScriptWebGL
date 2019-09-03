@@ -56,6 +56,7 @@ export default class SpriteModel extends EntityManager2d {
     }
     this.center(this.position.x, this.position.y, this.position.z);
     this.rotateOrigin(this.position.x, this.position.y, this.position.z);
+    this.rotateZ(180);
     this.initEntity(engineHelper);
     this.timer.start();
   }
