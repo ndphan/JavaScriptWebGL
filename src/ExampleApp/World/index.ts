@@ -1,23 +1,22 @@
 import {
-  Ground3d,
-  ObjectManager,
   BitmapConfigParser,
+  Coordinate,
   Cube,
-  Sphere,
-  Plane3d,
-  Events,
-  VertexParser,
-  BMFontReader,
-  Rect3d,
-  Object3d,
-  RenderType,
-  PlaneType,
-  Light,
-  ModelObject3d,
+  EngineEvent,
   EngineHelper,
   EngineObject,
-  EngineEvent,
-  Coordinate
+  Events,
+  Ground3d,
+  Light,
+  ModelObject3d,
+  Object3d,
+  ObjectManager,
+  Plane3d,
+  PlaneType,
+  Rect3d,
+  RenderType,
+  ResourceResolver,
+  Sphere
 } from "../../SynarenEngine";
 
 export default class World extends ObjectManager {
@@ -58,53 +57,31 @@ export default class World extends ObjectManager {
   }
 
   loadResources() {
-    this.engineHelper.getResource("assets/sphere.txt").then(result => {
-      this.engineHelper.addVertexUvCache(
-        "sphere_cw",
-        new VertexParser(result.data).vertices
-      );
-    });
+    this.engineHelper
+      .getResource("assets/sphere.txt")
+      .then(ResourceResolver.objResolver(this.engineHelper, "sphere_cw"));
 
-    this.engineHelper.getResource("assets/low_poly_tree.txt").then(result => {
-      this.engineHelper.addVertexUvCache(
-        "low_poly_tree",
-        new VertexParser(result.data).vertices
-      );
-    });
+    this.engineHelper
+      .getResource("assets/low_poly_tree.txt")
+      .then(ResourceResolver.objResolver(this.engineHelper, "low_poly_tree"));
 
-    this.engineHelper.getResource("assets/low_poly_girl.txt").then(result => {
-      this.engineHelper.addVertexUvCache(
-        "low_poly_girl",
-        new VertexParser(result.data).vertices
-      );
-    });
+    this.engineHelper
+      .getResource("assets/low_poly_girl.txt")
+      .then(ResourceResolver.objResolver(this.engineHelper, "low_poly_girl"));
 
-    this.engineHelper.getResource("assets/racing_car.txt").then(result => {
-      this.engineHelper.addVertexUvCache(
-        "racing_car",
-        new VertexParser(result.data).vertices
-      );
-    });
+    this.engineHelper
+      .getResource("assets/racing_car.txt")
+      .then(ResourceResolver.objResolver(this.engineHelper, "racing_car"));
 
-    this.engineHelper.getResource("assets/paprika.fnt").then(result => {
-      result.registerFont(new BMFontReader(result.data));
-      this.fontCacheId = result.cacheId;
-    });
+    this.engineHelper
+      .getResource("assets/paprika.fnt")
+      .then(ResourceResolver.bmFontResolver(this.engineHelper));
 
-    this.engineHelper.getResource("assets/atlas.txt").then(result => {
-      this.bitmapLoader = new BitmapConfigParser(
-        result.data,
-        1024,
-        1024,
-        20e-3
+    this.engineHelper
+      .getResource("assets/atlas.txt")
+      .then(
+        ResourceResolver.bitmapResolver(this.engineHelper, 1024, 1024, 20e-3)
       );
-      for (const key in this.bitmapLoader.getMap()) {
-        if (this.bitmapLoader.map.hasOwnProperty(key)) {
-          const uv = this.bitmapLoader.map[key];
-          this.engineHelper.addUVCache(key, uv);
-        }
-      }
-    });
   }
 
   init() {
