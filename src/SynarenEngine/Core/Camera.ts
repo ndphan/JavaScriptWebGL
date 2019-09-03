@@ -32,6 +32,9 @@ class Camera {
 
   cameraOptions: any;
 
+  height: number;
+  width: number;
+
   // optimise matrix recompile when required
   requireUpdateViewMtrx: boolean = true;
 
@@ -57,6 +60,8 @@ class Camera {
       fov = maxFovAspect;
     }
     this.aspect = aspect;
+    this.height = canvas.height;
+    this.width = canvas.width;
     this.init(fov, aspect, near, far);
   };
 
