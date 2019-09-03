@@ -51,5 +51,6 @@ export { default as PlaneColour } from "./Entity/PlaneColour";
 export { default as Sphere } from "./Entity/Sphere";
 export { default as SpriteModel } from "./Entity/SpriteModel";
 export { default as EngineHelper } from "./Core/EngineHelper";
+export { default as EngineMap } from "./Core/EngineEntity/EngineMap";
 export { default as Position } from "./Core/EngineEntity/Position";
 export default App;
