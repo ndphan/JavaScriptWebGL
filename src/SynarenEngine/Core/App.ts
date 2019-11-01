@@ -11,11 +11,14 @@ import SubscriberPool, { Subscription } from "./Common/SubscriberPool";
 
 export class WebGLContainer {
   canvas: HTMLCanvasElement;
+  aspectRatio: number;
   constructor(
     elementId: string,
     parentElement: HTMLElement,
+    aspectRatio: number,
     restoreContentFn: () => any
   ) {
+    this.aspectRatio = aspectRatio;
     this.canvas = document.createElement("canvas");
     if (elementId) {
       this.canvas.id = elementId;
@@ -43,10 +46,12 @@ export class WebGLContainer {
   }
 
   resize(measureElement: HTMLElement) {
-    this.canvas.width = measureElement.offsetWidth;
-    this.canvas.height = measureElement.offsetHeight;
-    this.canvas.style.height = measureElement.offsetHeight + "px";
-    this.canvas.style.width = measureElement.offsetWidth + "px";
+    const width = measureElement.offsetWidth;
+    const height = width / this.aspectRatio;
+    this.canvas.width = width;
+    this.canvas.height = height;
+    this.canvas.style.height = `${height}px`;
+    this.canvas.style.width = `${width}px`;
   }
 
   getCtx(): WebGLRenderingContext {
@@ -281,6 +286,7 @@ export default class App {
     this.webGLContainer = new WebGLContainer(
       args.canvasId,
       appElement,
+      args.aspectRatio || 2.414,
       this.setup
     );
     this.resizeCanvas(appElement);
