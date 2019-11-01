@@ -32,8 +32,10 @@ class EngineMap extends EngineObject {
   }
 
   setShow(show: boolean) {
-    this.beforeShow();
     this.show = show;
+    if (this.show) {
+      this.beforeShow();
+    }
     this.objects.forEach((ent: EngineObject) => {
       Physics.setEnabledPhysics(ent, show);
       ent.$hidden = false;
