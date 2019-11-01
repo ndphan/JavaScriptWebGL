@@ -14,27 +14,39 @@ class ConfigMapBuilder {
   objects: EngineObject[];
   texts: FontReference[];
   ref: { [key: string]: any };
+  anchor: { [key: string]: any };
 
   constructor(engineHelper: EngineHelper) {
     this.engineHelper = engineHelper;
     this.objects = [];
     this.ref = {};
+    this.anchor = {};
     this.texts = [];
   }
 
   build(map: any) {
-    console.log("loading config for", map);
     for (const prop in map) {
       if (map.hasOwnProperty(prop)) {
         if (prop.startsWith("$")) {
           this.ref[prop] = map[prop];
+        } else if (prop.startsWith("+")) {
+          this.anchor[prop] = map[prop];
         } else {
           let object = map[prop];
           if (object.$ref && this.ref[object.$ref]) {
             // merge ref with object
-            object = { ...object, ...this.ref[object.$ref] };
+            object = { ...this.ref[object.$ref], ...object };
           }
-          console.log("building for", prop, object);
+          if (object.$anchor && this.anchor[object.$anchor]) {
+            const anchor = this.anchor[object.$anchor];
+            // translate anchor
+            if (object.type !== "Font") {
+              object.position.x += anchor.position.x;
+              object.position.y += anchor.position.y;
+              object.position.width += anchor.position.width;
+              object.position.height += anchor.position.height;
+            }
+          }
           this.buildObject(object);
         }
       }
