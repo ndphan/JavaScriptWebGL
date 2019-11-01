@@ -1,8 +1,9 @@
+import Colour from "../Data/Colour";
 import PlaneType from "../Data/PlaneType";
-import { RenderUnit } from "../..";
+import { ColourRenderUnit, TextureRenderUnit } from "../Data/RenderUnit";
 
 export class VertexBuilder {
-  toArray2D(vertexes: RenderUnit[]) {
+  toArray2D(vertexes: TextureRenderUnit[]) {
     const vertexConstruct = [];
     for (const key in vertexes) {
       if (vertexes.hasOwnProperty(key)) {
@@ -16,7 +17,7 @@ export class VertexBuilder {
     }
     return vertexConstruct;
   }
-  toArray(vertexes: RenderUnit[]) {
+  toTextureArray(vertexes: TextureRenderUnit[]) {
     const vertexConstruct = [];
     for (const key in vertexes) {
       if (vertexes.hasOwnProperty(key)) {
@@ -33,28 +34,52 @@ export class VertexBuilder {
     }
     return vertexConstruct;
   }
-  planeXYColor(width: number, height: number, colour: any): number[] {
+  toColourArray(vertexes: ColourRenderUnit[]) {
+    const vertexConstruct = [];
+    for (const key in vertexes) {
+      if (vertexes.hasOwnProperty(key)) {
+        const _vertex = vertexes[key];
+        vertexConstruct.push(_vertex.vertex.x);
+        vertexConstruct.push(_vertex.vertex.y);
+        vertexConstruct.push(_vertex.vertex.z);
+        vertexConstruct.push(_vertex.colour.r);
+        vertexConstruct.push(_vertex.colour.g);
+        vertexConstruct.push(_vertex.colour.b);
+        vertexConstruct.push(_vertex.colour.a);
+      }
+    }
+    return vertexConstruct;
+  }
+  planeXYColor(width: number, height: number, colour: Colour): number[] {
     const _colour = [
       -width / 2,
       -height / 2,
+      0,
       colour.r,
       colour.g,
       colour.b,
+      colour.a,
       width / 2,
       -height / 2,
+      0,
       colour.r,
       colour.g,
       colour.b,
+      colour.a,
       -width / 2,
       height / 2,
+      0,
       colour.r,
       colour.g,
       colour.b,
+      colour.a,
       width / 2,
       height / 2,
+      0,
       colour.r,
       colour.g,
-      colour.b
+      colour.b,
+      colour.a
     ];
     return _colour;
   }
@@ -92,7 +117,7 @@ export class VertexBuilder {
     ];
     return uv;
   }
-  planeUV(vertices: RenderUnit[], uv: number[]) {
+  planeUV(vertices: TextureRenderUnit[], uv: number[]) {
     vertices[0].texture.u = uv[4];
     vertices[0].texture.v = uv[1];
     vertices[2].texture.u = uv[4];
@@ -103,7 +128,7 @@ export class VertexBuilder {
     vertices[3].texture.v = uv[3];
   }
 
-  planeXY(plane: PlaneType, vertices: RenderUnit[]) {
+  planeXY(plane: PlaneType, vertices: TextureRenderUnit[]) {
     vertices[0].vertex.x = -plane.width / 2;
     vertices[0].vertex.y = -plane.height / 2;
     vertices[0].normal.z = plane.normalDirection;
@@ -118,7 +143,7 @@ export class VertexBuilder {
     vertices[3].normal.z = plane.normalDirection;
   }
 
-  plane(vertices: RenderUnit[], PLANE: PlaneType) {
+  plane(vertices: TextureRenderUnit[], PLANE: PlaneType) {
     switch (PLANE) {
       case PlaneType.XY: {
         vertices[0].vertex.x = -1 / 2;

@@ -4,7 +4,7 @@ import { mat4 } from "gl-matrix";
 
 export class ShaderEntity {
   opt: RenderOption = new RenderOption();
-  vertexModel: VertexModel = new VertexModel();
+  vertexModel: VertexModel;
   rendererBufferId?: number;
   rendererTextureRef?: string;
   src?: string;

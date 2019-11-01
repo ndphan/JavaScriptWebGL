@@ -6,8 +6,8 @@ import EngineObject from "../Core/EngineEntity/EngineObject";
 import ShaderEntityBuilder from "../Core/Builder/ShaderEntityBuilder";
 import { ShaderEntity } from "../Core/EngineEntity/ShaderEntity";
 import VertexModel from "../Core/Data/VertexModel";
-import { Rect2d } from "..";
 import EngineHelper from "../Core/EngineHelper";
+import Rect2d from "../Core/Data/Rect2d";
 
 export default class PlaneColour extends EngineObject {
   vertexModel: VertexModel;
@@ -24,7 +24,7 @@ export default class PlaneColour extends EngineObject {
   }
   init(engineHelper: EngineHelper) {
     const renderOpt = new RenderOption();
-    renderOpt.renderType = RenderType.PLAIN;
+    renderOpt.renderType = RenderType.TRIANGLE;
     renderOpt.shaderType = ShaderType.COLOUR;
     this.shaderEntity = new ShaderEntityBuilder(engineHelper)
       .addBuffer(this.vertexModel)

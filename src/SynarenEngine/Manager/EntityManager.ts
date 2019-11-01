@@ -1,6 +1,6 @@
 import EngineObject from "../Core/EngineEntity/EngineObject";
-import { Rect3d } from "..";
 import EngineHelper from "../Core/EngineHelper";
+import Rect3d from "../Core/Data/Rect3d";
 
 class EntityManager extends EngineObject {
   entities: EngineObject[] = [];

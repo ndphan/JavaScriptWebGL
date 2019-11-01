@@ -1,12 +1,12 @@
-import VertexModel from "../Core/Data/VertexModel";
 import ModelObject3d from "../Core/EngineEntity/ModelObject3d";
-import { Rect3d } from "..";
 import EngineHelper from "../Core/EngineHelper";
+import TextureVertexModel from "../Core/Data/TextureVertexModel";
+import Rect3d from "../Core/Data/Rect3d";
 
 export default class Sphere extends ModelObject3d {
   vertexUvCacheId: string;
   constructor(rect: Rect3d, vertexUvCacheId: string, textureSource: string) {
-    super(rect, new VertexModel(), textureSource);
+    super(rect, new TextureVertexModel(), textureSource);
     this.vertexUvCacheId = vertexUvCacheId;
   }
   render(engineHelper: EngineHelper) {

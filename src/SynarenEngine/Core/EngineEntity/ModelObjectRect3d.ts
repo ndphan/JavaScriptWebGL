@@ -1,18 +1,22 @@
-import EngineObject from "./EngineObject";
-import RenderOption, { ShaderType, RenderType } from "../Data/RenderOption";
 import ShaderEntityBuilder from "../Builder/ShaderEntityBuilder";
-import VertexModel from "../Data/VertexModel";
-import { ShaderEntity } from "./ShaderEntity";
 import Rect3d from "../Data/Rect3d";
+import RenderOption, { RenderType, ShaderType } from "../Data/RenderOption";
+import TextureVertexModel from "../Data/TextureVertexModel";
 import EngineHelper from "../EngineHelper";
+import EngineObject from "./EngineObject";
+import { ShaderEntity } from "./ShaderEntity";
 
 export default class ModelObjectRect3d extends EngineObject {
-  vertexModel: VertexModel;
+  vertexModel: TextureVertexModel;
 
   shaderEntity: ShaderEntity;
   textureSource: string;
 
-  constructor(rect: Rect3d, vertexModel: VertexModel, textureSource: string) {
+  constructor(
+    rect: Rect3d,
+    vertexModel: TextureVertexModel,
+    textureSource: string
+  ) {
     super();
     this.vertexModel = vertexModel;
     this.textureSource = textureSource;

@@ -2,8 +2,8 @@ import Plane2d from "./Plane2d";
 import PlaneType from "../Core/Data/PlaneType";
 import Timer from "../Core/Common/Timer";
 import EntityManager2d from "../Manager/EntityManager2d";
-import { Rect2d } from "..";
 import EngineHelper from "../Core/EngineHelper";
+import Rect2d from "../Core/Data/Rect2d";
 
 export default class SpriteModel extends EntityManager2d {
   spriteIdx = 0;

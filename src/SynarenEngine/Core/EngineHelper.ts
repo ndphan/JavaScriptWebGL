@@ -6,7 +6,7 @@ import FontMetaData from "./Data/FontMetaData";
 import Light from "./Data/Light";
 import ModelData from "./Data/ModelData";
 import PlaneType from "./Data/PlaneType";
-import VertexModel from "./Data/VertexModel";
+import TextureVertexModel from "./Data/TextureVertexModel";
 import EngineObjectHelper from "./EngineEntity/EngineObjectHelper";
 import { ShaderEntity } from "./EngineEntity/ShaderEntity";
 import Font, { FontReference } from "./Font/Font";
@@ -225,9 +225,9 @@ export default class EngineHelper {
     }
   }
 
-  create2DPlaneVertexModelCacheId(cacheId: string): VertexModel {
+  create2DPlaneVertexModelCacheId(cacheId: string): TextureVertexModel {
     const uv = this.getUVCache(cacheId);
-    const vertexModel = new VertexModel().createRenderUnits(4);
+    const vertexModel = new TextureVertexModel().createRenderUnits(4);
     EngineObjectHelper.vertex.plane(vertexModel.renderUnits, PlaneType.YX);
     EngineObjectHelper.vertex.planeUV(vertexModel.renderUnits, uv);
     return vertexModel;
@@ -236,16 +236,16 @@ export default class EngineHelper {
   createPlaneVertexModelCacheId(
     cacheId: string,
     plane: PlaneType
-  ): VertexModel {
+  ): TextureVertexModel {
     const uv = this.getUVCache(cacheId);
-    const vertexModel = new VertexModel().createRenderUnits(4);
+    const vertexModel = new TextureVertexModel().createRenderUnits(4);
     EngineObjectHelper.vertex.plane(vertexModel.renderUnits, plane);
     EngineObjectHelper.vertex.planeUV(vertexModel.renderUnits, uv);
     return vertexModel;
   }
 
-  createPlaneVertexModel(uv: number[], plane: PlaneType): VertexModel {
-    const vertexModel = new VertexModel().createRenderUnits(4);
+  createPlaneVertexModel(uv: number[], plane: PlaneType): TextureVertexModel {
+    const vertexModel = new TextureVertexModel().createRenderUnits(4);
     EngineObjectHelper.vertex.plane(vertexModel.renderUnits, plane);
     EngineObjectHelper.vertex.planeUV(vertexModel.renderUnits, uv);
     return vertexModel;

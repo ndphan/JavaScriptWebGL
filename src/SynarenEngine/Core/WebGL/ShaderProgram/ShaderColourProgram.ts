@@ -5,7 +5,7 @@ import ArrayBuffer from "../../Buffer/ArrayBuffer";
 import ProgramReference from "../Base/ProgramReference";
 
 export default class ShaderProgramColour extends BaseProgram {
-  static DRAW_VERTEX_SIZE = 5;
+  static DRAW_VERTEX_SIZE = 7;
   positionRef: ProgramReference;
   colorRef: ProgramReference;
   modelViewMatrixRef: ProgramReference;
@@ -55,7 +55,7 @@ export default class ShaderProgramColour extends BaseProgram {
       2,
       ctx.FLOAT,
       false,
-      4 * 5,
+      4 * 7,
       0
     );
     ctx.vertexAttribPointer(
@@ -63,8 +63,8 @@ export default class ShaderProgramColour extends BaseProgram {
       3,
       ctx.FLOAT,
       false,
-      4 * 5,
-      2 * 4
+      4 * 7,
+      3 * 4
     );
   }
 

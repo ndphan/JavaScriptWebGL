@@ -10,6 +10,8 @@ export { default as Light, LightOptions } from "./Core/Data/Light";
 export { default as Rect3d } from "./Core/Data/Rect3d";
 export { default as PlaneType } from "./Core/Data/PlaneType";
 export { default as Colour } from "./Core/Data/Colour";
+export { default as ColourVertexModel } from "./Core/Data/ColourVertexModel";
+export { default as EngineObjectHelper } from "./Core/EngineEntity/EngineObjectHelper";
 export { default as Coordinate } from "./Core/Data/Coordinate";
 export { FontReference } from "./Core/Font/Font";
 export {
@@ -19,7 +21,11 @@ export {
 } from "./Core/Data/FontMetaData";
 export { default as ModelData } from "./Core/Data/ModelData";
 export { default as Rect2d } from "./Core/Data/Rect2d";
-export { default as RenderUnit } from "./Core/Data/RenderUnit";
+export {
+  RenderUnit,
+  TextureRenderUnit,
+  ColourRenderUnit
+} from "./Core/Data/RenderUnit";
 export { default as Vector2d } from "./Core/Data/Vector2d";
 export { default as VertexModel } from "./Core/Data/VertexModel";
 export { default as EngineObject } from "./Core/EngineEntity/EngineObject";
