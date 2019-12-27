@@ -17,7 +17,7 @@ window.onload = function() {
         isFovMax: true
       },
       eventThrottle: 1000.0 / 60.0,
-      fps: 20,
+      fps: 15,
       isStepRender: false
     };
     const app = new App(args);

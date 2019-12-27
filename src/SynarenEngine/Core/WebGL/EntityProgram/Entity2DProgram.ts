@@ -1,7 +1,8 @@
-import { mat4, vec3 } from "gl-matrix";
+import { mat4 } from "gl-matrix";
 import { ShaderType, RenderType } from "../../Data/RenderOption";
 import Shader2DProgram from "../ShaderProgram/Shader2DProgram";
 import { ShaderEntity } from "../../EngineEntity/ShaderEntity";
+import { BaseCamera } from "../../Camera";
 
 class Entity2DProgram {
   program: Shader2DProgram;
@@ -9,7 +10,6 @@ class Entity2DProgram {
   constructor(ctx: WebGLRenderingContext) {
     this.ctx = ctx;
     this.program = new Shader2DProgram(ctx);
-    this.updatePerspective();
     this.updateViewModel(mat4.create());
   }
 
@@ -53,10 +53,15 @@ class Entity2DProgram {
     this.program.arrayBuffer.bufferBind(this.ctx);
   }
 
-  render(entities: ShaderEntity[], textureReg: { [key: string]: any }) {
+  render(
+    entities: [ShaderEntity, Float32List][],
+    camera: BaseCamera,
+    textureReg: { [key: string]: any }
+  ) {
     this.program.arrayBuffer.bind(this.ctx);
     this.program.bindAttributePointers();
     this.program.bindProgram();
+    this.program.glSetViewMatrix(camera.viewMatrix);
     if (this.ctx.isEnabled(this.ctx.CULL_FACE)) {
       this.ctx.disable(this.ctx.CULL_FACE);
     }
@@ -65,7 +70,9 @@ class Entity2DProgram {
     }
 
     for (let index = 0; index < entities.length; index++) {
-      const entity = entities[index];
+      const data = entities[index];
+      const entity = data[0];
+      const model = data[1];
       const opt = entity.getOpt();
 
       if (!entity.rendererTextureRef) {
@@ -74,7 +81,7 @@ class Entity2DProgram {
 
       const texReg = textureReg[entity.rendererTextureRef];
       this.program.bindTexture(texReg.texture);
-      this.program.glSetModelMatrix(entity.getModel());
+      this.program.glSetModelMatrix(model);
 
       if (!entity.rendererBufferId) {
         throw new Error("Unregistered entity buffer" + entity);
@@ -117,12 +124,9 @@ class Entity2DProgram {
     this.program.glSetViewMatrix(model);
   }
 
-  updatePerspective() {
+  updatePerspective(projectionMatrix: mat4) {
     this.program.bindProgram();
-    const translateSpace = mat4.create();
-    mat4.translate(translateSpace, translateSpace, vec3.fromValues(-1, -1, 0));
-    mat4.scale(translateSpace, translateSpace, vec3.fromValues(2.0, 2.0, 1.0));
-    this.program.glSetProjectMatrix(translateSpace);
+    this.program.glSetProjectMatrix(projectionMatrix);
   }
 }
 

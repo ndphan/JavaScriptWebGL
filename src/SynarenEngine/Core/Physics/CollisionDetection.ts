@@ -3,7 +3,7 @@ import Coordinate from "../Data/Coordinate";
 import Rect2d from "../Data/Rect2d";
 import { vec4, mat4 } from "gl-matrix";
 import Plane3d from "../../Entity/Plane3d";
-import Camera from "../Camera";
+import { BaseCamera } from "../Camera";
 
 export class Collision {
   willIntersect: boolean;
@@ -28,10 +28,22 @@ export class CollisionDetection {
     height2: number
   ) {
     return (
-      CollisionDetection.getLength(x1, 0, x2, 0) <= width1 / 2 + width2 / 2 &&
-      CollisionDetection.getLength(y1, 0, y2, 0) <= height1 / 2 + height2 / 2
+      CollisionDetection.getLength(x1 + width1 / 2, 0, x2 + width2 / 2, 0) <=
+        width1 / 2 + width2 / 2 &&
+      CollisionDetection.getLength(y1 + height1 / 2, 0, y2 + height2 / 2, 0) <=
+        height1 / 2 + height2 / 2
     );
   }
+
+  static isRectInRect(rect1: Rect2d, rect2: Rect2d): boolean {
+    return !(
+      rect1.x + rect1.width < rect2.x ||
+      rect1.y + rect1.height < rect2.y ||
+      rect1.x > rect2.x + rect2.width ||
+      rect1.y > rect2.y + rect2.height
+    );
+  }
+
   static isPointInRect(rect: Rect2d, coord: Coordinate): boolean {
     return this.isCollidingRect(
       rect.x,
@@ -45,7 +57,7 @@ export class CollisionDetection {
     );
   }
   static isPointInPlane3d(
-    camera: Camera,
+    camera: BaseCamera,
     obj: Plane3d,
     x: number,
     y: number

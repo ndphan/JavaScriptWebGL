@@ -9,7 +9,8 @@ export default class ShaderProgramColour extends BaseProgram {
   positionRef: ProgramReference;
   colorRef: ProgramReference;
   modelViewMatrixRef: ProgramReference;
-
+  viewMtrx: ProgramReference;
+  projMtrx: ProgramReference;
   arrayBuffer: ArrayBuffer;
 
   constructor(ctx: WebGLRenderingContext) {
@@ -27,6 +28,13 @@ export default class ShaderProgramColour extends BaseProgram {
     this.colorRef = new ProgramReference("a_color", ctx, true, this.program);
     this.modelViewMatrixRef = new ProgramReference(
       "u_model",
+      ctx,
+      false,
+      this.program
+    );
+    this.viewMtrx = new ProgramReference("u_view", ctx, false, this.program);
+    this.projMtrx = new ProgramReference(
+      "u_projection",
       ctx,
       false,
       this.program
@@ -74,7 +82,15 @@ export default class ShaderProgramColour extends BaseProgram {
     ctx.disableVertexAttribArray(this.colorRef.ref);
   }
 
+  glSetProjectMatrix(matrixArray: Float32List) {
+    this.ctx.uniformMatrix4fv(this.projMtrx.ref, false, matrixArray);
+  }
+
   glSetModelViewMatrix(matrixArray: Float32List) {
     this.ctx.uniformMatrix4fv(this.modelViewMatrixRef.ref, false, matrixArray);
+  }
+
+  glSetViewMatrix(matrixArray: Float32List) {
+    this.ctx.uniformMatrix4fv(this.viewMtrx.ref, false, matrixArray);
   }
 }

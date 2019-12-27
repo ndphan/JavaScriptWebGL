@@ -1,6 +1,8 @@
 import { ShaderType } from "../../Data/RenderOption";
 import ShaderProgramColour from "../ShaderProgram/ShaderColourProgram";
 import { ShaderEntity } from "../../EngineEntity/ShaderEntity";
+import { mat4 } from "gl-matrix";
+import { BaseCamera } from "../../Camera";
 
 class EntityColourProgram {
   program: ShaderProgramColour;
@@ -50,14 +52,22 @@ class EntityColourProgram {
     this.program.arrayBuffer.bufferBind(this.ctx);
   }
 
-  render(entities: ShaderEntity[]) {
+  render(entities: [ShaderEntity, Float32List][], camera: BaseCamera) {
     this.program.arrayBuffer.bind(this.ctx);
     this.program.bindAttributePointers();
     this.program.bindProgram();
+    this.program.glSetViewMatrix(camera.viewMatrix);
+    if (this.ctx.isEnabled(this.ctx.CULL_FACE)) {
+      this.ctx.disable(this.ctx.CULL_FACE);
+    }
+    if (this.ctx.isEnabled(this.ctx.DEPTH_TEST)) {
+      this.ctx.disable(this.ctx.DEPTH_TEST);
+    }
 
     for (let index = 0; index < entities.length; index++) {
-      const entity = entities[index];
-      const model = entity.getModel();
+      const data = entities[index];
+      const entity = data[0];
+      const model = data[1];
       if (!entity.rendererBufferId) {
         throw new Error("Unregistered entity buffer" + entity);
       }
@@ -87,6 +97,11 @@ class EntityColourProgram {
     this.program.arrayBuffer.push(objBuffer, size);
     object.rendererBufferId = this.program.arrayBuffer.bufferRegId;
     this.program.arrayBuffer.bufferRegId++;
+  }
+
+  updatePerspective(projectionMatrix: mat4) {
+    this.program.bindProgram();
+    this.program.glSetProjectMatrix(projectionMatrix);
   }
 }
 

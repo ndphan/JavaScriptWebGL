@@ -10,7 +10,7 @@ import { mat4, vec3 } from "gl-matrix";
 import Texture from "../../Buffer/Texture";
 import ProgramReference from "../Base/ProgramReference";
 import Light from "../../Data/Light";
-import Camera from "../../Camera";
+import { BaseCamera } from "../../Camera";
 
 export default class Shader3DProgram extends BaseProgram {
   static DRAW_VERTEX_SIZE = 8;
@@ -287,7 +287,7 @@ export default class Shader3DProgram extends BaseProgram {
     this.ctx.disableVertexAttribArray(this.shadowPos.ref);
   }
 
-  setLight(light: Light, camera: Camera) {
+  setLight(light: Light, camera: BaseCamera) {
     this.light = light;
     const lookAt = light.lookAt();
 

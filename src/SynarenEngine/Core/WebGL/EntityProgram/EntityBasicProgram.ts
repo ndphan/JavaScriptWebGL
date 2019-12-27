@@ -2,7 +2,7 @@ import ShaderBasicProgram from "../ShaderProgram/ShaderBasicProgram";
 import { ShaderType, RenderType } from "../../Data/RenderOption";
 import { ShaderEntity } from "../../EngineEntity/ShaderEntity";
 import { mat4 } from "gl-matrix";
-import Camera from "../../Camera";
+import { BaseCamera } from "../../Camera";
 
 class EntityBasicProgram {
   static DRAW_VERTEX_SIZE = 8;
@@ -54,9 +54,8 @@ class EntityBasicProgram {
     );
   }
   render(
-    entities: ShaderEntity[],
-
-    camera: Camera,
+    entities: [ShaderEntity, Float32List][],
+    camera: BaseCamera,
     textureReg: { [key: string]: any }
   ) {
     this.program.arrayBuffer.bind(this.ctx);
@@ -71,7 +70,9 @@ class EntityBasicProgram {
     }
 
     for (let index = 0; index < entities.length; index++) {
-      const entity = entities[index];
+      const data = entities[index];
+      const entity = data[0];
+      const model = data[1];
       const opt = entity.getOpt();
       if (!entity.rendererTextureRef) {
         throw new Error("Unregistered entity texture" + entity);
@@ -79,7 +80,7 @@ class EntityBasicProgram {
 
       const texReg = textureReg[entity.rendererTextureRef];
       this.program.bindTexture(texReg.texture);
-      this.program.glSetModelViewMatrix(entity.getModel());
+      this.program.glSetModelViewMatrix(model);
 
       if (!entity.rendererBufferId) {
         throw new Error("Unregistered entity buffer" + entity);

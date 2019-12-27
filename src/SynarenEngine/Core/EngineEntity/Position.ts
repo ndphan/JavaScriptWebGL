@@ -1,4 +1,6 @@
-class Position {
+import Rect2d from "../Data/Rect2d";
+
+class Position extends Rect2d {
   x: number = 0;
   y: number = 0;
   z: number = 0;
@@ -19,9 +21,8 @@ class Position {
   originZ: number = 0;
   maxHeight: number = 0;
   maxWidth: number = 0;
-
-  copy(): Position {
-    return JSON.parse(JSON.stringify(this));
+  constructor() {
+    super(0, 0, 0, 0, 0);
   }
 }
 

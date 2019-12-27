@@ -1,25 +1,18 @@
 import ShaderEntityBuilder from "../Builder/ShaderEntityBuilder";
 import Rect3d from "../Data/Rect3d";
 import RenderOption, { RenderType, ShaderType } from "../Data/RenderOption";
-import TextureVertexModel from "../Data/TextureVertexModel";
 import EngineHelper from "../EngineHelper";
 import EngineObject from "./EngineObject";
 import { ShaderEntity } from "./ShaderEntity";
+import TextureVertexModel from "../Data/TextureVertexModel";
 
 export default class ModelObjectRect3d extends EngineObject {
-  vertexModel: TextureVertexModel;
+  public vertexModel: TextureVertexModel;
+  public shaderEntity: ShaderEntity;
 
-  shaderEntity: ShaderEntity;
-  textureSource: string;
-
-  constructor(
-    rect: Rect3d,
-    vertexModel: TextureVertexModel,
-    textureSource: string
-  ) {
+  constructor(rect: Rect3d, vertexModel: TextureVertexModel) {
     super();
     this.vertexModel = vertexModel;
-    this.textureSource = textureSource;
     this.centerRect(rect);
     this.rotateOriginRect(rect);
     this.scaleRect(rect);
@@ -31,7 +24,7 @@ export default class ModelObjectRect3d extends EngineObject {
     renderOpt.shaderType = ShaderType.THREE_DIMENSION;
     this.shaderEntity = new ShaderEntityBuilder(engineHelper)
       .addBuffer(this.vertexModel)
-      .createTexture(this.textureSource)
+      .createTexture(this.vertexModel.textureSource)
       .build(this, renderOpt);
   }
 }

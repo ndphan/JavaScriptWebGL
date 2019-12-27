@@ -50,36 +50,70 @@ export class VertexBuilder {
     }
     return vertexConstruct;
   }
-  planeXYColor(width: number, height: number, colour: Colour): number[] {
+  triangleXYColour(colour: Colour): number[] {
+    const r = colour.r / 255.0;
+    const g = colour.g / 255.0;
+    const b = colour.b / 255.0;
+    const a = colour.a / 255.0;
     const _colour = [
-      -width / 2,
-      -height / 2,
+      1,
+      1,
       0,
-      colour.r,
-      colour.g,
-      colour.b,
-      colour.a,
-      width / 2,
-      -height / 2,
+      r,
+      g,
+      b,
+      a,
       0,
-      colour.r,
-      colour.g,
-      colour.b,
-      colour.a,
-      -width / 2,
-      height / 2,
+      1,
       0,
-      colour.r,
-      colour.g,
-      colour.b,
-      colour.a,
-      width / 2,
-      height / 2,
+      r,
+      g,
+      b,
+      a,
       0,
-      colour.r,
-      colour.g,
-      colour.b,
-      colour.a
+      0,
+      0,
+      r,
+      g,
+      b,
+      a
+    ];
+    return _colour;
+  }
+  planeXYColour(colour: Colour): number[] {
+    const r = colour.r / 255.0;
+    const g = colour.g / 255.0;
+    const b = colour.b / 255.0;
+    const a = colour.a / 255.0;
+    const _colour = [
+      0,
+      0,
+      0,
+      r,
+      g,
+      b,
+      a,
+      1,
+      0,
+      0,
+      r,
+      g,
+      b,
+      a,
+      0,
+      1,
+      0,
+      r,
+      g,
+      b,
+      a,
+      1,
+      1,
+      0,
+      r,
+      g,
+      b,
+      a
     ];
     return _colour;
   }
@@ -127,116 +161,120 @@ export class VertexBuilder {
     vertices[3].texture.u = uv[0];
     vertices[3].texture.v = uv[3];
   }
-
-  planeXY(plane: PlaneType, vertices: TextureRenderUnit[]) {
-    vertices[0].vertex.x = -plane.width / 2;
-    vertices[0].vertex.y = -plane.height / 2;
-    vertices[0].normal.z = plane.normalDirection;
-    vertices[1].vertex.x = -plane.width / 2;
-    vertices[1].vertex.y = plane.height / 2;
-    vertices[1].normal.z = plane.normalDirection;
-    vertices[2].vertex.x = plane.width / 2;
-    vertices[2].vertex.y = -plane.height / 2;
-    vertices[2].normal.z = plane.normalDirection;
-    vertices[3].vertex.x = plane.width / 2;
-    vertices[3].vertex.y = plane.height / 2;
-    vertices[3].normal.z = plane.normalDirection;
+  planeXY(vertices: TextureRenderUnit[]) {
+    this.plane(vertices, PlaneType.XY);
   }
-
   plane(vertices: TextureRenderUnit[], PLANE: PlaneType) {
     switch (PLANE) {
       case PlaneType.XY: {
-        vertices[0].vertex.x = -1 / 2;
-        vertices[0].vertex.y = -1 / 2;
+        vertices[0].vertex.x = 0;
+        vertices[0].vertex.y = 0;
         vertices[0].normal.z = -1;
-        vertices[1].vertex.x = -1 / 2;
-        vertices[1].vertex.y = 1 / 2;
+        vertices[1].vertex.x = 0;
+        vertices[1].vertex.y = 1;
         vertices[1].normal.z = -1;
-        vertices[2].vertex.x = 1 / 2;
-        vertices[2].vertex.y = -1 / 2;
+        vertices[2].vertex.x = 1;
+        vertices[2].vertex.y = 0;
         vertices[2].normal.z = -1;
-        vertices[3].vertex.x = 1 / 2;
-        vertices[3].vertex.y = 1 / 2;
+        vertices[3].vertex.x = 1;
+        vertices[3].vertex.y = 1;
         vertices[3].normal.z = -1;
         break;
       }
       case PlaneType.YX: {
-        vertices[0].vertex.x = 1 / 2;
-        vertices[0].vertex.y = 1 / 2;
+        vertices[0].vertex.x = 1;
+        vertices[0].vertex.y = 1;
         vertices[0].normal.z = 1;
-        vertices[2].vertex.x = 1 / 2;
-        vertices[2].vertex.y = -1 / 2;
+        vertices[2].vertex.x = 1;
+        vertices[2].vertex.y = 0;
         vertices[2].normal.z = 1;
-        vertices[1].vertex.x = -1 / 2;
-        vertices[1].vertex.y = 1 / 2;
+        vertices[1].vertex.x = 0;
+        vertices[1].vertex.y = 1;
         vertices[1].normal.z = 1;
-        vertices[3].vertex.x = -1 / 2;
-        vertices[3].vertex.y = -1 / 2;
+        vertices[3].vertex.x = 0;
+        vertices[3].vertex.y = 0;
         vertices[3].normal.z = 1;
         break;
       }
       case PlaneType.XZ: {
-        vertices[0].vertex.x = -1 / 2;
-        vertices[0].vertex.z = -1 / 2;
+        vertices[0].vertex.x = 0;
+        vertices[0].vertex.z = 0;
         vertices[0].normal.y = 1;
-        vertices[1].vertex.x = -1 / 2;
-        vertices[1].vertex.z = 1 / 2;
+        vertices[1].vertex.x = 0;
+        vertices[1].vertex.z = 1;
         vertices[1].normal.y = 1;
-        vertices[2].vertex.x = 1 / 2;
-        vertices[2].vertex.z = -1 / 2;
+        vertices[2].vertex.x = 1;
+        vertices[2].vertex.z = 0;
         vertices[2].normal.y = 1;
-        vertices[3].vertex.x = 1 / 2;
-        vertices[3].vertex.z = 1 / 2;
+        vertices[3].vertex.x = 1;
+        vertices[3].vertex.z = 1;
         vertices[3].normal.y = 1;
         break;
       }
       case PlaneType.ZX: {
-        vertices[0].vertex.x = 1 / 2;
-        vertices[0].vertex.z = 1 / 2;
+        vertices[0].vertex.x = 1;
+        vertices[0].vertex.z = 1;
         vertices[0].normal.y = -1;
-        vertices[2].vertex.x = 1 / 2;
-        vertices[2].vertex.z = -1 / 2;
+        vertices[2].vertex.x = 1;
+        vertices[2].vertex.z = 0;
         vertices[2].normal.y = -1;
-        vertices[1].vertex.x = -1 / 2;
-        vertices[1].vertex.z = 1 / 2;
+        vertices[1].vertex.x = 0;
+        vertices[1].vertex.z = 1;
         vertices[1].normal.y = -1;
-        vertices[3].vertex.x = -1 / 2;
-        vertices[3].vertex.z = -1 / 2;
+        vertices[3].vertex.x = 0;
+        vertices[3].vertex.z = 0;
         vertices[3].normal.y = -1;
         break;
       }
       case PlaneType.YZ: {
-        vertices[0].vertex.y = -1 / 2;
-        vertices[0].vertex.z = -1 / 2;
+        vertices[0].vertex.y = 0;
+        vertices[0].vertex.z = 0;
         vertices[0].normal.x = -1;
-        vertices[1].vertex.y = -1 / 2;
-        vertices[1].vertex.z = 1 / 2;
+        vertices[1].vertex.y = 0;
+        vertices[1].vertex.z = 1;
         vertices[1].normal.x = -1;
-        vertices[2].vertex.y = 1 / 2;
-        vertices[2].vertex.z = -1 / 2;
+        vertices[2].vertex.y = 1;
+        vertices[2].vertex.z = 0;
         vertices[2].normal.x = -1;
-        vertices[3].vertex.y = 1 / 2;
-        vertices[3].vertex.z = 1 / 2;
+        vertices[3].vertex.y = 1;
+        vertices[3].vertex.z = 1;
         vertices[3].normal.x = -1;
         break;
       }
       case PlaneType.ZY: {
-        vertices[0].vertex.y = 1 / 2;
-        vertices[0].vertex.z = 1 / 2;
+        vertices[0].vertex.y = 1;
+        vertices[0].vertex.z = 1;
         vertices[0].normal.x = 1;
-        vertices[2].vertex.y = 1 / 2;
-        vertices[2].vertex.z = -1 / 2;
+        vertices[2].vertex.y = 1;
+        vertices[2].vertex.z = 0;
         vertices[2].normal.x = 1;
-        vertices[1].vertex.y = -1 / 2;
-        vertices[1].vertex.z = 1 / 2;
+        vertices[1].vertex.y = 0;
+        vertices[1].vertex.z = 1;
         vertices[1].normal.x = 1;
-        vertices[3].vertex.y = -1 / 2;
-        vertices[3].vertex.z = -1 / 2;
+        vertices[3].vertex.y = 0;
+        vertices[3].vertex.z = 0;
         vertices[3].normal.x = 1;
         break;
       }
       default:
         break;
     }
+  }
+  circleXYColour(segments: number, colour: Colour): number[] {
+    const r = colour.r / 255.0;
+    const g = colour.g / 255.0;
+    const b = colour.b / 255.0;
+    const a = colour.a / 255.0;
+    const increment = (2 * Math.PI) / segments;
+    const vertices = [];
+    for (let angle = -Math.PI / 2; angle < Math.PI / 2; angle += increment) {
+      const x = Math.sin(angle);
+      const y = Math.cos(angle);
+      vertices.push(x, y, 0);
+      vertices.push(r, g, b, a);
+      vertices.push(x, -y, 0);
+      vertices.push(r, g, b, a);
+    }
+    return vertices;
   }
 }

@@ -34,7 +34,7 @@ class WebGLContext {
   }
 
   resizeViewPort(canvas: HTMLCanvasElement) {
-    this.ctx.viewport(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+    this.ctx.viewport(0, 0, canvas.width, canvas.height);
   }
 
   getWebGL2RenderingContext(): WebGL2RenderingContext {

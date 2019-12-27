@@ -19,20 +19,20 @@ export interface EngineEvent {
 }
 
 export default class Events {
-  eventDown: boolean = false;
-  touchDown: boolean = false;
-  eventDownX: number = 0.0;
-  eventDownY: number = 0.0;
-  eventDownDx: number = 0.0;
-  eventDownDy: number = 0.0;
-  keyDownMap: { [key: string]: boolean } = {};
-  prevEvent: number = 0.0;
-  timeStamp: number = 0.0;
-  prevTimeStamp: number = 0.0;
-  motionTimeStamp: number = 0.0;
-  orientationQuaternion = [0.0, 0.0, 0.0, 0.0];
-  orientation: string | number;
-  NULL_EVENT = {
+  private eventDown: boolean = false;
+  private touchDown: boolean = false;
+  private eventDownX: number = 0.0;
+  private eventDownY: number = 0.0;
+  private eventDownDx: number = 0.0;
+  private eventDownDy: number = 0.0;
+  private keyDownMap: { [key: string]: boolean } = {};
+  private prevEvent: number = 0.0;
+  private timeStamp: number = 0.0;
+  private prevTimeStamp: number = 0.0;
+  private motionTimeStamp: number = 0.0;
+  private orientationQuaternion = [0.0, 0.0, 0.0, 0.0];
+  private orientation: string | number;
+  private NULL_EVENT = {
     x: 0,
     y: 0,
     dx: 0,
@@ -58,15 +58,8 @@ export default class Events {
   static boundedWindow = false;
 
   callback: Function;
-  webGLContainer: WebGLContainer;
-
-  ax = 0;
-  ay = 0;
-  az = 0;
-
-  initialAngle = false;
-
-  throttle = 1000.0 / 25.0;
+  private webGLContainer: WebGLContainer;
+  private throttle = 1000.0 / 25.0;
 
   setThrottle = (throttle: number) => {
     if (throttle) {
@@ -306,27 +299,23 @@ export default class Events {
   };
 
   handleTouchEnd = (evt: TouchEvent) => {
-    if (evt.touches.length > 0 && evt.target instanceof HTMLElement) {
-      this.touchDown = false;
-      this.timeStamp = evt.timeStamp;
-      this.eventDownX = evt.touches[0].clientX - evt.target.offsetLeft;
-      this.eventDownY = evt.touches[0].clientY - evt.target.offsetTop;
-      this.callback(this.buildEvent(evt, Events.UP));
-      this.prevEvent = Events.UP;
-      this.prevTimeStamp = evt.timeStamp;
-    }
+    this.touchDown = false;
+    this.timeStamp = evt.timeStamp;
+    this.callback(this.buildEvent(evt, Events.UP));
+    this.prevEvent = Events.UP;
+    this.prevTimeStamp = evt.timeStamp;
   };
 
   handleTouchStart = (evt: TouchEvent) => {
+    this.touchDown = true;
+    this.timeStamp = evt.timeStamp;
     if (evt.target instanceof HTMLElement) {
-      this.touchDown = true;
       this.eventDownX = evt.touches[0].clientX - evt.target.offsetLeft;
       this.eventDownY = evt.touches[0].clientY - evt.target.offsetTop;
-      this.timeStamp = evt.timeStamp;
-      this.callback(this.buildEvent(evt, Events.DOWN));
-      this.prevEvent = Events.DOWN;
-      this.prevTimeStamp = evt.timeStamp;
     }
+    this.callback(this.buildEvent(evt, Events.DOWN));
+    this.prevEvent = Events.DOWN;
+    this.prevTimeStamp = evt.timeStamp;
   };
 
   handleTouchMove = (evt: TouchEvent) => {

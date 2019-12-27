@@ -47,11 +47,27 @@ export class WebGLContainer {
 
   resize(measureElement: HTMLElement) {
     const width = measureElement.offsetWidth;
-    const height = width / this.aspectRatio;
-    this.canvas.width = width;
-    this.canvas.height = height;
+    const height = width / this.getAspectRatio();
+    this.canvas.width = width * window.devicePixelRatio;
+    this.canvas.height = height * window.devicePixelRatio;
     this.canvas.style.height = `${height}px`;
     this.canvas.style.width = `${width}px`;
+  }
+
+  getAspectRatio() {
+    let aspectRatio = this.aspectRatio;
+    if (!aspectRatio) {
+      const width =
+        window.innerWidth ||
+        document.documentElement.clientWidth ||
+        document.body.clientWidth;
+      const height =
+        window.innerHeight ||
+        document.documentElement.clientHeight ||
+        document.body.clientHeight;
+      aspectRatio = width / height;
+    }
+    return aspectRatio;
   }
 
   getCtx(): WebGLRenderingContext {
@@ -61,7 +77,7 @@ export class WebGLContainer {
     if (!ctx) {
       throw new Error("WebGL not avaliable");
     }
-    return ctx;
+    return ctx as WebGLRenderingContext;
   }
 }
 
@@ -105,13 +121,14 @@ export default class App {
     this.args = args;
     this.buildCanvas(args);
 
-    this.setFPS(args.fps);
     this.isStepRender = args.isStepRender || false;
     event.bind(this.onEvent, this.webGLContainer);
     event.setThrottle(args.eventThrottle || 1000.0 / 25.0);
 
     this.errorCallback = args.error;
     this.setup();
+
+    this.setFPS(args.fps);
   }
 
   setFPS(fps: number) {
@@ -286,7 +303,7 @@ export default class App {
     this.webGLContainer = new WebGLContainer(
       args.canvasId,
       appElement,
-      args.aspectRatio || 2.414,
+      args.aspectRatio,
       this.setup
     );
     this.resizeCanvas(appElement);

@@ -1,12 +1,10 @@
 import {
   BitmapConfigParser,
   Coordinate,
-  Cube,
   EngineEvent,
   EngineHelper,
   EngineObject,
   Events,
-  Ground3d,
   Light,
   ModelObject3d,
   Object3d,
@@ -15,9 +13,12 @@ import {
   PlaneType,
   Rect3d,
   RenderType,
-  ResourceResolver,
-  Sphere
+  ResourceResolver
 } from "../../SynarenEngine";
+
+import Ground3d from "./Ground3d";
+import Cube from "./Cube";
+import Sphere from "./Sphere";
 
 export default class World extends ObjectManager {
   fontCacheId: number;
@@ -43,35 +44,58 @@ export default class World extends ObjectManager {
 
   update() {
     this.entities.forEach((ent: EngineObject) => ent.update(this.engineHelper));
-    const [x, y, z] = this.engineHelper.camera.getPos();
+    const { x, y, z } = this.engineHelper.camera.camera3d.position;
     this.sky.center(x, y, z);
   }
 
   event(event: EngineEvent) {
     super.event(event);
     if (event.eventType === Events.DRAG) {
-      this.engineHelper.camera.rotateAngleY(-event.dxRaw);
-      this.engineHelper.camera.rotateAngleX(event.dyRaw);
-      this.engineHelper.camera.updateProjectionView();
+      this.engineHelper.camera.camera3d.angleY(-event.dxRaw);
+      this.engineHelper.camera.camera3d.angleX(event.dyRaw);
+      this.engineHelper.camera.camera3d.updateProjectionView();
     }
   }
 
   loadResources() {
     this.engineHelper
       .getResource("assets/sphere.txt")
-      .then(ResourceResolver.objResolver(this.engineHelper, "sphere_cw"));
+      .then(
+        ResourceResolver.objResolverMultiple(this.engineHelper, [
+          { textureSource: "assets/background.jpg", name: "background" },
+          { textureSource: "assets/sun.png", name: "sun" }
+        ])
+      );
 
     this.engineHelper
       .getResource("assets/low_poly_tree.txt")
-      .then(ResourceResolver.objResolver(this.engineHelper, "low_poly_tree"));
+      .then(
+        ResourceResolver.objResolver(
+          this.engineHelper,
+          "assets/low_poly_tree.png",
+          "low_poly_tree"
+        )
+      );
 
     this.engineHelper
       .getResource("assets/low_poly_girl.txt")
-      .then(ResourceResolver.objResolver(this.engineHelper, "low_poly_girl"));
+      .then(
+        ResourceResolver.objResolver(
+          this.engineHelper,
+          "assets/low_poly_girl.png",
+          "low_poly_girl"
+        )
+      );
 
     this.engineHelper
       .getResource("assets/racing_car.txt")
-      .then(ResourceResolver.objResolver(this.engineHelper, "racing_car"));
+      .then(
+        ResourceResolver.objResolver(
+          this.engineHelper,
+          "assets/racing_car.png",
+          "racing_car"
+        )
+      );
 
     this.engineHelper
       .getResource("assets/paprika.fnt")
@@ -88,13 +112,12 @@ export default class World extends ObjectManager {
     const length = 30;
     const width = 20;
 
-    this.engineHelper.camera.setPos(0, 2, length / 2 - 4);
-    this.engineHelper.camera.updateProjectionView();
+    this.engineHelper.camera.camera3d.center(0, 2, length / 2 - 4);
+    this.engineHelper.camera.camera3d.updateProjectionView();
 
     this.sky = new Sphere(
       new Rect3d(0.0, 2.0, 0.0, 30.0, 32.0, 30.0),
-      "sphere_cw",
-      "assets/background.jpg"
+      "background"
     );
     // render without shadows and lighting
     this.sky.setRenderType(RenderType.PLAIN);
@@ -102,8 +125,7 @@ export default class World extends ObjectManager {
 
     this.lowPolyGirl = new Object3d(
       new Rect3d(-4, 0.95, 5, 1.0, 1.0, 1.0),
-      "low_poly_girl",
-      "assets/low_poly_girl.png"
+      "low_poly_girl"
     );
     this.lowPolyGirl.angleY(240);
     this.lowPolyGirl.scale(0.7, 0.7, 0.7);
@@ -111,16 +133,14 @@ export default class World extends ObjectManager {
 
     this.racingCar = new Object3d(
       new Rect3d(0, -0.25, 0, 1.5, 1.5, 1.5),
-      "racing_car",
-      "assets/racing_car.png"
+      "racing_car"
     );
     this.racingCar.angleY(135);
     this.addEntity(this.racingCar);
 
     this.ground = new Ground3d(
       new Rect3d(0.0, 0.0, 0.0, width, 0, length),
-      this.engineHelper.getUVCache("grass"),
-      "assets/atlas.png"
+      "grass"
     );
     this.ground.event = (
       event: EngineEvent,
@@ -134,14 +154,14 @@ export default class World extends ObjectManager {
           new Coordinate(event.x, event.y, 0)
         );
         if (clickedElement) {
-          const cameraX = engineHelper.camera.x;
-          const cameraZ = engineHelper.camera.z;
+          const cameraX = engineHelper.camera.camera3d.position.x;
+          const cameraZ = engineHelper.camera.camera3d.position.z;
           const dx = Math.abs(cameraX - clickedElement.position.x);
           const dz = Math.abs(cameraZ - clickedElement.position.z);
           const totalDist = Math.sqrt(dx * dx + dz * dz);
           const speed = 1 / 200;
           const time = totalDist / speed;
-          engineHelper.camera.moveTo(
+          engineHelper.camera.camera3d.pan(
             time,
             clickedElement.position.x,
             undefined,
@@ -192,11 +212,7 @@ export default class World extends ObjectManager {
     };
     this.addEntity(this.cube2);
 
-    this.sun = new Sphere(
-      new Rect3d(0.0, 10, -15, 1.0, 1.0, 1.0),
-      "sphere_cw",
-      "assets/sun.png"
-    );
+    this.sun = new Sphere(new Rect3d(0.0, 10, -15, 1.0, 1.0, 1.0), "sun");
     this.sun.setRenderType(RenderType.PLAIN);
     this.sun.update = function() {
       this.position.ay++;
@@ -214,8 +230,7 @@ export default class World extends ObjectManager {
     const treeCreator = (l: number, w: number) => {
       const tree = new Object3d(
         new Rect3d(l, 0, w, 1.0, 1.0, 1.0),
-        "low_poly_tree",
-        "assets/low_poly_tree.png"
+        "low_poly_tree"
       );
       const heightRand = Math.random() * 0.8 - 0.8;
       const scale = 3.5 + heightRand;
@@ -232,16 +247,11 @@ export default class World extends ObjectManager {
       treeCreator(w - width / 2, length / 2 - 1);
     }
 
-    const groundUV = this.engineHelper.getUVCache("ground");
-    const vertexModel = this.engineHelper.createPlaneVertexModel(
-      groundUV,
+    const vertexModel = this.engineHelper.newVertexModel(
+      "ground",
       PlaneType.XZ
     );
-    this.road = new Plane3d(
-      new Rect3d(0, 0.01, 0.0, 1, 1, 1),
-      vertexModel,
-      "assets/atlas.png"
-    );
+    this.road = new Plane3d(new Rect3d(0, 0.01, 0.0, 1, 1, 1), vertexModel);
     this.road.scale(3, 1, (2 * width) / Math.sqrt(2));
     this.road.angleY(-45);
     this.addEntity(this.road);

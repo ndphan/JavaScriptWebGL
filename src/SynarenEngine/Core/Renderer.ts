@@ -89,8 +89,11 @@ export class RendererNotification {
     RendererNotification.NOTIFICATION_RENDER_KEY,
     "RENDER_ENTITY"
   );
-  static renderEntity = (entity: ShaderEntity) =>
-    NotificationPayload.from(RendererNotification.RENDER_ENTITY, [entity]);
+  static renderEntity = (entity: ShaderEntity, model: Float32List) =>
+    NotificationPayload.from(RendererNotification.RENDER_ENTITY, [
+      entity,
+      model
+    ]);
 }
 
 class Renderer {
@@ -103,7 +106,7 @@ class Renderer {
   textureReg: { [key: string]: any } = {};
   world: WorldDelegate;
   camera: Camera;
-  _defRenderEntites: { [key: number]: any } = {};
+  _renderEntities: { [key: number]: [ShaderEntity, Float32List][] } = {};
   notificationQueue: NotificationQueue;
   subscriberPool: SubscriberPool;
   glContext: WebGLContext;
@@ -144,10 +147,16 @@ class Renderer {
 
   updatePerspective = () => {
     if (this.shader3DProgram) {
-      this.shader3DProgram.updatePerspective(this.camera.frustum);
+      this.shader3DProgram.updatePerspective(this.camera.camera3d.frustum);
     }
     if (this.shaderBasicProgram) {
-      this.shaderBasicProgram.updatePerspective(this.camera.frustum);
+      this.shaderBasicProgram.updatePerspective(this.camera.camera3d.frustum);
+    }
+    if (this.shader2DProgram) {
+      this.shader2DProgram.updatePerspective(this.camera.camera2d.frustum);
+    }
+    if (this.shaderColourProgram) {
+      this.shaderColourProgram.updatePerspective(this.camera.camera2d.frustum);
     }
   };
 
@@ -179,7 +188,7 @@ class Renderer {
 
   setLighting = (light: Light) => {
     if (this.shader3DProgram) {
-      this.shader3DProgram.setLight(light, this.camera);
+      this.shader3DProgram.setLight(light, this.camera.camera3d);
     } else {
       throw new Error("Lighting is set without any 3D entities");
     }
@@ -219,36 +228,52 @@ class Renderer {
     return program;
   };
 
-  _defRender = () => {
-    const entites3DFull = this._defRenderEntites[ShaderType.THREE_DIMENSION]
-      .full;
-    if (entites3DFull.length > 0) {
-      this.shader3DProgram.render3DShadowMap(
-        entites3DFull,
-        this.resizeViewPort
+  _defRenderTop(isTop: boolean) {
+    const model3d = this._renderEntities[ShaderType.THREE_DIMENSION].filter(
+      e => !!e[0].isTop === isTop
+    );
+    if (model3d.length > 0) {
+      this.shader3DProgram.render3DShadowMap(model3d, this.resizeViewPort);
+      this.shader3DProgram.render(
+        model3d,
+        this.camera.camera3d,
+        this.textureReg
       );
-      this.shader3DProgram.render(entites3DFull, this.camera, this.textureReg);
     }
     // render 3D basic
-    const entites3DPlain = this._defRenderEntites[ShaderType.THREE_DIMENSION]
-      .plain;
-    if (entites3DPlain.length > 0) {
+    const modelPlain3d = this._renderEntities[
+      ShaderType.THREE_DIMENSION | RenderType.PLAIN
+    ].filter(e => !!e[0].isTop === isTop);
+    if (modelPlain3d.length > 0) {
       this.shaderBasicProgram.render(
-        entites3DPlain,
-        this.camera,
+        modelPlain3d,
+        this.camera.camera3d,
         this.textureReg
       );
     }
     // render colour
-    const colourEntites = this._defRenderEntites[ShaderType.COLOUR];
-    if (colourEntites.length > 0) {
-      this.shaderColourProgram.render(colourEntites);
+    const colourModel = this._renderEntities[ShaderType.COLOUR].filter(
+      e => !!e[0].isTop === isTop
+    );
+    if (colourModel.length > 0) {
+      this.shaderColourProgram.render(colourModel, this.camera.camera2d);
     }
     // render 2D
-    const entities2D = this._defRenderEntites[ShaderType.TWO_DIMENSION];
-    if (entities2D.length > 0) {
-      this.shader2DProgram.render(entities2D, this.textureReg);
+    const model2d = this._renderEntities[ShaderType.TWO_DIMENSION].filter(
+      e => !!e[0].isTop === isTop
+    );
+    if (model2d.length > 0) {
+      this.shader2DProgram.render(
+        model2d,
+        this.camera.camera2d,
+        this.textureReg
+      );
     }
+  }
+
+  _defRender = () => {
+    this._defRenderTop(false);
+    this._defRenderTop(true);
   };
 
   init() {
@@ -268,18 +293,25 @@ class Renderer {
     }
   }
 
-  _render = (entity: ShaderEntity) => {
+  _render = (entity: ShaderEntity, model: Float32List) => {
+    if (entity.hidden) {
+      return;
+    }
+
     const opt = entity.getOpt();
+    const payload: [ShaderEntity, Float32List] = [entity, model];
     if (ShaderType.COLOUR === opt.shaderType) {
-      this._defRenderEntites[ShaderType.COLOUR].push(entity);
+      this._renderEntities[ShaderType.COLOUR].push(payload);
     } else if (ShaderType.THREE_DIMENSION === opt.shaderType) {
       if (this._isPlain(opt)) {
-        this._defRenderEntites[ShaderType.THREE_DIMENSION].plain.push(entity);
+        this._renderEntities[
+          ShaderType.THREE_DIMENSION | RenderType.PLAIN
+        ].push(payload);
       } else {
-        this._defRenderEntites[ShaderType.THREE_DIMENSION].full.push(entity);
+        this._renderEntities[ShaderType.THREE_DIMENSION].push(payload);
       }
     } else if (ShaderType.TWO_DIMENSION === opt.shaderType) {
-      this._defRenderEntites[ShaderType.TWO_DIMENSION].push(entity);
+      this._renderEntities[ShaderType.TWO_DIMENSION].push(payload);
     }
   };
 
@@ -309,7 +341,6 @@ class Renderer {
       } else if (!this.shader3DProgram) {
         this.shader3DProgram = new Entity3DProgram(this.ctx);
       }
-      this.updatePerspective();
     } else if (ShaderType.TWO_DIMENSION === opt.shaderType) {
       if (!this.shader2DProgram) {
         this.shader2DProgram = new Entity2DProgram(this.ctx);
@@ -318,6 +349,8 @@ class Renderer {
       console.error(this, opt);
       throw new Error("unsupported opt shader type");
     }
+
+    this.updatePerspective();
   }
 
   registerEntity(object: ShaderEntity, modelData: ModelData) {
@@ -333,20 +366,22 @@ class Renderer {
   }
 
   _resetDefferred = () => {
-    this._defRenderEntites = {};
-    this._defRenderEntites[ShaderType.COLOUR] = [];
-    this._defRenderEntites[ShaderType.TWO_DIMENSION] = [];
-    this._defRenderEntites[ShaderType.THREE_DIMENSION] = {
-      full: [],
-      plain: []
-    };
+    this._renderEntities = {};
+    // @ts-ignore
+    this._renderEntities[ShaderType.COLOUR] = [];
+    // @ts-ignore
+    this._renderEntities[ShaderType.TWO_DIMENSION] = [];
+    // @ts-ignore
+    this._renderEntities[ShaderType.THREE_DIMENSION] = [];
+    // @ts-ignore
+    this._renderEntities[ShaderType.THREE_DIMENSION | RenderType.PLAIN] = [];
   };
 
   handleNotification = (notification: NotificationPayload) => {
     let updatePerspective = false;
     switch (notification.action) {
       case RendererNotification.RENDER_ENTITY.action:
-        this._render(notification.data[0]);
+        this._render(notification.data[0], notification.data[1]);
         break;
       case RendererNotification.UPDATE_PROJECTION_MATRIX.action:
         updatePerspective = true;
@@ -381,9 +416,8 @@ class Renderer {
 
     this.readMessages(RendererNotification.NOTIFICATION_PRE_RENDER_KEY, true);
 
-    if (this.camera.requireUpdateViewMtrx) {
-      this.camera.commitProjectionView();
-    }
+    this.camera.commitProjectionView();
+
     engineHelper.setTime(time);
 
     // reinitialse next cycle

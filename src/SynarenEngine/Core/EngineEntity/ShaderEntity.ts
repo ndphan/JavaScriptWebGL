@@ -1,6 +1,7 @@
 import RenderOption from "../Data/RenderOption";
 import VertexModel from "../Data/VertexModel";
 import { mat4 } from "gl-matrix";
+import Position from "./Position";
 
 export class ShaderEntity {
   opt: RenderOption = new RenderOption();
@@ -8,7 +9,9 @@ export class ShaderEntity {
   rendererBufferId?: number;
   rendererTextureRef?: string;
   src?: string;
-
+  hidden: boolean;
+  isTop: boolean;
+  modelPosition: () => Position;
   model: () => mat4;
 
   getVertexModel(): VertexModel {

@@ -1,15 +1,16 @@
 import Timer from "../Common/Timer";
+import ModelPosition from "../EngineEntity/ModelPosition";
 import { CollisionDetection } from "./CollisionDetection";
-import EngineObject from "../EngineEntity/EngineObject";
 
 export default class Physics {
-  static TIME_STEP_MILLIS = 60;
+  static TIME_STEP_MILLIS = 10;
   static simulations: {
-    [key: string]:
+    [key: number]:
       | {
           timer: Timer;
           totalRunTime: number;
           runTime: number;
+          totalIterations: number;
           simulation: (
             simulationId: number,
             timeStep: number,
@@ -22,11 +23,11 @@ export default class Physics {
   static simulationIdCurrent = 0;
   static simulationLoop: NodeJS.Timeout | undefined;
   static physicsEntities: {
-    [key: number]: { entity: EngineObject; enabled: boolean };
+    [key: number]: { entity: ModelPosition; enabled: boolean };
   } = {};
   static physicsEntityIdCount = 0;
 
-  static registerPhysics(entity: EngineObject) {
+  static registerPhysics(entity: ModelPosition) {
     if (!entity.$physicsId) {
       entity.$physicsId = Physics.physicsEntityIdCount++;
 
@@ -36,19 +37,41 @@ export default class Physics {
       };
     }
   }
-  static setEnabledPhysics(entity: EngineObject, enabled: boolean) {
+  static deregisterPhysics(entity: ModelPosition) {
+    if (
+      entity.$physicsId !== undefined &&
+      this.physicsEntities[entity.$physicsId]
+    ) {
+      delete this.physicsEntities[entity.$physicsId];
+    }
+  }
+  static setEnabledPhysics(entity: ModelPosition, enabled: boolean) {
     if (this.physicsEntities[entity.$physicsId]) {
       this.physicsEntities[entity.$physicsId].enabled = enabled;
     }
   }
-  static isColliding2d(
-    entity: EngineObject,
+  static isCollidingOffset2d(
+    entity: ModelPosition,
     dx: number,
     dy: number
-  ): EngineObject[] {
-    const isColliding = [];
+  ): ModelPosition[] {
     const px = entity.position.x + dx;
     const py = entity.position.y + dy;
+    return Physics.isCollidingPos2d(entity, px, py);
+  }
+
+  static isCollidingPoint2d(entity: ModelPosition): ModelPosition[] {
+    const px = entity.position.x;
+    const py = entity.position.y;
+    return Physics.isCollidingPos2d(entity, px, py);
+  }
+
+  private static isCollidingPos2d(
+    entity: ModelPosition,
+    px: number,
+    py: number
+  ): ModelPosition[] {
+    const collision: ModelPosition[] = [];
     for (const key in this.physicsEntities) {
       if (this.physicsEntities.hasOwnProperty(key)) {
         const physicsEntity = this.physicsEntities[key];
@@ -68,19 +91,27 @@ export default class Physics {
             entity.position.height
           );
           if (colliding) {
-            isColliding.push(physicsEntity.entity);
+            collision.push(physicsEntity.entity);
           }
         }
       }
     }
-    return isColliding;
+    return collision;
   }
+
   static generateSimulationId() {
     const simulationId = this.simulationIdCurrent;
     this.simulationIdCurrent += 1;
     return simulationId;
   }
   static cancelSimulation(simulationId: number) {
+    const data = this.simulations[simulationId];
+    if (!data) {
+      return;
+    }
+    if (data.completeSimulation) {
+      data.completeSimulation();
+    }
     delete this.simulations[simulationId];
   }
   static physicsLoop() {
@@ -89,17 +120,15 @@ export default class Physics {
       if (this.simulations.hasOwnProperty(simulationId)) {
         const data = this.simulations[simulationId];
         if (data) {
-          const time = data.timer.peak() / 1000.0;
+          const time = data.timer.peak();
           data.runTime += time;
-          if (data.runTime < data.totalRunTime) {
+          if (data.totalIterations === 0 || data.runTime < data.totalRunTime) {
             data.simulation(+simulationId, time, data.totalRunTime);
           } else {
-            if (data.completeSimulation) {
-              data.completeSimulation();
-            }
-            delete this.simulations[simulationId];
+            this.cancelSimulation((simulationId as unknown) as number);
           }
           data.timer.start();
+          data.totalIterations += 1;
           simulationCount++;
         } else {
           delete this.simulations[simulationId];
@@ -131,6 +160,7 @@ export default class Physics {
         simulation: simulation,
         totalRunTime: totalRunTime,
         completeSimulation: completeSimulation,
+        totalIterations: 0,
         runTime: 0.0
       };
     } else {

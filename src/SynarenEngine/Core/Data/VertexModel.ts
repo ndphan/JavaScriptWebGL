@@ -1,14 +1,16 @@
 import ModelData from "./ModelData";
 import EngineHelper from "../EngineHelper";
+import { RenderUnit } from "./RenderUnit";
 
 abstract class VertexModel {
-  vertexBufferId: number;
+  public vertexBufferId: number;
+  public renderUnits: RenderUnit[];
 
-  abstract createRenderUnits(count: number): VertexModel;
-  abstract fillRenderUnits(vertexUV: number[]): void;
-  abstract createModel(): ModelData;
+  public abstract createRenderUnits(count: number): VertexModel;
+  public abstract fillRenderUnits(vertexUV: number[]): void;
+  public abstract createModel(): ModelData;
 
-  registerModel(engineHelper: EngineHelper) {
+  public registerModel(engineHelper: EngineHelper) {
     if (!this.vertexBufferId) {
       this.vertexBufferId = engineHelper.addBufferCache(this.createModel());
     }

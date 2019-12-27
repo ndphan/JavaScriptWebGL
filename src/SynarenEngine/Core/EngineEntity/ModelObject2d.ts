@@ -1,22 +1,18 @@
-import EngineObject from "./EngineObject";
-import RenderOption, { ShaderType, RenderType } from "../Data/RenderOption";
 import ShaderEntityBuilder from "../Builder/ShaderEntityBuilder";
-import { ShaderEntity } from "./ShaderEntity";
-import EngineHelper from "../EngineHelper";
-import VertexModel from "../Data/VertexModel";
 import Rect2d from "../Data/Rect2d";
+import RenderOption, { RenderType, ShaderType } from "../Data/RenderOption";
+import TextureVertexModel from "../Data/TextureVertexModel";
+import EngineHelper from "../EngineHelper";
+import EngineObject from "./EngineObject";
 
 export default class ModelObject2d extends EngineObject {
-  vertexModel: VertexModel;
-  shaderEntity: ShaderEntity;
-  textureSource: string;
+  public vertexModel: TextureVertexModel;
 
-  constructor(rect: Rect2d, vertexModel: VertexModel, textureSource: string) {
+  constructor(rect: Rect2d, vertexModel: TextureVertexModel) {
     super();
     this.vertexModel = vertexModel;
-    this.textureSource = textureSource;
     this.centerRect(rect);
-    this.rotateOriginRect(rect);
+    this.rotateOriginRect(rect.center());
     this.scaleRect(rect);
   }
 
@@ -26,7 +22,7 @@ export default class ModelObject2d extends EngineObject {
     renderOpt.shaderType = ShaderType.TWO_DIMENSION;
     this.shaderEntity = new ShaderEntityBuilder(engineHelper)
       .addBuffer(this.vertexModel)
-      .createTexture(this.textureSource)
+      .createTexture(this.vertexModel.textureSource)
       .build(this, renderOpt);
   }
 }

@@ -6,6 +6,7 @@ import FontMetaData from "./Data/FontMetaData";
 import Light from "./Data/Light";
 import ModelData from "./Data/ModelData";
 import PlaneType from "./Data/PlaneType";
+import { ShaderType } from "./Data/RenderOption";
 import TextureVertexModel from "./Data/TextureVertexModel";
 import EngineObjectHelper from "./EngineEntity/EngineObjectHelper";
 import { ShaderEntity } from "./EngineEntity/ShaderEntity";
@@ -19,8 +20,8 @@ export default class EngineHelper {
   bufferCache: { [key: number]: ModelData } = {};
   fontCache: { [key: number]: { meta: FontMetaData; font: Font } } = {};
   fontNameKeyReverse: { [key: string]: number } = {};
-  uvCache: { [key: string]: number[] } = {};
-  vertexUVCache: { [key: string]: number[] } = {};
+  uvCache: { [key: string]: { source: string; uv: number[] } } = {};
+  vertexUVCache: { [key: string]: { source: string; uv: number[] } } = {};
   camera: Camera;
   time: number;
   cacheId: number = 0;
@@ -42,8 +43,17 @@ export default class EngineHelper {
   }
 
   render(entity: ShaderEntity) {
+    const shaderProgram = entity.opt.shaderType;
+    if (
+      (shaderProgram === ShaderType.TWO_DIMENSION ||
+        shaderProgram === ShaderType.COLOUR) &&
+      this.camera.camera2d.isOutOfBound(entity.modelPosition())
+    ) {
+      return;
+    }
+
     this.notificationQueue.pushPayload(
-      RendererNotification.renderEntity(entity)
+      RendererNotification.renderEntity(entity, entity.getModel())
     );
   }
 
@@ -60,20 +70,6 @@ export default class EngineHelper {
 
   getFPS(): number {
     return this.fps;
-  }
-
-  zoomIn() {
-    this.camera.zoomIn();
-    this.notificationQueue.push(RendererNotification.UPDATE_PROJECTION_MATRIX);
-  }
-
-  zoomOut() {
-    this.camera.zoomOut();
-    this.notificationQueue.push(RendererNotification.UPDATE_PROJECTION_MATRIX);
-  }
-
-  getAspect(): number {
-    return this.camera.aspect;
   }
 
   getTotalPixelHeight(): number {
@@ -225,59 +221,72 @@ export default class EngineHelper {
     }
   }
 
-  create2DPlaneVertexModelCacheId(cacheId: string): TextureVertexModel {
-    const uv = this.getUVCache(cacheId);
-    const vertexModel = new TextureVertexModel().createRenderUnits(4);
-    EngineObjectHelper.vertex.plane(vertexModel.renderUnits, PlaneType.YX);
-    EngineObjectHelper.vertex.planeUV(vertexModel.renderUnits, uv);
+  newVertexModel2d(cacheId: string): TextureVertexModel {
+    return this.newVertexModel(cacheId, PlaneType.YX);
+  }
+
+  newVertexModelUv3d(cacheId: string): TextureVertexModel {
+    const cache = this.vertexUVCache[cacheId];
+    const vertexModel = new TextureVertexModel().fillRenderUnits(cache.uv);
+    vertexModel.textureSource = cache.source;
     return vertexModel;
   }
 
-  createPlaneVertexModelCacheId(
-    cacheId: string,
+  createPlaneVertexModel(
+    src: string,
+    uv: number[],
     plane: PlaneType
   ): TextureVertexModel {
-    const uv = this.getUVCache(cacheId);
     const vertexModel = new TextureVertexModel().createRenderUnits(4);
+    vertexModel.textureSource = src;
     EngineObjectHelper.vertex.plane(vertexModel.renderUnits, plane);
     EngineObjectHelper.vertex.planeUV(vertexModel.renderUnits, uv);
     return vertexModel;
   }
 
-  createPlaneVertexModel(uv: number[], plane: PlaneType): TextureVertexModel {
-    const vertexModel = new TextureVertexModel().createRenderUnits(4);
-    EngineObjectHelper.vertex.plane(vertexModel.renderUnits, plane);
-    EngineObjectHelper.vertex.planeUV(vertexModel.renderUnits, uv);
-    return vertexModel;
+  getUVCache(name: string): number[] {
+    return this.uvCache[name].uv;
   }
 
-  getUVCache(name: string) {
-    return this.uvCache[name];
+  addUVCache(source: string, name: string, uv: number[]) {
+    this.uvCache[name] = { source: source, uv: uv };
   }
 
-  addUVCache(name: string, uv: number[]) {
-    this.uvCache[name] = uv;
+  getVertexUvCache(name: string): number[] {
+    return this.vertexUVCache[name].uv;
   }
 
-  getVertexUvCache(name: string) {
-    return this.vertexUVCache[name];
+  newVertexModel(cacheId: string, plane: PlaneType): TextureVertexModel {
+    const cache = this.uvCache[cacheId];
+    return this.createPlaneVertexModel(cache.source, cache.uv, plane);
   }
 
-  addVertexUvCache(name: string, vertexUv: number[]) {
-    this.vertexUVCache[name] = vertexUv;
+  addVertexUvCache(textureSource: string, name: string, vertexUv: number[]) {
+    this.vertexUVCache[name] = { source: textureSource, uv: vertexUv };
   }
 
-  writeFont(fontId: number | string, fontRef: FontReference): FontReference {
-    let fontCacheId: number;
-    if (typeof fontId === "string") {
-      fontCacheId = this.fontNameKeyReverse[fontId];
-    } else if (typeof fontId === "number") {
-      fontCacheId = fontId;
-    } else {
+  writeFont(fontRef: FontReference): FontReference {
+    let fontCacheId: number | undefined = undefined;
+    if (typeof fontRef.$cacheId === "string") {
+      fontCacheId = this.fontNameKeyReverse[fontRef.$cacheId];
+    } else if (typeof fontRef.$cacheId === "number") {
+      fontCacheId = fontRef.$cacheId;
+    } else if (fontRef.$cacheId !== undefined) {
       throw new Error("fontId is not a number or string");
     }
-    const font = this.fontCache[fontCacheId].font;
+    let font: Font;
+    if (fontCacheId === undefined) {
+      font = Font.DefaultFont;
+    } else {
+      font = this.fontCache[fontCacheId].font;
+    }
     return font.writeRef(fontRef);
+  }
+
+  updateProjectionMatrix() {
+    this.notificationQueue.pushPayload(
+      RendererNotification.UPDATE_PROJECTION_MATRIX
+    );
   }
 }
 

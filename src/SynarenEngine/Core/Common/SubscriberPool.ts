@@ -39,8 +39,8 @@ class SubscriberPool {
     this.subscribers = {};
   }
 
-  listen(subscription: Subscription, callback: (data: any) => void) {
-    this.getSubscriptionListeners(subscription).listen(callback);
+  listen(subscription: Subscription, callback: (data: any) => void): number {
+    return this.getSubscriptionListeners(subscription).listen(callback);
   }
 
   getSubscriptionListeners(subscription: Subscription) {

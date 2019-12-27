@@ -22,7 +22,8 @@ module.exports = {
   'no-invalid-this': 0,
   '@typescript-eslint/no-non-null-assertion': 0,
   '@typescript-eslint/no-explicit-any': 0,
-  'no-unused-vars': 0
+  'no-unused-vars': 0,
+  'guard-for-in': 0
  },
  env: {
   browser: true,

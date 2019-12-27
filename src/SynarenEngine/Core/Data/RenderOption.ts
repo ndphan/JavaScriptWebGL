@@ -5,9 +5,9 @@ export class ShaderType {
 }
 
 export class RenderType {
-  static PLAIN = 1;
-  static TRIANGLE = 2;
-  static RECTANGLE = 3;
+  static PLAIN = 4;
+  static TRIANGLE = 5;
+  static RECTANGLE = 6;
 }
 
 export default class RenderOption {

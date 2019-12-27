@@ -5,19 +5,15 @@ import Physics from "../Physics/Physics";
 import Position from "./Position";
 import ConfigMapBuilder from "../Builder/ConfigMapBuilder";
 import { FontReference } from "../Font/Font";
+import EntityManager2d from "../../Manager/EntityManager2d";
 
-class EngineMap extends EngineObject {
-  objects: EngineObject[] = [];
+class EngineMap extends EntityManager2d {
   $ref: { [key: string]: { entity: EngineObject; position: Position } } = {};
-  get $hidden(): boolean {
-    return false;
-  }
-  set $hidden(_: boolean) {}
   show: boolean = false;
   configBuilder?: ConfigMapBuilder;
 
   reset() {
-    this.objects = [];
+    this.entities = [];
     this.$ref = {};
   }
 
@@ -36,9 +32,9 @@ class EngineMap extends EngineObject {
     if (this.show) {
       this.beforeShow();
     }
-    this.objects.forEach((ent: EngineObject) => {
+    this.entities.forEach((ent: EngineObject) => {
       Physics.setEnabledPhysics(ent, show);
-      ent.$hidden = false;
+      ent.hidden = !show;
     });
     if (this.show) {
       this.restore();
@@ -54,12 +50,12 @@ class EngineMap extends EngineObject {
     }
   }
 
-  addObject(object: EngineObject): EngineMap {
-    if (!this.$ref[object.$id]) {
-      this.objects.push(object);
-      this.$ref[object.$id] = {
-        entity: object,
-        position: object.position
+  addEntity(entity: EngineObject): EngineMap {
+    if (!this.$ref[entity.$id]) {
+      this.entities.push(entity);
+      this.$ref[entity.$id] = {
+        entity: entity,
+        position: entity.position
       };
     }
     return this;
@@ -69,10 +65,10 @@ class EngineMap extends EngineObject {
     if (!this.show) {
       return;
     }
-    this.objects.forEach((ent: EngineObject) => ent.update(engineHelper));
+    this.entities.forEach((ent: EngineObject) => ent.update(engineHelper));
     if (this.configBuilder) {
       this.configBuilder.texts.forEach((fontRef: FontReference) =>
-        engineHelper.writeFont(fontRef.$cacheId!, fontRef)
+        engineHelper.writeFont(fontRef)
       );
     }
   }
@@ -80,24 +76,24 @@ class EngineMap extends EngineObject {
     if (!this.show) {
       return;
     }
-    this.objects
-      .filter((ent: EngineObject) => !ent.$hidden)
-      .forEach((ent: EngineObject) => ent.render(engineHelper));
+    this.entities.forEach((ent: EngineObject) => ent.render(engineHelper));
   }
   event(event: EngineEvent, engineHelper: EngineHelper): void {
     if (!this.show) {
       return;
     }
-    this.objects.forEach((ent: EngineEntity) => ent.event(event, engineHelper));
+    this.entities.forEach((ent: EngineEntity) =>
+      ent.event(event, engineHelper)
+    );
   }
   init(engineHelper: EngineHelper) {
-    this.objects.forEach((ent: EngineEntity) => ent.init(engineHelper));
+    this.entities.forEach((ent: EngineEntity) => ent.init(engineHelper));
   }
   parseMap(engineHelper: EngineHelper, map: any) {
     this.configBuilder = new ConfigMapBuilder(engineHelper);
     this.configBuilder.build(map);
     this.configBuilder.objects.forEach((ent: EngineObject) =>
-      this.addObject(ent)
+      this.addEntity(ent)
     );
   }
 }

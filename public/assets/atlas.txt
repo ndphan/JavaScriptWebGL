@@ -1,3 +1,4 @@
+$source = ./assets/atlas.png
 blockface = 0 0 200 200
 blockside = 201 0 200 200
 buttongreen = 404 402 85 27

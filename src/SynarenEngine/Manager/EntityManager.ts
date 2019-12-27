@@ -62,6 +62,16 @@ class EntityManager extends EngineObject {
   initEntity(engineHelper: EngineHelper) {
     this.entities.forEach(a => a.init(engineHelper));
   }
+
+  render(engineHelper: EngineHelper) {
+    this.entities.forEach(entity => entity.render(engineHelper));
+    super.render(engineHelper);
+  }
+
+  update(engineHelper: EngineHelper) {
+    this.entities.forEach(entity => entity.update(engineHelper));
+    super.update(engineHelper);
+  }
 }
 
 export default EntityManager;

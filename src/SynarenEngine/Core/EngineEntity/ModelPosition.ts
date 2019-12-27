@@ -1,8 +1,10 @@
 import { quat, mat4, glMatrix } from "gl-matrix";
 import Rect3d from "../Data/Rect3d";
 import Position from "./Position";
+import Coordinate from "../Data/Coordinate";
 
 export default class ModelPosition {
+  $physicsId: number;
   position: Position = new Position();
   cachedModel: mat4;
   dirtyModel = true;
@@ -38,13 +40,21 @@ export default class ModelPosition {
     this.rotateOrigin(rect.x, rect.y, rect.z);
   }
 
+  centerCoord(coord: Coordinate) {
+    this.center(coord.x, coord.y, coord.z);
+  }
+
   center(x: number, y: number, z: number) {
     this.position.x = x;
     this.position.y = y;
     this.position.z = z;
     this.dirtyPos = true;
     this.dirtyModel = true;
-    this.rotateOrigin(this.position.x, this.position.y, this.position.z);
+    this.rotateOrigin(
+      x + this.position.width / 2.0,
+      y + this.position.height / 2.0,
+      z + this.position.length / 2.0
+    );
   }
 
   rotateOrigin(x: number, y: number, z: number) {
@@ -112,18 +122,13 @@ export default class ModelPosition {
     this.position.scaleZ = z;
     this.position.width = x;
     this.position.height = y;
+    this.position.length = z;
     this.dirtyScale = true;
     this.dirtyModel = true;
   }
 
   scaleRect(rect: Rect3d) {
-    this.position.scaleX = rect.width;
-    this.position.scaleY = rect.height;
-    this.position.scaleZ = rect.length;
-    this.position.width = rect.width;
-    this.position.height = rect.height;
-    this.dirtyScale = true;
-    this.dirtyModel = true;
+    this.scale(rect.width, rect.height, rect.length);
   }
 
   translate(dx: number, dy: number, dz: number) {
@@ -132,7 +137,11 @@ export default class ModelPosition {
     this.position.z += dz;
     this.dirtyPos = true;
     this.dirtyModel = true;
-    this.rotateOrigin(this.position.x, this.position.y, this.position.z);
+    this.rotateOrigin(
+      this.position.x + this.position.width / 2.0,
+      this.position.y + this.position.height / 2.0,
+      this.position.z + this.position.length / 2.0
+    );
   }
 
   _buildQuat() {
@@ -284,12 +293,8 @@ export default class ModelPosition {
   }
 
   setRect(rect: Rect3d) {
-    this.position.x = rect.x;
-    this.position.y = rect.y;
-    this.position.z = rect.z;
-    this.position.width = rect.width;
-    this.position.height = rect.height;
-    this.position.length = rect.length;
+    this.scaleRect(rect);
+    this.centerRect(rect);
   }
 
   getRect(): Rect3d {

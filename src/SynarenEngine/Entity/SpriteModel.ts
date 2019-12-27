@@ -1,5 +1,4 @@
 import Plane2d from "./Plane2d";
-import PlaneType from "../Core/Data/PlaneType";
 import Timer from "../Core/Common/Timer";
 import EntityManager2d from "../Manager/EntityManager2d";
 import EngineHelper from "../Core/EngineHelper";
@@ -7,23 +6,16 @@ import Rect2d from "../Core/Data/Rect2d";
 
 export default class SpriteModel extends EntityManager2d {
   spriteIdx = 0;
-  timer = new Timer();
-  ticks: number;
-  textureSource: string;
-  uvCacheId: string[];
-  constructor(
-    rect: Rect2d,
-    textureSource: string,
-    ticks: number,
-    uvCacheId: string[]
-  ) {
+  private timer = new Timer();
+  private ticks: number;
+  private textures: string[];
+  constructor(rect: Rect2d, ticks: number, textures: string[]) {
     super();
     this.setRect(rect);
     this.ticks = ticks;
-    this.textureSource = textureSource;
-    this.uvCacheId = uvCacheId;
+    this.textures = textures;
   }
-  update(engineHelper: EngineHelper) {}
+  update(_: EngineHelper) {}
   render(engineHelper: EngineHelper) {
     this.entities[this.spriteIdx].render(engineHelper);
     this.calcSpriteIdx();
@@ -46,13 +38,8 @@ export default class SpriteModel extends EntityManager2d {
     }
   }
   init(engineHelper: EngineHelper) {
-    for (let index = 0; index < this.uvCacheId.length; index++) {
-      const uvCacheId = this.uvCacheId[index];
-      const uv = engineHelper.getUVCache(uvCacheId);
-      const vertexModel = engineHelper.createPlaneVertexModel(uv, PlaneType.YX);
-      this.entities.push(
-        new Plane2d(this.getRect(), vertexModel, this.textureSource)
-      );
+    for (let index = 0; index < this.textures.length; index++) {
+      this.entities.push(new Plane2d(this.getRect(), this.textures[index]));
     }
     this.center(this.position.x, this.position.y, this.position.z);
     this.rotateOrigin(this.position.x, this.position.y, this.position.z);

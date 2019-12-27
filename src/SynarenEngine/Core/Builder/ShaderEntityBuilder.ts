@@ -35,6 +35,7 @@ class ShaderEntityBuilder {
     entityOption.renderType = opt.renderType;
     entityOption.shaderType = opt.shaderType;
     entity.model = engineObject.getModel;
+    entity.modelPosition = () => engineObject.position;
     entity.vertexModel = this.vertexModel;
     entity.vertexModel.registerModel(this.engineHelper);
     this.engineHelper.registerEntity(entity);

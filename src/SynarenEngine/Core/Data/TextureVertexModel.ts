@@ -6,6 +6,7 @@ import EngineObjectHelper from "../EngineEntity/EngineObjectHelper";
 class TextureVertexModel extends VertexModel {
   vertexBufferId: number;
   renderUnits: TextureRenderUnit[];
+  textureSource: string;
   createRenderUnits(count: number): TextureVertexModel {
     this.renderUnits = [];
     for (let index = 0; index < count; index++) {

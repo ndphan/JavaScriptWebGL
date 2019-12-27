@@ -2,7 +2,7 @@ import Shader3DProgram from "../ShaderProgram/Shader3DProgram";
 import { ShaderType, RenderType } from "../../Data/RenderOption";
 import { mat4 } from "gl-matrix";
 import Light from "../../Data/Light";
-import Camera from "../../Camera";
+import { BaseCamera } from "../../Camera";
 import { ShaderEntity } from "../../EngineEntity/ShaderEntity";
 
 class Entity3DProgram {
@@ -23,7 +23,7 @@ class Entity3DProgram {
     this.program.delete();
   }
 
-  setLight(light: Light, camera: Camera) {
+  setLight(light: Light, camera: BaseCamera) {
     this.program.setLight(light, camera);
   }
 
@@ -58,12 +58,14 @@ class Entity3DProgram {
     );
   }
 
-  _render3DShadowEntities(entities: ShaderEntity[]) {
+  _render3DShadowEntities(entities: [ShaderEntity, Float32List][]) {
     for (let index = 0; index < entities.length; index++) {
-      const entity = entities[index];
+      const data = entities[index];
+      const entity = data[0];
+      const model = data[1];
       const opt = entity.getOpt();
 
-      this.program.glSetShadowModelMatrix(entity.getModel());
+      this.program.glSetShadowModelMatrix(model);
 
       if (!entity.rendererBufferId) {
         throw new Error("Unregistered entity buffer" + entity);
@@ -89,7 +91,10 @@ class Entity3DProgram {
     this.program.bindShadowTexture();
   }
 
-  render3DShadowMap(entities: ShaderEntity[], setOriginalViewport: Function) {
+  render3DShadowMap(
+    entities: [ShaderEntity, Float32List][],
+    setOriginalViewport: Function
+  ) {
     if (!this.program.isShadowEnabled) {
       return;
     }
@@ -103,9 +108,8 @@ class Entity3DProgram {
     this._setupShadow();
   }
   render(
-    entities: ShaderEntity[],
-
-    camera: Camera,
+    entities: [ShaderEntity, Float32List][],
+    camera: BaseCamera,
     textureReg: { [key: string]: any }
   ) {
     this.program.arrayBuffer.bind(this.ctx);
@@ -120,7 +124,9 @@ class Entity3DProgram {
     }
 
     for (let index = 0; index < entities.length; index++) {
-      const entity = entities[index];
+      const data = entities[index];
+      const entity = data[0];
+      const model = data[1];
       const opt = entity.getOpt();
       if (!entity.rendererTextureRef) {
         throw new Error("Unregistered entity texture" + entity);
@@ -128,7 +134,7 @@ class Entity3DProgram {
 
       const texReg = textureReg[entity.rendererTextureRef];
       this.program.bindTexture(texReg.texture);
-      this.program.glSetModelViewMatrix(entity.getModel());
+      this.program.glSetModelViewMatrix(model);
 
       if (!entity.rendererBufferId) {
         throw new Error("Unregistered entity buffer" + entity);

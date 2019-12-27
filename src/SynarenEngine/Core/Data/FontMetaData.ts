@@ -3,6 +3,7 @@ export class FontMeta {
   height: number;
   width: number;
   fonts: { [key: string]: FontCharacter } = {};
+  lineHeight: number;
 }
 
 export class FontCharacter {
@@ -12,6 +13,8 @@ export class FontCharacter {
   height: number;
   charCode: number;
   char: string;
+  xOffset: number;
+  yOffset: number;
 }
 
 class FontMetaData {
