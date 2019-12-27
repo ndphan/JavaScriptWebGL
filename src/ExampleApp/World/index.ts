@@ -251,9 +251,10 @@ export default class World extends ObjectManager {
       "ground",
       PlaneType.XZ
     );
-    this.road = new Plane3d(new Rect3d(0, 0.01, 0.0, 1, 1, 1), vertexModel);
-    this.road.scale(3, 1, (2 * width) / Math.sqrt(2));
+    this.road = new Plane3d(new Rect3d(0, 0.01, 0, 3, 1, (2 * width) / Math.sqrt(2)), vertexModel);
     this.road.angleY(-45);
+    this.road.center(-2, 0.01, -15);
+
     this.addEntity(this.road);
 
     // initialise all the engine objects
