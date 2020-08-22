@@ -219,7 +219,7 @@ class Moveable extends EntityManager {
       this.physics.collisionIteration++;
       if (this.physics.collisionIteration > this.physics.collisionStopItThres) {
         const simulation = Physics.simulations[simulationId];
-        if (simulation && simulation.completeSimulation) {
+        if (simulation?.completeSimulation) {
           simulation.completeSimulation();
         }
         Physics.cancelSimulation(simulationId);

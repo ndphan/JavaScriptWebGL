@@ -47,7 +47,7 @@ export { default as EntityManager2d } from "./Manager/EntityManager2d";
 export {
   default as BitmapConfigParser
 } from "./AssetLoader/BitmapConfigParser";
-export { default as BMFontReader } from "./AssetLoader/FntFontReader";
+export { default as FntFontReader } from "./AssetLoader/FntFontReader";
 export { default as VertexParser } from "./AssetLoader/VertexParser";
 export { default as Button } from "./Interface/Button";
 export { default as ProgressBar } from "./Interface/ProgressBar";
