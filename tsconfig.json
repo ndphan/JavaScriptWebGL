@@ -5,7 +5,6 @@
     "moduleResolution": "node",
     "sourceMap": true,
     "outDir": "typings",
-    "rootDir": "src",
     "declaration": true,
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,

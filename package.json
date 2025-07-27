@@ -13,6 +13,8 @@
     "lint": "eslint --fix --ignore-pattern node_modules/ --ext .ts src/**",
     "build": "tsc --outDir dist --declaration --emitDeclarationOnly false && webpack --mode production --config webpack.config.js",
     "build:dev": "webpack --mode development --config webpack.config.js",
+    "build:example": "webpack --mode production --config webpack.config.example.js",
+    "serve:example": "webpack serve --mode development --config webpack.config.example.js",
     "link": "yarn build && yarn link",
     "unlink": "yarn unlink"
   },
@@ -47,6 +49,7 @@
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.0.2",
+    "typescript-eslint": "^8.38.0",
     "typescript-tslint-plugin": "^1.0.2",
     "webpack": "^5.76.2",
     "webpack-cli": "^5.0.1",
