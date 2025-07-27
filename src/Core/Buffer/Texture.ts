@@ -5,12 +5,7 @@ class TextureLoader {
     return new Promise((resolve, reject) => {
       this.image = document.createElement("img");
       if (window.location.origin !== "file://") {
-        this.image.crossOrigin = "";
-      }
-      // @ts-ignore
-      if (window.$Synaren?.baseUrl) {
-        // @ts-ignore
-        src = `${window.$Synaren.baseUrl}${src}`;
+        this.image.crossOrigin = "anonymous";
       }
       this.image.onload = () => resolve();
       this.image.onerror = (error) => reject(error);

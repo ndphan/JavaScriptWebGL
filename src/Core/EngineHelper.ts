@@ -138,11 +138,6 @@ export default class EngineHelper {
   getResource(src: string): Promise<RetrieveResource> {
     const promise = new Promise<RetrieveResource>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      // @ts-ignore
-      if (window.$Synaren?.baseUrl) {
-        // @ts-ignore
-        src = `${window.$Synaren.baseUrl}${src}`;
-      }
       console.log(`Loading resource ${src}`);
       xhr.open("GET", src);
       xhr.onreadystatechange = () => {
