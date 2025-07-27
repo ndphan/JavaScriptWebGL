@@ -1,10 +1,10 @@
 export default class PlaneType {
-  static XY = new PlaneType('XY', 0, 0, 0, 0);
-  static YX = new PlaneType('YX', 0, 0, 0, 0);
-  static XZ = new PlaneType('XZ', 0, 0, 0, 0);
-  static ZX = new PlaneType('ZX' ,0, 0, 0, 0);
-  static YZ = new PlaneType('YZ', 0, 0, 0, 0);
-  static ZY = new PlaneType('ZY', 0, 0, 0, 0);
+  static XY = new PlaneType("XY", 0, 0, 0, 0);
+  static YX = new PlaneType("YX", 0, 0, 0, 0);
+  static XZ = new PlaneType("XZ", 0, 0, 0, 0);
+  static ZX = new PlaneType("ZX", 0, 0, 0, 0);
+  static YZ = new PlaneType("YZ", 0, 0, 0, 0);
+  static ZY = new PlaneType("ZY", 0, 0, 0, 0);
   static BACKWARDS = -1;
   static FORWARD = 1;
 

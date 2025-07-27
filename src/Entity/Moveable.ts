@@ -154,7 +154,7 @@ class Moveable extends EntityManager {
         complete();
       };
     }
-  
+
     physics.simulationId = Physics.runSimulation(
       totalTime,
       this.moveSimulation.bind(this),
@@ -257,11 +257,7 @@ class Moveable extends EntityManager {
       simulationId
     );
   }
-  physicSimulation = (
-    simulationId: number,
-    time: number,
-    _: number
-  ) => {
+  physicSimulation = (simulationId: number, time: number, _: number) => {
     const physics = this.physics;
     physics.isMoving = true;
 
@@ -374,7 +370,7 @@ class Moveable extends EntityManager {
 
   copyTexture(obj: EngineObject) {
     this.shaderEntity ? super.copyTexture(obj) : undefined;
-    this.entities.forEach(entity => entity.copyTexture(obj));
+    this.entities.forEach((entity) => entity.copyTexture(obj));
   }
 }
 

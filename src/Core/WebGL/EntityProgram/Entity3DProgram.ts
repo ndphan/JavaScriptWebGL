@@ -37,9 +37,8 @@ class Entity3DProgram {
       return;
     }
 
-    const buffReg = this.program.arrayBuffer.bufferReg[
-      entity.rendererBufferId!
-    ];
+    const buffReg =
+      this.program.arrayBuffer.bufferReg[entity.rendererBufferId!];
     if (!buffer || buffer.length !== buffReg.verticesSize) {
       console.error(
         "New Buffer data does not match initial buffer data!",
@@ -69,9 +68,8 @@ class Entity3DProgram {
         throw new Error("Unregistered entity buffer" + entity);
       }
 
-      const buffReg = this.program.arrayBuffer.bufferReg[
-        entity.rendererBufferId
-      ];
+      const buffReg =
+        this.program.arrayBuffer.bufferReg[entity.rendererBufferId];
 
       if (opt.renderType === RenderType.TRIANGLE) {
         this.ctx.drawArrays(this.ctx.TRIANGLES, buffReg.offset, buffReg.size);
@@ -148,9 +146,8 @@ class Entity3DProgram {
       if (!entity.rendererBufferId) {
         throw new Error("Unregistered entity buffer" + entity);
       }
-      const buffReg = this.program.arrayBuffer.bufferReg[
-        entity.rendererBufferId
-      ];
+      const buffReg =
+        this.program.arrayBuffer.bufferReg[entity.rendererBufferId];
       if (opt.renderType === RenderType.TRIANGLE) {
         this.ctx.drawArrays(this.ctx.TRIANGLES, buffReg.offset, buffReg.size);
       } else {

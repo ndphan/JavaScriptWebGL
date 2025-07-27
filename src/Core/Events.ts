@@ -50,7 +50,7 @@ export default class Events {
     orientationQuaternion: [0, 0, 0, 0],
     rawEvent: undefined,
     isDown: false,
-    isUp: false
+    isUp: false,
   };
 
   static DOWN = 1;
@@ -63,7 +63,7 @@ export default class Events {
   static SYSTEM_EVENTS = 8;
   boundedWindow = false;
 
-  callback: (EngineEventCallback)[] = [];
+  callback: EngineEventCallback[] = [];
   private webGLContainer: WebGLContainer;
   private throttle = 1000.0 / 25.0;
 
@@ -254,7 +254,7 @@ export default class Events {
       orientationQuaternion: this.orientationQuaternion,
       rawEvent: evt,
       isDown: type === Events.DOWN,
-      isUp: type === Events.UP
+      isUp: type === Events.UP,
     };
   };
 
@@ -270,7 +270,7 @@ export default class Events {
       event: evt,
       keyDown: this.keyDownMap,
       isDown: type === Events.DOWN,
-      isUp: type === Events.UP
+      isUp: type === Events.UP,
     };
   };
 
@@ -380,7 +380,7 @@ export default class Events {
 
   handleEvent = (evt: Event, event: Events[keyof Events]) => {
     const targetEvent = this.buildEvent(evt, event);
-    for(let i = 0; i < this.callback.length; i++) {
+    for (let i = 0; i < this.callback.length; i++) {
       const callbackPropagate = this.callback[i](targetEvent);
       if (callbackPropagate === false) {
         break;

@@ -14,7 +14,12 @@ import EngineHelper from "../Core/EngineHelper";
 
 export default class LineColour extends EngineObject {
   vertexModel: VertexModel;
-  constructor(private point1: Coordinate, private point2: Coordinate, private thickness: number, private rgba: Colour) {
+  constructor(
+    private point1: Coordinate,
+    private point2: Coordinate,
+    private thickness: number,
+    private rgba: Colour
+  ) {
     super();
   }
 

@@ -84,7 +84,7 @@ class EngineMap extends EntityManager2d {
     if (!this.show) {
       return;
     }
-    
+
     for (const entities of this.entities) {
       if (entities.isLastEvent) {
         continue;
@@ -100,7 +100,7 @@ class EngineMap extends EntityManager2d {
       if (!entities.isLastEvent) {
         continue;
       }
-      
+
       const shouldPropagate = entities.event(event, engineHelper);
       if (shouldPropagate === false) {
         return false;

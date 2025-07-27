@@ -55,14 +55,14 @@ export class WebGLContainer {
 
     if (this.isFullScreen) {
       width = window.innerWidth;
-      height = window.innerHeight
+      height = window.innerHeight;
     }
 
     this.canvas.width = width * window.devicePixelRatio;
     this.canvas.height = height * window.devicePixelRatio;
 
     this.canvas.style.height = `${height}px`;
-    this.canvas.style.width = `${width}px`;  
+    this.canvas.style.width = `${width}px`;
   }
 
   getAspectRatio() {
@@ -164,7 +164,11 @@ export default class App {
       this.subscriberPool
     );
 
-    this.camera.setupCamera(args.camera, args.aspectRatio, this.webGLContainer.canvas);
+    this.camera.setupCamera(
+      args.camera,
+      args.aspectRatio,
+      this.webGLContainer.canvas
+    );
     this.engineHelper = new EngineHelper(
       this.notificationQueue,
       this.subscriberPool,
@@ -179,7 +183,7 @@ export default class App {
     if (event.eventType === Events.RESIZE) {
       this.resizeScreen();
     }
-    if(this.world) {
+    if (this.world) {
       this.world.event(event);
     }
     return true;
@@ -297,9 +301,12 @@ export default class App {
           `startup time: ${new Date().getTime() - startTime.getTime()}`
         )
       )
-      .then(() => new Promise(function (resolve) {
-        setTimeout(resolve, 1)
-      }))
+      .then(
+        () =>
+          new Promise(function (resolve) {
+            setTimeout(resolve, 1);
+          })
+      )
       .catch(this.onRunError);
   };
 
@@ -310,7 +317,11 @@ export default class App {
   resizeScreen = () => {
     const measureElement = document.getElementById(this.args.elementId)!;
     this.resizeCanvas(measureElement);
-    this.camera.setupCamera(this.args.camera, this.args.aspectRatio, this.webGLContainer.canvas);
+    this.camera.setupCamera(
+      this.args.camera,
+      this.args.aspectRatio,
+      this.webGLContainer.canvas
+    );
     this.notificationQueue.push(RendererNotification.RESIZE_SCREEN);
     if (this.isStepRender && this.ready) {
       this.animationFrame();

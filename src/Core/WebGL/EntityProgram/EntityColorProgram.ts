@@ -27,9 +27,8 @@ class EntityColourProgram {
       return;
     }
 
-    const buffReg = this.program.arrayBuffer.bufferReg[
-      entity.rendererBufferId!
-    ];
+    const buffReg =
+      this.program.arrayBuffer.bufferReg[entity.rendererBufferId!];
     if (!buffer || buffer.length !== buffReg.verticesSize) {
       console.error(
         "New Buffer data does not match initial buffer data!",
@@ -69,9 +68,8 @@ class EntityColourProgram {
       if (!entity.rendererBufferId) {
         throw new Error("Unregistered entity buffer" + entity);
       }
-      const buffReg = this.program.arrayBuffer.bufferReg[
-        entity.rendererBufferId
-      ];
+      const buffReg =
+        this.program.arrayBuffer.bufferReg[entity.rendererBufferId];
       this.program.glSetModelViewMatrix(model);
       this.ctx.drawArrays(
         this.ctx.TRIANGLE_STRIP,

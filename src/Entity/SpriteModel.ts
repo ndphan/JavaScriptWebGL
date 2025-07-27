@@ -44,10 +44,10 @@ export default class SpriteModel extends EntityManager2d {
     for (let index = 0; index < this.textures.length; index++) {
       this.entities.push(new Plane2d(this.getRect(), this.textures[index]));
     }
-    this.entities.forEach(e => {
+    this.entities.forEach((e) => {
       e.setTop(this.isTop);
       e.hidden = this.hidden;
-    })
+    });
     this.center(this.position.x, this.position.y, this.position.z);
     this.rotateOrigin(this.position.x, this.position.y, this.position.z);
     this.rotateZ(180);

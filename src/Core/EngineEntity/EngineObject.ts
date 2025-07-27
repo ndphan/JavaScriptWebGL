@@ -56,7 +56,9 @@ abstract class EngineObject extends ModelPosition implements EngineEntity {
   }
   update(engineHelper: EngineHelper) {}
   render(engineHelper: EngineHelper) {}
-  event(event: EngineEvent, engineHelper: EngineHelper): boolean | undefined { return; }
+  event(event: EngineEvent, engineHelper: EngineHelper): boolean | undefined {
+    return;
+  }
   init(engineHelper: EngineHelper) {}
 }
 

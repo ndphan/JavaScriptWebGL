@@ -37,8 +37,10 @@ class BitmapConfigParser {
         .replace("\r", "")
         .replace("\n", "");
 
-      if(window.location.origin === "file://") {
-        console.info("file based loading should not have ./ in front of the source")
+      if (window.location.origin === "file://") {
+        console.info(
+          "file based loading should not have ./ in front of the source"
+        );
       }
 
       return;

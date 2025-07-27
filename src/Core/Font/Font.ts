@@ -250,7 +250,7 @@ export class FontReference {
     return this;
   }
   setText(text: string): FontReference {
-    if(this._hidden) {
+    if (this._hidden) {
       this.prevText = text;
       this.text = "";
     } else {
@@ -266,11 +266,11 @@ export class FontReference {
     return this;
   }
   set hidden(hidden: boolean) {
-    if(!this._hidden && hidden) {
+    if (!this._hidden && hidden) {
       this.prevText = this.text;
       this.text = "";
       this.isDirtyText = true;
-    } else if(this._hidden && !hidden) {
+    } else if (this._hidden && !hidden) {
       this.text = this.prevText ?? "";
       this.prevText = "";
       this.isDirtyText = true;
@@ -342,7 +342,7 @@ class Font implements EngineEntity {
     }
     if (!fontRef.fontSize) {
       if (!fontRef.width) {
-        if (!this.warningShown){
+        if (!this.warningShown) {
           this.warningShown = true;
           console.warn(
             "Either font size or width needs to be set in FontReference"
@@ -351,7 +351,7 @@ class Font implements EngineEntity {
         return fontRef;
       }
       if (!fontRef.text) {
-        if (!this.warningShown){
+        if (!this.warningShown) {
           this.warningShown = true;
           console.warn(
             "Font text must be set to calculate font size to fit width"

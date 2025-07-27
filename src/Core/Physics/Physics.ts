@@ -28,18 +28,25 @@ export default class Physics {
   static simulationIdCurrent = 1;
   static simulationLoop: ReturnType<typeof setInterval> | undefined;
   static physicsEntities: {
-    [key: number]: { entity: ModelPosition; enabled: boolean; physics: PhysicsData | undefined; };
+    [key: number]: {
+      entity: ModelPosition;
+      enabled: boolean;
+      physics: PhysicsData | undefined;
+    };
   } = {};
   static physicsEntityIdCount = 1;
 
-  static registerPhysics(entity: ModelPosition, physics: PhysicsData | undefined = undefined) {
+  static registerPhysics(
+    entity: ModelPosition,
+    physics: PhysicsData | undefined = undefined
+  ) {
     if (!entity.$physicsId) {
       entity.$physicsId = Physics.physicsEntityIdCount++;
 
       this.physicsEntities[entity.$physicsId] = {
         entity: entity,
         enabled: true,
-        physics: physics
+        physics: physics,
       };
     }
   }
@@ -85,7 +92,8 @@ export default class Physics {
         const physicsEntity = this.physicsEntities[key];
         const node = physicsEntity.entity;
         if (physicsEntity.enabled && node.$physicsId !== entity.$physicsId) {
-          const { x, y, width, height } = physicsEntity.physics?.collisionSize || node.position;
+          const { x, y, width, height } =
+            physicsEntity.physics?.collisionSize || node.position;
           const colliding = CollisionDetection.isCollidingRect(
             x,
             y,
@@ -234,7 +242,7 @@ export default class Physics {
       if (this.simulations.hasOwnProperty(simulationId)) {
         const data = this.simulations[simulationId];
         if (!data) continue;
-        if(data.cancelled) {
+        if (data.cancelled) {
           continue;
         }
         if (data) {
@@ -255,7 +263,7 @@ export default class Physics {
             data.totalIterations += 1;
             simulationCount++;
           } else {
-            this.cancelSimulation((simulationId as unknown) as number);
+            this.cancelSimulation(simulationId as unknown as number);
           }
         }
       }
@@ -285,7 +293,7 @@ export default class Physics {
         completeSimulation: completeSimulation,
         totalIterations: 0,
         runTime: 0.0,
-        cancelled: false
+        cancelled: false,
       };
     } else {
       if (data.cancelled) {

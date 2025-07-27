@@ -24,7 +24,10 @@ export default class ObjectManager extends WorldDelegate {
 
   event(event: EngineEvent) {
     for (let entityIdx = 0; entityIdx < this.entities.length; entityIdx++) {
-      const shouldPropagate = this.entities[entityIdx].event(event, this.engineHelper);
+      const shouldPropagate = this.entities[entityIdx].event(
+        event,
+        this.engineHelper
+      );
       if (shouldPropagate === false) {
         return false;
       }

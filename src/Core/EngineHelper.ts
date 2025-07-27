@@ -59,7 +59,7 @@ export default class EngineHelper {
     }
 
     let model = entity.getModel();
-    if(entity.clone) {
+    if (entity.clone) {
       model = model.slice(0);
     }
 
@@ -139,9 +139,9 @@ export default class EngineHelper {
     const promise = new Promise<RetrieveResource>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       // @ts-ignore
-      if(window.$Synaren?.baseUrl) {
+      if (window.$Synaren?.baseUrl) {
         // @ts-ignore
-        src = `${window.$Synaren.baseUrl}${src}`
+        src = `${window.$Synaren.baseUrl}${src}`;
       }
       console.log(`Loading resource ${src}`);
       xhr.open("GET", src);
@@ -326,7 +326,7 @@ export default class EngineHelper {
   }
 
   rotate(event: EngineEvent, rect: Position) {
-    const { x, y } = this.camera.camera3d.position; 
+    const { x, y } = this.camera.camera3d.position;
     return CollisionDetection.rotate(x + event.x, y + event.y, rect);
   }
 

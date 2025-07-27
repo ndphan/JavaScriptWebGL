@@ -8,15 +8,15 @@ import Rect2d from "./Data/Rect2d";
 import { CollisionDetection } from "./Physics/CollisionDetection";
 
 export interface CameraOptions {
-  maxFov: number,
-  near: number,
-  far: number,
+  maxFov: number;
+  near: number;
+  far: number;
   experimental?: {
-    enabled?: boolean,
-    inverseAngleY?: boolean
-  },
-  isFovMax: boolean,
-  fov: number
+    enabled?: boolean;
+    inverseAngleY?: boolean;
+  };
+  isFovMax: boolean;
+  fov: number;
 }
 
 export class BaseCamera extends ModelPosition {
@@ -185,7 +185,7 @@ export class BaseCamera extends ModelPosition {
     this.frustum = this.perspective();
   };
 
-  angleX(dx: number) { 
+  angleX(dx: number) {
     this.position.ax -= dx;
     if (this.position.ax > 90) {
       const diff = 90;
@@ -209,7 +209,7 @@ export class BaseCamera extends ModelPosition {
 
   angleY(dy: number) {
     if (this.cameraOptions?.experimental?.inverseAngleY) {
-      if (!!dy) {
+      if (dy) {
         dy *= -1;
       }
     }
@@ -340,12 +340,7 @@ class Camera2d extends BaseCamera {
 
   public pan2dDif(time: number, dx?: number, dy?: number) {
     const { x, y } = this.position;
-    super.pan(
-      time,
-      this.INTERVAL_TIME,
-      x + (dx ?? 0),
-      y + (dy ?? 0)
-    );
+    super.pan(time, this.INTERVAL_TIME, x + (dx ?? 0), y + (dy ?? 0));
   }
 }
 

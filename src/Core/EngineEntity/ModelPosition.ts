@@ -49,9 +49,11 @@ export default class ModelPosition {
   }
 
   center(x: number, y: number, z: number) {
-    if(this.position.x === x
-    && this.position.y === y
-    && this.position.z === z) {
+    if (
+      this.position.x === x &&
+      this.position.y === y &&
+      this.position.z === z
+    ) {
       return;
     }
     this.position.x = x;
@@ -143,10 +145,12 @@ export default class ModelPosition {
   }
 
   scale(x: number, y: number, z: number) {
-    if(this.position.scaleX === x
-      && this.position.scaleY === y
-      && this.position.scaleZ === z) {
-        return;
+    if (
+      this.position.scaleX === x &&
+      this.position.scaleY === y &&
+      this.position.scaleZ === z
+    ) {
+      return;
     }
 
     this.position.scaleX = x;
@@ -320,7 +324,14 @@ export default class ModelPosition {
   }
 
   // memory optimised
-  setRect2(x: number, y: number, z: number, width: number, height: number, length: number) {
+  setRect2(
+    x: number,
+    y: number,
+    z: number,
+    width: number,
+    height: number,
+    length: number
+  ) {
     this.scale(width, height, length);
     this.center(x, y, z);
   }
@@ -343,5 +354,5 @@ export default class ModelPosition {
 
   getPosition = () => {
     return this.position;
-  }
+  };
 }

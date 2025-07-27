@@ -104,7 +104,7 @@ class EntityManager extends EngineObject {
 
   set hidden(value: boolean) {
     super.setHidden(value);
-    this.entities.forEach(entity => entity.hidden = value);
+    this.entities.forEach((entity) => (entity.hidden = value));
   }
 }
 

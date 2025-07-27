@@ -15,7 +15,7 @@ export default class ModelObjectRect3d extends EngineObject {
     this.centerRect(rect);
     this.rotateOriginRect(rect);
     this.scaleRect(rect);
-}
+  }
 
   init(engineHelper: EngineHelper) {
     const renderOpt = new RenderOption();

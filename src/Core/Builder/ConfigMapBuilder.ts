@@ -1,5 +1,5 @@
 import BasicSprite from "../../Entity/BasicSprite";
-import LineColour from '../../Entity/LineColour';
+import LineColour from "../../Entity/LineColour";
 import Moveable from "../../Entity/Moveable";
 import Plane2d from "../../Entity/Plane2d";
 import Plane3d from "../../Entity/Plane3d";
@@ -19,7 +19,11 @@ import Events, { EngineEvent } from "../Events";
 import { FontReference } from "../Font/Font";
 import Physics from "../Physics/Physics";
 
-export type OnClickType = (event: EngineEvent, engineHelper: EngineHelper, object: EngineObject) => boolean | undefined;
+export type OnClickType = (
+  event: EngineEvent,
+  engineHelper: EngineHelper,
+  object: EngineObject
+) => boolean | undefined;
 
 class ConfigMapBuilder {
   engineHelper: EngineHelper;
@@ -91,7 +95,9 @@ class ConfigMapBuilder {
     }
   }
 
-  buildModel(config: ConfigEntity): ConfigEntityConcreteType[ConfigEntity['type']] {
+  buildModel(
+    config: ConfigEntity
+  ): ConfigEntityConcreteType[ConfigEntity["type"]] {
     if (!config.type) {
       console.error("unable to parse empty type for object", config);
       return null as any;
@@ -159,7 +165,7 @@ class ConfigMapBuilder {
       obj = this.createLineColour(
         config.rgba,
         config.point1,
-        config.point2, 
+        config.point2,
         config.thickness
       );
       this.hookCustomHandler(config, obj);
@@ -177,8 +183,8 @@ class ConfigMapBuilder {
         obj.setTop(true);
       }
     }
-    
-    if(obj instanceof EngineObject && config.clone) {
+
+    if (obj instanceof EngineObject && config.clone) {
       obj.setClone(true);
     }
 
@@ -229,14 +235,20 @@ class ConfigMapBuilder {
       } else {
         _eventCustom = () => {};
       }
-      const _event = object.event.bind(object) as EngineEntity['event'];
+      const _event = object.event.bind(object) as EngineEntity["event"];
       object.event = (event: EngineEvent, engineHelper: EngineHelper) => {
         let shouldPropagate = true;
         // only stop propagation if the event returns false
-        shouldPropagate = shouldPropagate && (_event(event, engineHelper) !== false);
-        shouldPropagate = shouldPropagate && (_eventCustom(event, engineHelper, object) !== false);
+        shouldPropagate =
+          shouldPropagate && _event(event, engineHelper) !== false;
+        shouldPropagate =
+          shouldPropagate &&
+          _eventCustom(event, engineHelper, object) !== false;
         if (onClickedDefined) {
-          shouldPropagate = shouldPropagate && (this.isClicked(event, engineHelper, object, config.onClick) !== false);
+          shouldPropagate =
+            shouldPropagate &&
+            this.isClicked(event, engineHelper, object, config.onClick) !==
+              false;
         }
         return shouldPropagate;
       };
@@ -244,7 +256,9 @@ class ConfigMapBuilder {
       const _event = object.event.bind(object);
       object.event = (event: EngineEvent, engineHelper: EngineHelper) => {
         let shouldPropagate = _event(event, engineHelper) !== false;
-        shouldPropagate = shouldPropagate && (this.isClicked(event, engineHelper, object, config.onClick) !== false);
+        shouldPropagate =
+          shouldPropagate &&
+          this.isClicked(event, engineHelper, object, config.onClick) !== false;
         return shouldPropagate;
       };
     }
@@ -304,8 +318,13 @@ class ConfigMapBuilder {
     this.texts.push(textRef);
     return textRef;
   }
-  
-  createLineColour(rgba: Colour, point1: Coordinate, point2: Coordinate, thickness: number): EngineObject {
+
+  createLineColour(
+    rgba: Colour,
+    point1: Coordinate,
+    point2: Coordinate,
+    thickness: number
+  ): EngineObject {
     const colour = new LineColour(point1, point2, thickness, rgba);
     this.objects.push(colour);
     return colour;
@@ -328,7 +347,7 @@ class ConfigMapBuilder {
     spriteModel.position.z = -1;
     spriteModel.scaleZ(0);
     if (hasPhysics) {
-      Physics.registerPhysics(obj, obj.physics)
+      Physics.registerPhysics(obj, obj.physics);
     }
     this.objects.push(obj);
     return obj;
@@ -347,7 +366,7 @@ class ConfigMapBuilder {
     moveable.rotateZ(180.0);
     moveable.setRect(location);
     if (hasPhysics) {
-      Physics.registerPhysics(moveable, moveable.physics)
+      Physics.registerPhysics(moveable, moveable.physics);
     }
     moveable.updatePhysicsPosition();
     this.objects.push(moveable);
@@ -366,7 +385,7 @@ class ConfigMapBuilder {
     spriteModel.rotateZ(180.0);
     spriteModel.scaleZ(0);
     if (hasPhysics) {
-      Physics.registerPhysics(obj, obj.physics)
+      Physics.registerPhysics(obj, obj.physics);
     }
     this.objects.push(obj);
     return obj;
@@ -386,17 +405,13 @@ class ConfigMapBuilder {
     return obj;
   }
 
-
   createPlane3D(
     model: string,
     location: Rect3d,
     hasPhysics: boolean,
     plane: PlaneType
   ): EngineObject {
-    const vertexModel = this.engineHelper.newVertexModel(
-      model,
-      plane
-    );
+    const vertexModel = this.engineHelper.newVertexModel(model, plane);
     const obj = new Plane3d(location, vertexModel);
     if (hasPhysics) {
       Physics.registerPhysics(obj);
@@ -405,10 +420,7 @@ class ConfigMapBuilder {
     return obj;
   }
 
-  createTriangle(
-    rgba: Colour,
-    location: Rect2d
-  ): EngineObject {
+  createTriangle(rgba: Colour, location: Rect2d): EngineObject {
     const obj = new TriangleColour2d(location, rgba);
     this.objects.push(obj);
     return obj;
@@ -418,20 +430,20 @@ class ConfigMapBuilder {
 export type ConfigEntityTypes = keyof ConfigEntityConcreteType;
 
 export type ConfigEntityConcreteType = {
-  'Line': LineColour;
-  'Plane2D': Plane2d;
-  'Colour': PlaneColour;
-  'Font': FontReference;
-  'Plane3D': Plane3d;
-  'Triangle': TriangleColour2d;
-  'SpriteMoveable': SpriteMoveable;
-  'Moveable': Moveable;
-  'Sprite': BasicSprite;
-}
+  Line: LineColour;
+  Plane2D: Plane2d;
+  Colour: PlaneColour;
+  Font: FontReference;
+  Plane3D: Plane3d;
+  Triangle: TriangleColour2d;
+  SpriteMoveable: SpriteMoveable;
+  Moveable: Moveable;
+  Sprite: BasicSprite;
+};
 
 export class ConfigEntity {
   id: string;
-  type: ConfigEntityTypes; 
+  type: ConfigEntityTypes;
   position: Position;
   point1: Coordinate;
   point2: Coordinate;

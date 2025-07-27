@@ -22,9 +22,17 @@ export { default as Physics } from "./Core/Physics/Physics";
 export { default as Position } from "./Core/EngineEntity/Position";
 export { default as Timer } from "./Core/Common/Timer";
 export { generateId } from "./Core/Common/IdGenerator";
-export { ConfigBuilder, ConfigEntity, ConfigEntityConcreteType } from "./Core/Builder/ConfigMapBuilder";
+export {
+  ConfigBuilder,
+  ConfigEntity,
+  ConfigEntityConcreteType,
+} from "./Core/Builder/ConfigMapBuilder";
 export { default as Events, EngineEvent } from "./Core/Events";
-export { Collision, CollisionDetection, Polygon } from "./Core/Physics/CollisionDetection";
+export {
+  Collision,
+  CollisionDetection,
+  Polygon,
+} from "./Core/Physics/CollisionDetection";
 export { default as Camera } from "./Core/Camera";
 export { default as Coordinate } from "./Core/Data/Coordinate";
 export { default as Plane3d } from "./Entity/Plane3d";
