@@ -17,15 +17,7 @@
     "unlink": "yarn unlink"
   },
   "dependencies": {
-    "abstract-sequential-promise-chain": "^1.0.5",
-    "dot-object": "^2.1.4",
-    "fullscreen-polyfill": "^1.0.4",
-    "gl-matrix": "3.4.3",
-    "msgpack-lite": "^0.1.26",
-    "prop-types": "^15.8.1",
-    "uikit": "^3.16.8",
-    "url-search-params-polyfill": "^8.1.1",
-    "ws": "^8.13.0"
+    "gl-matrix": "3.4.3"
   },
   "devDependencies": {
     "@babel/core": "^7.21.3",
