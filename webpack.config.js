@@ -25,8 +25,10 @@ module.exports = {
   output: {
     path: path.join(__dirname, "dist"),
     filename: "[name].js",
-    library: "javascript-webgl-engine",
-    libraryTarget: "umd",
+    library: {
+      type: "umd",
+      name: "javascript-webgl-engine"
+    },
     globalObject: "this"
   },
   module: {
