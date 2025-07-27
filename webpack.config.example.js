@@ -31,8 +31,8 @@ module.exports = {
         exclude: /node_modules/,
       },
       {
-        test: /\.glsl$/,
-        type: 'asset/source',
+        test: /\.glsl$/i,
+        use: "raw-loader",
       },
     ],
   },
