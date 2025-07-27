@@ -10,14 +10,12 @@
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
-    "noImplicitAny" : true,
-    "noImplicitReturns": true,
-    "noImplicitThis": true,
-    "noUnusedLocals": true,
     "noErrorTruncation": true,
     "strictBindCallApply": true,
     "strictFunctionTypes": true,
-    "lib": ["es2019", "dom"]
+    "allowSyntheticDefaultImports": true,
+    "lib": ["es2019", "dom"],
+    "types": ["node"]
   },
   "include": ["src"],
   "exclude": ["node", "node_modules", "public", "build"]

@@ -1,23 +1,29 @@
 var path = require("path");
 var nodeModulesPath = path.resolve(__dirname, "node_modules");
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-  entry: {
-    "javascript-webgl-engine": "./src/index.ts"
-  },
   externals: {},
   plugins: [
-    
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, 'src/Core/WebGL/Shaders'),
+          to: path.resolve(__dirname, 'dist/Core/WebGL/Shaders'),
+          filter: (resourcePath) => resourcePath.endsWith('.glsl'),
+        },
+      ],
+    }),
   ],
   performance: {
     hints: false
   },
   resolve: {
-    modules: ["src-webgl", "node_modules"],
-    extensions: ["*", ".js", ".ts", ".tsx", ".glsl"],
+    modules: ["src", "node_modules"],
+    extensions: [".js", ".ts", ".tsx", ".glsl", ".*"],
   },
   output: {
-    path: path.join(__dirname, "public"),
+    path: path.join(__dirname, "dist"),
     filename: "[name].js",
     library: "javascript-webgl-engine",
     libraryTarget: "umd",
@@ -73,5 +79,11 @@ module.exports = {
         },
       }
     ],
+  },
+  devServer: {
+    static: path.join(__dirname, 'public'),
+    port: 3030,
+    hot: true,
+    open: true
   }
 };
