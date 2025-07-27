@@ -44,17 +44,32 @@ export default class EngineHelper {
 
   render(entity: ShaderEntity) {
     const shaderProgram = entity.opt.shaderType;
+    // Use camera3d if available, otherwise fallback to camera2d
+    const camera3d = (this.camera as any).camera3d;
     if (
       (shaderProgram === ShaderType.TWO_DIMENSION ||
         shaderProgram === ShaderType.COLOUR) &&
-      this.camera.camera2d.isOutOfBound(entity.modelPosition())
+      camera3d && camera3d.isOutOfBound(entity.modelPosition())
     ) {
       return;
     }
 
+    let model = entity.getModel();
+    if ((entity as any).clone) {
+      model = model.slice(0);
+    }
+
     this.notificationQueue.pushPayload(
-      RendererNotification.renderEntity(entity, entity.getModel())
+      RendererNotification.renderEntity(entity, model)
     );
+  }
+
+  renderCopy(entity: any, pos: any) {
+    this.render(entity.shaderEntity.renderCopy(pos));
+  }
+
+  getTime() {
+    return this.time;
   }
 
   setLighting(light: Light) {

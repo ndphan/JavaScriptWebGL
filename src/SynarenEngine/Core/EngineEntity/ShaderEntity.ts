@@ -13,6 +13,7 @@ export class ShaderEntity {
   isTop: boolean;
   modelPosition: () => Position;
   model: () => mat4;
+  clone = false;
 
   getVertexModel(): VertexModel {
     return this.vertexModel;
@@ -32,6 +33,12 @@ export class ShaderEntity {
   setTextureSource(src: string) {
     this.src = src;
   }
+  renderCopy(model: any): ShaderEntity {
+    const newInstance = this.shallowCopy();
+    newInstance.model = model.getModel;
+    newInstance.modelPosition = model.getPosition;
+    return newInstance;
+  }
 
   shallowCopy(): ShaderEntity {
     const newInstance = new ShaderEntity();
@@ -40,6 +47,8 @@ export class ShaderEntity {
     newInstance.rendererBufferId = this.rendererBufferId;
     newInstance.rendererTextureRef = this.rendererTextureRef;
     newInstance.src = this.src;
+    newInstance.isTop = this.isTop;
+    newInstance.hidden = this.hidden;
     return newInstance;
   }
 }

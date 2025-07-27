@@ -16,7 +16,8 @@
     "noUnusedLocals": true,
     "noErrorTruncation": true,
     "strictBindCallApply": true,
-    "strictFunctionTypes": true
+    "strictFunctionTypes": true,
+    "lib": ["es2019", "dom"]
   },
   "include": ["src"],
   "exclude": ["node", "node_modules", "public", "build"]
