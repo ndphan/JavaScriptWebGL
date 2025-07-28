@@ -9,6 +9,7 @@ import WorldDelegate from "./WorldDelegate";
 import { EngineEvent } from "../Core/Events";
 import SubscriberPool, { Subscription } from "./Common/SubscriberPool";
 import Resource from "./Data/Resource";
+import EngineDebugger from "./EngineDebugger";
 
 export class WebGLContainer {
   canvas: HTMLCanvasElement;
@@ -117,6 +118,7 @@ export default class App {
   isVisible: boolean;
   notificationQueue: NotificationQueue;
   subscriberPool: SubscriberPool;
+  debugger?: EngineDebugger;
 
   constructor(args: { [key: string]: any }) {
     if (!args) {
@@ -167,7 +169,8 @@ export default class App {
     this.camera.setupCamera(
       args.camera,
       args.aspectRatio,
-      this.webGLContainer.canvas
+      this.webGLContainer.canvas,
+      args.renderMode || args.camera?.renderMode || '2d' // Default to 2D mode
     );
     this.engineHelper = new EngineHelper(
       this.notificationQueue,
@@ -175,8 +178,51 @@ export default class App {
       this.camera
     );
 
+    // Initialize debugger
+    this.debugger = new EngineDebugger(this.webGLContainer.canvas);
+    this.setupKeyboardControls();
+
     this.world = this.args.world;
     this.world.setEngineHelper(this.engineHelper);
+    
+    // Set debugger references after world and renderer are available
+    if (this.debugger) {
+      this.debugger.setReferences(this.world, this.renderer);
+      this.debugger.setEngineHelper(this.engineHelper);
+    }
+  };
+
+  setupKeyboardControls = () => {
+    document.addEventListener('keydown', this.handleKeyDown);
+  };
+
+  handleKeyDown = (event: KeyboardEvent) => {
+    switch (event.key.toLowerCase()) {
+      case 'd':
+        if (this.debugger) {
+          this.debugger.toggle();
+        }
+        event.preventDefault();
+        break;
+      case 'r':
+        // Reset camera position
+        if (this.camera && this.args.camera) {
+          this.camera.setupCamera(
+            this.args.camera,
+            this.args.aspectRatio,
+            this.webGLContainer.canvas
+          );
+          console.log('Camera reset to initial position');
+        }
+        event.preventDefault();
+        break;
+      case 'p':
+        // Toggle pause
+        this.togglePause();
+        console.log(`Engine ${this.isPaused ? 'paused' : 'unpaused'}`);
+        event.preventDefault();
+        break;
+    }
   };
 
   onEvent = (event: EngineEvent): boolean => {
@@ -193,6 +239,16 @@ export default class App {
     clearInterval(this.interval);
     this.renderer.delete();
     event.delete(this.onEvent);
+    
+    // Remove keyboard listener
+    document.removeEventListener('keydown', this.handleKeyDown);
+    
+    // Cleanup debugger
+    if (this.debugger) {
+      this.debugger.destroy();
+      this.debugger = undefined;
+    }
+    
     this.webGLContainer.delete();
 
     console.log("destroying", this);
@@ -205,10 +261,20 @@ export default class App {
     try {
       this.updater.update(this.timer.peak(), this.engineHelper);
       this.renderer.render(this.timer.peak(), this.engineHelper);
+      
+      // Update debugger with engine state
+      if (this.debugger) {
+        this.debugger.resetRenderCalls();
+        this.debugger.updateDebugInfo(this.engineHelper);
+      }
+      
       this.notifyFrames();
       this.timer.start();
     } catch (error) {
       console.error(error);
+      if (this.debugger) {
+        this.debugger.logError(error.toString());
+      }
       clearInterval(this.interval);
       if (this.errorCallback) {
         this.errorCallback(error);
@@ -320,7 +386,8 @@ export default class App {
     this.camera.setupCamera(
       this.args.camera,
       this.args.aspectRatio,
-      this.webGLContainer.canvas
+      this.webGLContainer.canvas,
+      this.args.renderMode || this.args.camera?.renderMode || '2d'
     );
     this.notificationQueue.push(RendererNotification.RESIZE_SCREEN);
     if (this.isStepRender && this.ready) {

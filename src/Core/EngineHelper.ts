@@ -51,9 +51,10 @@ export default class EngineHelper {
   render(entity: ShaderEntity) {
     const shaderProgram = entity.opt.shaderType;
     if (
+      this.camera.renderMode === '2d' &&
       (shaderProgram === ShaderType.TWO_DIMENSION ||
         shaderProgram === ShaderType.COLOUR) &&
-      this.camera.camera3d.isOutOfBound(entity.modelPosition())
+      this.camera.camera2d.isOutOfBound(entity.modelPosition())
     ) {
       return;
     }
@@ -316,12 +317,12 @@ export default class EngineHelper {
   }
 
   isClicked(event: EngineEvent, rect: Rect3d) {
-    const distance = this.camera.camera3d.distanceEvent(event);
+    const distance = this.camera.camera2d.distanceEvent(event);
     return CollisionDetection.isPointInRect(rect, distance);
   }
 
   rotate(event: EngineEvent, rect: Position) {
-    const { x, y } = this.camera.camera3d.position;
+    const { x, y } = this.camera.camera2d.position;
     return CollisionDetection.rotate(x + event.x, y + event.y, rect);
   }
 

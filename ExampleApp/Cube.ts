@@ -1,15 +1,7 @@
-import {
-  EntityManager,
-  Rect3d,
-  EngineHelper,
-  EngineEvent,
-  CollisionDetection,
-  PlaneType,
-  Plane3d
-} from "../dist/index";
+import { EntityManager, Plane3d, Rect3d, EngineHelper, EngineEvent, CollisionDetection, PlaneType } from "../dist";
 
 export default class Cube extends EntityManager {
-  planes: Plane3d[] = [];
+  planes: Plane3d[];
   textureSource: string;
   uvs: string[];
 
@@ -25,10 +17,40 @@ export default class Cube extends EntityManager {
   }
 
   isPointInCube(evnt: EngineEvent, engineHelper: EngineHelper) {
-    return this.planes.some(plane =>
+    return (
       CollisionDetection.isPointInPlane3d(
         engineHelper.camera.camera3d,
-        plane,
+        this.planes[0],
+        evnt.x,
+        evnt.y
+      ) ||
+      CollisionDetection.isPointInPlane3d(
+        engineHelper.camera.camera3d,
+        this.planes[1],
+        evnt.x,
+        evnt.y
+      ) ||
+      CollisionDetection.isPointInPlane3d(
+        engineHelper.camera.camera3d,
+        this.planes[2],
+        evnt.x,
+        evnt.y
+      ) ||
+      CollisionDetection.isPointInPlane3d(
+        engineHelper.camera.camera3d,
+        this.planes[3],
+        evnt.x,
+        evnt.y
+      ) ||
+      CollisionDetection.isPointInPlane3d(
+        engineHelper.camera.camera3d,
+        this.planes[4],
+        evnt.x,
+        evnt.y
+      ) ||
+      CollisionDetection.isPointInPlane3d(
+        engineHelper.camera.camera3d,
+        this.planes[5],
         evnt.x,
         evnt.y
       )
@@ -36,8 +58,14 @@ export default class Cube extends EntityManager {
   }
 
   init(engineHelper: EngineHelper) {
-    const { width, length, height, x, y, z } = this.position;
+    const width = this.position.width;
+    const length = this.position.length;
+    const height = this.position.height;
+    const x = this.position.x;
+    const y = this.position.y;
+    const z = this.position.z;
     const rect = new Rect3d(x, y, z, width, height, length);
+
     this.planes = [
       new Plane3d(rect, engineHelper.newVertexModel(this.uvs[0], PlaneType.YX)),
       new Plane3d(rect, engineHelper.newVertexModel(this.uvs[1], PlaneType.XY)),
@@ -46,18 +74,22 @@ export default class Cube extends EntityManager {
       new Plane3d(rect, engineHelper.newVertexModel(this.uvs[4], PlaneType.ZY)),
       new Plane3d(rect, engineHelper.newVertexModel(this.uvs[5], PlaneType.YZ))
     ];
+
     this.planes.forEach(plane => this.entities.push(plane));
+
     this.scaleRect(rect);
     this.centerRect(rect);
     this.rotateOriginRect(rect);
+
     this.planes[0].center(x, y, z + length);
     this.planes[1].center(x, y, z);
     this.planes[2].center(x, y, z);
     this.planes[3].center(x, y + height, z);
     this.planes[4].center(x + width, y, z);
     this.planes[5].center(x, y, z);
+
     this.rotateOriginRect(this.getRect().center());
-    // If you have an initEntity method, call it here, otherwise remove this line.
-    // this.initEntity(engineHelper);
+
+    super.init(engineHelper);
   }
 }

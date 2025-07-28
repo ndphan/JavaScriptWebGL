@@ -181,7 +181,6 @@ export class BaseCamera extends ModelPosition {
   };
 
   frustumMatrix = (): mat4 => {
-    // Ensure we have proper defaults for frustum parameters
     const left = this.cameraOptions.left ?? -this.aspect ?? -1;
     const right = this.cameraOptions.right ?? this.aspect ?? 1;
     const bottom = this.cameraOptions.bottom ?? -1;
@@ -198,7 +197,7 @@ export class BaseCamera extends ModelPosition {
     );
   };
 
-  perspective = (): mat4 => {
+  public perspective(): mat4 {
     return mat4.perspective(
       mat4.create(),
       this.degreesToRadians(this.fov),
@@ -212,6 +211,12 @@ export class BaseCamera extends ModelPosition {
     if (this.cameraOptions?.projection === 'frustum') {
       this.frustum = this.frustumMatrix();
     } else {
+      console.log("panda2", {
+        fov: this.degreesToRadians(this.fov),
+        aspect: this.aspect,
+        near: this.near,
+        far: this.far
+      })
       this.frustum = this.perspective();
     }
   };
@@ -374,7 +379,7 @@ class Camera2d extends BaseCamera {
     return new Coordinate(event.x + this.position.x, this.position.y + event.y);
   }
 
-  perspective = (): mat4 => {
+  updateProjectionMatrix = () => {
     const translateSpace = mat4.create();
     mat4.translate(
       translateSpace,
@@ -390,7 +395,7 @@ class Camera2d extends BaseCamera {
       translateSpace,
       vec3.fromValues(this.zoomScale.x, this.zoomScale.y, 1.0)
     );
-    return translateSpace;
+    this.frustum = translateSpace;
   };
 
   zoomIn(delta: number) {
@@ -421,7 +426,9 @@ class Camera2d extends BaseCamera {
   }
 }
 
-class Camera3d extends Camera2d {
+class Camera3d extends BaseCamera {
+  protected INTERVAL_TIME = 10;
+
   public pan3d(time: number, x?: number, y?: number, z?: number) {
     super.pan(time, this.INTERVAL_TIME, x, y, z);
   }
@@ -429,23 +436,49 @@ class Camera3d extends Camera2d {
 
 class Camera {
   public camera3d = new Camera3d();
+  public camera2d = new Camera2d();
   public height: number;
   public width: number;
+  public renderMode: '2d' | '3d' = '2d'; // Default to 2D mode
 
   public setupCamera(
     cameraOptions: any,
     aspectRatio: number,
-    canvas: HTMLCanvasElement
+    canvas: HTMLCanvasElement,
+    renderMode?: '2d' | '3d'
   ) {
-    this.camera3d.setupCamera(cameraOptions, aspectRatio || 1, canvas);
+    // Set render mode, default to 2D unless 3D is explicitly requested
+    this.renderMode = renderMode || cameraOptions.renderMode || '2d';
+
+    if (this.renderMode === '3d') {
+      this.camera3d.setupCamera(cameraOptions, aspectRatio || 1, canvas);
+    } else {
+      this.camera2d.setupCamera(cameraOptions, aspectRatio || 1, canvas);
+    }
+
     this.height = canvas.height;
     this.width = canvas.width;
   }
 
   public commitProjectionView() {
-    if (this.camera3d.isUpdateView()) {
-      this.camera3d.commitProjectionView();
+    if (this.renderMode === '3d') {
+      if (this.camera3d.isUpdateView()) {
+        this.camera3d.commitProjectionView();
+      }
+    } else {
+      if (this.camera2d.isUpdateView()) {
+        this.camera2d.commitProjectionView();
+      }
     }
+  }
+
+  // Helper methods to get the active camera
+  public getActiveCamera(): BaseCamera {
+    return this.renderMode === '3d' ? this.camera3d : this.camera2d;
+  }
+
+  public getActiveFrustum(): any {
+    return this.renderMode === '3d' ? this.camera3d.frustum : this.camera2d.frustum;
   }
 }
 

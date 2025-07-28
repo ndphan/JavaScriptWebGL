@@ -142,11 +142,20 @@ class Renderer {
   };
 
   updatePerspective = () => {
-    if (this.shader3DProgram) {
-      this.shader3DProgram.updatePerspective(this.camera.camera3d.frustum);
-    }
-    if (this.shaderColourProgram) {
-      this.shaderColourProgram.updatePerspective(this.camera.camera3d.frustum);
+    if (this.camera.renderMode === '3d') {
+      if (this.shader3DProgram) {
+        this.shader3DProgram.updatePerspective(this.camera.camera3d.frustum);
+      }
+      if (this.shaderColourProgram) {
+        this.shaderColourProgram.updatePerspective(this.camera.camera3d.frustum);
+      }
+    } else {
+      if (this.shader3DProgram) {
+        this.shader3DProgram.updatePerspective(this.camera.camera2d.frustum);
+      }
+      if (this.shaderColourProgram) {
+        this.shaderColourProgram.updatePerspective(this.camera.camera2d.frustum);
+      }
     }
   };
 
@@ -172,7 +181,8 @@ class Renderer {
 
   setLighting = (light: Light) => {
     if (this.shader3DProgram) {
-      this.shader3DProgram.setLight(light, this.camera.camera3d);
+      const activeCamera = this.camera.renderMode === '3d' ? this.camera.camera3d : this.camera.camera2d;
+      this.shader3DProgram.setLight(light, activeCamera);
     } else {
       throw new Error("Lighting is set without any 3D entities");
     }
@@ -219,7 +229,7 @@ class Renderer {
       (e) => !!e[0].isTop === isTop
     );
     if (colourModel.length > 0) {
-      this.shaderColourProgram.render(colourModel, this.camera.camera3d);
+      this.shaderColourProgram.render(colourModel, this.camera.camera2d);
     }
 
     const model3d = this._renderEntities[ShaderType.THREE_DIMENSION].filter(
@@ -241,7 +251,7 @@ class Renderer {
     if (model2d.length > 0) {
       this.shader3DProgram.render(
         model2d,
-        this.camera.camera3d,
+        this.camera.camera2d,
         this.textureReg,
         true
       );

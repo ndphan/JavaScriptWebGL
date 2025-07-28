@@ -36,6 +36,8 @@ export {
 export { default as Camera } from "./Core/Camera";
 export { default as Coordinate } from "./Core/Data/Coordinate";
 export { default as Plane3d } from "./Entity/Plane3d";
+export { default as Plane2d } from "./Entity/Plane2d";
+export { default as PlaneColour } from "./Entity/PlaneColour";
 export { default as BitmapConfigParser } from "./AssetLoader/BitmapConfigParser";
 export { default as ModelObject3d } from "./Core/EngineEntity/ModelObject3d";
 export { default as Object3d } from "./Entity/Object3d";
