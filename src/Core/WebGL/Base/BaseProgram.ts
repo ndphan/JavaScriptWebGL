@@ -28,16 +28,15 @@ export default class BaseProgram {
     ctx.compileShader(fragmentShader);
 
     if (!ctx.getShaderParameter(vertexShader, ctx.COMPILE_STATUS)) {
-      throw new Error(
-        "could not compile vertex shader:" + ctx.getShaderInfoLog(vertexShader)
-      );
+      const error = "could not compile vertex shader:" + ctx.getShaderInfoLog(vertexShader);
+      console.error(error);
+      throw new Error(error);
     }
 
     if (!ctx.getShaderParameter(fragmentShader, ctx.COMPILE_STATUS)) {
-      throw new Error(
-        "could not compile fragment shader:" +
-          ctx.getShaderInfoLog(fragmentShader)
-      );
+      const error = "could not compile fragment shader:" + ctx.getShaderInfoLog(fragmentShader);
+      console.error(error);
+      throw new Error(error);
     }
 
     const program: WebGLProgram = ctx.createProgram()!;
@@ -48,9 +47,12 @@ export default class BaseProgram {
     ctx.validateProgram(program);
 
     if (!ctx.getProgramParameter(program, ctx.LINK_STATUS)) {
-      throw new Error("Link failed: " + ctx.getProgramInfoLog(program));
+      const error = "Link failed: " + ctx.getProgramInfoLog(program);
+      console.error(error);
+      throw new Error(error);
     }
 
+    console.log('Shader program compiled successfully');
     return program;
   }
 

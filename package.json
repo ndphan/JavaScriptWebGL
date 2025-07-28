@@ -1,5 +1,5 @@
 {
-  "name": "javascript-webgl-engine",
+  "name": "synaren-engine",
   "version": "0.0.2",
   "license": "MIT",
   "main": "dist/index.js",
@@ -19,7 +19,7 @@
     "unlink": "yarn unlink"
   },
   "dependencies": {
-    "gl-matrix": "3.4.3"
+    "gl-matrix": "^3.4.3"
   },
   "devDependencies": {
     "@babel/core": "^7.21.3",

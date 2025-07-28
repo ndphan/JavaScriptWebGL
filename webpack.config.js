@@ -27,7 +27,7 @@ module.exports = {
     filename: "[name].js",
     library: {
       type: "umd",
-      name: "javascript-webgl-engine"
+      name: "SynarenEngine"
     },
     globalObject: "this"
   },
