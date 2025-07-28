@@ -22,6 +22,8 @@ export interface CameraOptions {
   bottom?: number;
   top?: number;
   projection?: 'frustum' | 'perspective';
+  renderMode: '2d' | '3d';
+  aspect?: number;
 }
 
 export class BaseCamera extends ModelPosition {
@@ -279,7 +281,7 @@ export class BaseCamera extends ModelPosition {
   }
 
   public setupCamera(
-    cameraOptions: any,
+    cameraOptions: CameraOptions,
     aspectRatio: number,
     canvas: HTMLCanvasElement
   ) {
@@ -442,7 +444,7 @@ class Camera {
   public renderMode: '2d' | '3d' = '2d'; // Default to 2D mode
 
   public setupCamera(
-    cameraOptions: any,
+    cameraOptions: CameraOptions,
     aspectRatio: number,
     canvas: HTMLCanvasElement,
     renderMode?: '2d' | '3d'
@@ -472,7 +474,6 @@ class Camera {
     }
   }
 
-  // Helper methods to get the active camera
   public getActiveCamera(): BaseCamera {
     return this.renderMode === '3d' ? this.camera3d : this.camera2d;
   }

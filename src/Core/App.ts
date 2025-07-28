@@ -1,7 +1,7 @@
 import Camera from "./Camera";
 import Updater from "./Updater";
 import Renderer, { RendererNotification } from "./Renderer";
-import EngineHelper from "./EngineHelper";
+import EngineHelper, { RetrieveResource } from "./EngineHelper";
 import Events, { event } from "./Events";
 import Timer from "./Common/Timer";
 import NotificationQueue from "./Common/NotificationQueue";
@@ -178,50 +178,14 @@ export default class App {
       this.camera
     );
 
-    // Initialize debugger
     this.debugger = new EngineDebugger(this.webGLContainer.canvas);
-    this.setupKeyboardControls();
 
     this.world = this.args.world;
     this.world.setEngineHelper(this.engineHelper);
     
-    // Set debugger references after world and renderer are available
     if (this.debugger) {
       this.debugger.setReferences(this.world, this.renderer);
       this.debugger.setEngineHelper(this.engineHelper);
-    }
-  };
-
-  setupKeyboardControls = () => {
-    document.addEventListener('keydown', this.handleKeyDown);
-  };
-
-  handleKeyDown = (event: KeyboardEvent) => {
-    switch (event.key.toLowerCase()) {
-      case 'd':
-        if (this.debugger) {
-          this.debugger.toggle();
-        }
-        event.preventDefault();
-        break;
-      case 'r':
-        // Reset camera position
-        if (this.camera && this.args.camera) {
-          this.camera.setupCamera(
-            this.args.camera,
-            this.args.aspectRatio,
-            this.webGLContainer.canvas
-          );
-          console.log('Camera reset to initial position');
-        }
-        event.preventDefault();
-        break;
-      case 'p':
-        // Toggle pause
-        this.togglePause();
-        console.log(`Engine ${this.isPaused ? 'paused' : 'unpaused'}`);
-        event.preventDefault();
-        break;
     }
   };
 
@@ -240,10 +204,8 @@ export default class App {
     this.renderer.delete();
     event.delete(this.onEvent);
     
-    // Remove keyboard listener
-    document.removeEventListener('keydown', this.handleKeyDown);
+
     
-    // Cleanup debugger
     if (this.debugger) {
       this.debugger.destroy();
       this.debugger = undefined;
@@ -262,7 +224,6 @@ export default class App {
       this.updater.update(this.timer.peak(), this.engineHelper);
       this.renderer.render(this.timer.peak(), this.engineHelper);
       
-      // Update debugger with engine state
       if (this.debugger) {
         this.debugger.resetRenderCalls();
         this.debugger.updateDebugInfo(this.engineHelper);
@@ -324,7 +285,7 @@ export default class App {
     }, fps);
   };
 
-  initSystem = (): Promise<any> => {
+  initSystem = (): Promise<RetrieveResource[]> => {
     this.initFont();
     this.world.init(this.engineHelper);
     this.renderer.init();
@@ -335,7 +296,7 @@ export default class App {
     this.engineHelper.initFont();
   }
 
-  loadResources = (resources: Resource[]): Promise<any> => {
+  loadResources = (resources: Resource[]): Promise<RetrieveResource[]> => {
     this.world.loadResources(resources);
     return this.engineHelper.getAllResourcesLoading();
   };

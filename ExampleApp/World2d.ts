@@ -1,12 +1,11 @@
 import {
+  Colour,
   EngineEvent,
   EngineObject,
   Events,
   ObjectManager,
   PlaneColour,
-  Rect2d,
-  RenderType,
-  Colour
+  Rect2d
 } from "synaren-engine";
 
 export default class World2d extends ObjectManager {

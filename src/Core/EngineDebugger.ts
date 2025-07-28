@@ -1,24 +1,33 @@
+
+import EntityManager from "../Manager/EntityManager";
+import ObjectManager from "../Manager/ObjectManager";
+import Coordinate from "./Data/Coordinate";
+import EngineObject from "./EngineEntity/EngineObject";
 import EngineHelper from "./EngineHelper";
-import { ShaderEntity } from "./EngineEntity/ShaderEntity";
-import Camera from "./Camera";
+import Renderer from "./Renderer";
+import WorldDelegate from "./WorldDelegate";
+
+export interface DebugCameraInfo {
+  position: Coordinate;
+  rotation: { ax: number; ay: number; az: number };
+  origin: Coordinate;
+}
+
+export interface DebugEntityInfo {
+  type: string;
+  position: Coordinate;
+  hidden: boolean;
+  hasShaderEntity: boolean;
+  textureRef?: string;
+  bufferId?: number;
+}
 
 export interface DebugInfo {
   fps: number;
   frameTime: number;
   entityCount: number;
-  camera: {
-    position: { x: number; y: number; z: number };
-    rotation: { ax: number; ay: number; az: number };
-    origin: { x: number; y: number; z: number };
-  };
-  entities: Array<{
-    type: string;
-    position: { x: number; y: number; z: number };
-    hidden: boolean;
-    hasShaderEntity: boolean;
-    textureRef?: string;
-    bufferId?: number;
-  }>;
+  camera: DebugCameraInfo;
+  entities: DebugEntityInfo[];
   webglInfo: {
     faceCullingEnabled: boolean;
     depthTestEnabled: boolean;
@@ -38,13 +47,27 @@ export default class EngineDebugger {
   private frameTimeHistory: number[] = [];
   private renderCallCount: number = 0;
   private lastError: string | undefined;
-  private world: any = null;
-  private renderer: any = null;
-  private engineHelper: any = null;
+  private world: WorldDelegate | null = null;
+  private engineHelper: EngineHelper | null = null;
+  private renderer: Renderer | null = null;
 
   constructor(private canvas: HTMLCanvasElement) {
     this.createDebugUI();
     this.startUpdating();
+  }
+
+  /**
+   * Cleans up debugger UI and keyboard controls.
+   */
+  public destroy(): void {
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+      this.updateInterval = null;
+    }
+
+    if (this.debugElement && this.debugElement.parentElement) {
+      this.debugElement.parentElement.removeChild(this.debugElement);
+    }
   }
 
   private createDebugUI(): void {
@@ -240,13 +263,28 @@ export default class EngineDebugger {
     this.renderDebugInfo(debugInfo);
   }
 
-  public setReferences(world: any, renderer: any): void {
+  public setReferences(world: WorldDelegate, renderer: Renderer): void {
     this.world = world;
     this.renderer = renderer;
   }
 
-  public setEngineHelper(engineHelper: any): void {
+  public setEngineHelper(engineHelper: EngineHelper): void {
     this.engineHelper = engineHelper;
+  }
+
+  private buildEntityInfo(entity: EngineObject): DebugEntityInfo {
+    return {
+      type: entity ? entity.constructor.name : 'null',
+      position: entity ? {
+        x: Math.round(entity.position.x * 100) / 100,
+        y: Math.round(entity.position.y * 100) / 100,
+        z: Math.round(entity.position.z * 100) / 100
+      } : { x: 0, y: 0, z: 0 },
+      hidden: entity ? entity.hidden : true,
+      hasShaderEntity: entity ? !!entity.shaderEntity : false,
+      textureRef: entity?.shaderEntity?.rendererTextureRef,
+      bufferId: entity?.shaderEntity?.rendererBufferId
+    };
   }
 
   private gatherDebugInfo(engineHelper: EngineHelper): DebugInfo {
@@ -286,19 +324,12 @@ export default class EngineDebugger {
       }
     };
 
-    // Get entity info from world if available
-    const entities = this.world && this.world.entities ? this.world.entities.map((entity, index) => ({
-      type: entity ? entity.constructor.name : 'null',
-      position: entity ? {
-        x: Math.round(entity.position.x * 100) / 100,
-        y: Math.round(entity.position.y * 100) / 100,
-        z: Math.round(entity.position.z * 100) / 100
-      } : { x: 0, y: 0, z: 0 },
-      hidden: entity ? entity.hidden : true,
-      hasShaderEntity: entity ? !!entity.shaderEntity : false,
-      textureRef: entity?.shaderEntity?.rendererTextureRef,
-      bufferId: entity?.shaderEntity?.rendererBufferId
-    })) : [];
+    const entities = this.world instanceof ObjectManager && this.world?.entities?.flatMap((entity: EngineObject, index) => {
+      if (entity instanceof EntityManager) {
+        return entity.entities.map(obj => this.buildEntityInfo(obj));
+      }
+      return this.buildEntityInfo(entity)
+    }) || [];
 
     return {
       fps: this.fpsCounter,
@@ -319,7 +350,6 @@ export default class EngineDebugger {
   }
 
   private renderDebugInfo(info: DebugInfo): void {
-    // Update performance
     const perfContent = this.debugElement.querySelector('#perf-content');
     if (perfContent) {
       perfContent.innerHTML = `
@@ -369,13 +399,25 @@ export default class EngineDebugger {
     const originY = this.debugElement.querySelector('#cam-origin-y') as HTMLInputElement;
     const originZ = this.debugElement.querySelector('#cam-origin-z') as HTMLInputElement;
 
-    if (posX && posX !== document.activeElement) posX.value = camera.position.x.toString();
-    if (posY && posY !== document.activeElement) posY.value = camera.position.y.toString();
-    if (posZ && posZ !== document.activeElement) posZ.value = camera.position.z.toString();
-    if (rotX && rotX !== document.activeElement) rotX.value = camera.rotation.ax.toString();
-    if (rotY && rotY !== document.activeElement) rotY.value = camera.rotation.ay.toString();
-    if (rotZ && rotZ !== document.activeElement) rotZ.value = camera.rotation.az.toString();
-    
+    if (posX && posX !== document.activeElement) {
+      posX.value = camera.position.x.toString();
+    }
+    if (posY && posY !== document.activeElement) {
+      posY.value = camera.position.y.toString();
+    }
+    if (posZ && posZ !== document.activeElement) {
+      posZ.value = camera.position.z.toString();
+    }
+    if (rotX && rotX !== document.activeElement) {
+      rotX.value = camera.rotation.ax.toString();
+    }
+    if (rotY && rotY !== document.activeElement) {
+      rotY.value = camera.rotation.ay.toString();
+    }
+    if (rotZ && rotZ !== document.activeElement) {
+      rotZ.value = camera.rotation.az.toString();
+    }
+
     // Update origin input fields with proper styling based on values
     if (originX && originX !== document.activeElement) {
       originX.value = camera.origin.x.toString();
@@ -433,7 +475,7 @@ export default class EngineDebugger {
   }
 
   private updateDisplay(): void {
-    // This will be called by the engine
+
   }
 
   public toggle(): void {
@@ -464,17 +506,7 @@ export default class EngineDebugger {
     console.error('Engine Error:', error);
   }
 
-  public destroy(): void {
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-      this.updateInterval = null;
-    }
-    
-    // Remove debugger element
-    if (this.debugElement && this.debugElement.parentElement) {
-      this.debugElement.parentElement.removeChild(this.debugElement);
-    }
-  }
+
 
   private setupCameraControlEventListeners(): void {
     // Position controls

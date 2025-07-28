@@ -22,7 +22,7 @@ import Position from "./EngineEntity/Position";
 export default class EngineHelper {
   notificationQueue: NotificationQueue;
   subscriberPool: SubscriberPool;
-  resourcesLoading: Promise<any>[] = [];
+  resourcesLoading: Promise<RetrieveResource>[] = [];
   bufferCache: { [key: number]: ModelData } = {};
   fontCache: { [key: number]: { meta: FontMetaData; font: Font } } = {};
   fontNameKeyReverse: { [key: string]: number } = {};
@@ -175,7 +175,7 @@ export default class EngineHelper {
     return promise;
   }
 
-  getAllResourcesLoading(): Promise<any> {
+  getAllResourcesLoading(): Promise<RetrieveResource[]> {
     return Promise.all(this.resourcesLoading);
   }
 
