@@ -17,6 +17,11 @@ export interface CameraOptions {
   };
   isFovMax: boolean;
   fov: number;
+  left?: number;
+  right?: number;
+  bottom?: number;
+  top?: number;
+  projection?: 'frustum' | 'perspective';
 }
 
 export class BaseCamera extends ModelPosition {
@@ -43,6 +48,8 @@ export class BaseCamera extends ModelPosition {
   private ty: number;
   private tz: number;
   private timer: Timer = new Timer();
+
+
 
   public clearPan() {
     if (this.interval) {
@@ -137,6 +144,7 @@ export class BaseCamera extends ModelPosition {
   commitProjectionView = () => {
     this._isUpdateView = false;
 
+
     let quatRotationxyz = quat.create();
     quatRotationxyz = quat.rotateX(
       quatRotationxyz,
@@ -169,6 +177,25 @@ export class BaseCamera extends ModelPosition {
     mat4.translate(dest, dest, pos);
 
     this.viewMatrix = dest;
+
+  };
+
+  frustumMatrix = (): mat4 => {
+    // Ensure we have proper defaults for frustum parameters
+    const left = this.cameraOptions.left ?? -this.aspect ?? -1;
+    const right = this.cameraOptions.right ?? this.aspect ?? 1;
+    const bottom = this.cameraOptions.bottom ?? -1;
+    const top = this.cameraOptions.top ?? 1;
+
+    return mat4.frustum(
+      mat4.create(),
+      left,
+      right,
+      bottom,
+      top,
+      this.near,
+      this.far
+    );
   };
 
   perspective = (): mat4 => {
@@ -182,7 +209,11 @@ export class BaseCamera extends ModelPosition {
   };
 
   updateProjectionMatrix = () => {
-    this.frustum = this.perspective();
+    if (this.cameraOptions?.projection === 'frustum') {
+      this.frustum = this.frustumMatrix();
+    } else {
+      this.frustum = this.perspective();
+    }
   };
 
   angleX(dx: number) {
@@ -194,6 +225,7 @@ export class BaseCamera extends ModelPosition {
       const diff = -90;
       this.position.ax = diff;
     }
+    this.updateProjectionView();
   }
 
   angleZ(dz: number) {
@@ -205,6 +237,7 @@ export class BaseCamera extends ModelPosition {
       const diff = this.position.az + 360;
       this.position.az = diff;
     }
+    this.updateProjectionView();
   }
 
   angleY(dy: number) {
@@ -221,6 +254,7 @@ export class BaseCamera extends ModelPosition {
       const diff = this.position.ay + 360;
       this.position.ay = diff;
     }
+    this.updateProjectionView();
   }
 
   zoomIn(delta: number) {
@@ -245,9 +279,29 @@ export class BaseCamera extends ModelPosition {
     canvas: HTMLCanvasElement
   ) {
     this.cameraOptions = cameraOptions || {};
-    const near = this.near || cameraOptions.near || 1.0;
-    const far = this.far || cameraOptions.far || 4.0;
     const aspect = cameraOptions.aspect || canvas.width / canvas.height;
+
+    // Always update camera parameters from options
+    this.near = cameraOptions.near ?? 0.01;
+    this.far = cameraOptions.far ?? 1000.0;
+    this.aspect = aspect;
+
+    // Set frustum projection parameters if provided
+    if (cameraOptions.projection === 'frustum') {
+      // Ensure frustum values are properly set based on aspect ratio if not provided
+      if (!this.cameraOptions.left) {
+        this.cameraOptions.left = cameraOptions.left ?? -aspect;
+      }
+      if (!this.cameraOptions.right) {
+        this.cameraOptions.right = cameraOptions.right ?? aspect;
+      }
+      if (!this.cameraOptions.bottom) {
+        this.cameraOptions.bottom = cameraOptions.bottom ?? -1;
+      }
+      if (!this.cameraOptions.top) {
+        this.cameraOptions.top = cameraOptions.top ?? 1;
+      }
+    }
 
     if (this.cameraOptions.experimental?.enabled) {
       const width = canvas.offsetWidth;
@@ -266,15 +320,14 @@ export class BaseCamera extends ModelPosition {
       });
     }
 
-    let fov = this.fov || cameraOptions.fov || 45.0;
-    if (cameraOptions.isFovMax) {
-      const maxFovAspect = (Math.atan(1.0 / aspect) * 360.0) / Math.PI;
-      fov = maxFovAspect;
+    if (cameraOptions.projection !== 'frustum') {
+      let fov = cameraOptions.fov ?? 45.0;
+      if (cameraOptions.isFovMax) {
+        const maxFovAspect = (Math.atan(1.0 / aspect) * 360.0) / Math.PI;
+        fov = maxFovAspect;
+      }
+      this.fov = fov;
     }
-    this.aspect = aspect;
-    this.fov = fov;
-    this.near = near;
-    this.far = far;
 
     this.updateProjectionMatrix();
     this.updateProjectionView();
@@ -286,6 +339,30 @@ export class BaseCamera extends ModelPosition {
 
   setBaseTranslate(baseTranslate: Coordinate) {
     this.baseTranslate = baseTranslate;
+  }
+
+  /**
+   * Orients the camera to look at a target point in world space.
+   * @param targetX X coordinate of the target
+   * @param targetY Y coordinate of the target
+   * @param targetZ Z coordinate of the target
+   */
+  lookAt(targetX: number, targetY: number, targetZ: number) {
+    const dx = targetX - this.position.x;
+    const dy = targetY - this.position.y;
+    const dz = targetZ - this.position.z;
+
+    // Calculate yaw (ay) - rotation around Y axis
+    this.position.ay = Math.atan2(-dx, -dz) * 180 / Math.PI;
+
+    // Calculate pitch (ax) - rotation around X axis
+    const horizontalDistance = Math.sqrt(dx * dx + dz * dz);
+    this.position.ax = Math.atan2(-dy, horizontalDistance) * 180 / Math.PI;
+
+    // Reset roll (az) to 0
+    this.position.az = 0;
+
+    this.updateProjectionView();
   }
 }
 
