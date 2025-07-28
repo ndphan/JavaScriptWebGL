@@ -15,13 +15,23 @@ uniform float u_light1_attenuation;
 uniform float u_light1_ambient_coefficient;
 
 varying vec2 v_texture_coords;
+varying vec3 v_position;
 varying vec3 v_normal;
+varying mat4 v_model;
 
 varying vec3 v_light1_pos;
 varying vec3 v_light1_intensities;
+varying float v_light1_attenuation;
 varying float v_light1_ambient_coefficient;
 varying float v_diffuseCoefficient;
 varying float v_attenuation;
+
+struct Light {
+  vec3 position;
+  vec3 intensities;
+  float ambientCoefficient;
+  float attenuation;
+};
 
 float transpose(float m) {
   return m;
@@ -122,20 +132,40 @@ vec3 pow2(vec3 x, vec3 y) {
 void main(void) {
 
   v_texture_coords = a_texture_coords;
+  v_position = a_position;
   v_normal = a_normal;
+  v_model = u_model;
 
   v_light1_pos = u_light1_pos;
   v_light1_intensities = u_light1_intensities;
+  v_light1_attenuation = u_light1_attenuation;
   v_light1_ambient_coefficient = u_light1_ambient_coefficient;
 
-  vec3 surfacePos = vec3(u_model * vec4(a_position, 1));
+  Light light1;
+  light1.intensities = v_light1_intensities;
+  light1.position = v_light1_pos;
+  light1.attenuation = v_light1_attenuation;
+  light1.ambientCoefficient = v_light1_ambient_coefficient;
 
-  mat3 normalMatrix = transpose(inverse(mat3(u_model)));
-  vec3 normal = normalize(normalMatrix * a_normal);
+  vec3 surfacePos = vec3(v_model * vec4(v_position, 1));
 
-  vec3 surfaceToLight = u_light1_pos - surfacePos;
+  mat3 normalMatrix = transpose(inverse(mat3(v_model)));
+  vec3 normal = normalize(normalMatrix * v_normal);
+
+  vec3 fragPosition = vec3(v_model * vec4(v_position, 1));
+
+  vec3 surfaceToLight = light1.position - fragPosition;
+
+  float brightness = dot(normal, surfaceToLight) / (length(surfaceToLight) * length(normal));
+  if (brightness > 1.0) {
+    brightness = 1.0;
+  } else if (brightness < 0.0) {
+    brightness = 0.0;
+  }
+
+  float distanceToLight = length(light1.position - surfacePos);
 
   v_diffuseCoefficient = max(0.0, dot(normal, surfaceToLight));
-  v_attenuation = 1.0 / (1.0 + u_light1_attenuation * pow3(1.0, 2.0));
+  v_attenuation = 1.0 / (1.0 + light1.attenuation * pow3(distanceToLight, 2.0));
   gl_Position = u_projection * u_view * u_model * vec4(a_position, 1.0);
 }
