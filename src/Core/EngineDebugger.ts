@@ -1,4 +1,3 @@
-
 import EntityManager from "../Manager/EntityManager";
 import ObjectManager from "../Manager/ObjectManager";
 import Coordinate from "./Data/Coordinate";
@@ -54,6 +53,8 @@ export default class EngineDebugger {
   constructor(private canvas: HTMLCanvasElement) {
     this.createDebugUI();
     this.startUpdating();
+    this.enableDebugOnRightClick();
+    this.hide();
   }
 
   /**
@@ -201,10 +202,6 @@ export default class EngineDebugger {
           <strong style="color: #FF4444;">❌ Last Error:</strong><br>
           <span id="error-content" style="color: #FF4444; font-size: 11px; word-break: break-word;"></span>
         </div>
-        
-        <div style="margin-top: 10px; font-size: 10px; color: #888; border-top: 1px solid #444; padding-top: 8px;">
-          <strong>Controls:</strong> D=Toggle | R=Reset Camera | P=Pause
-        </div>
       </div>
     `;
 
@@ -308,19 +305,19 @@ export default class EngineDebugger {
     // Get camera info
     const cameraInfo = {
       position: { 
-        x: Math.round(camera.camera3d.position.x * 100) / 100, 
-        y: Math.round(camera.camera3d.position.y * 100) / 100, 
-        z: Math.round(camera.camera3d.position.z * 100) / 100 
+        x: Math.round(camera.getActiveCamera().position.x * 100) / 100, 
+        y: Math.round(camera.getActiveCamera().position.y * 100) / 100, 
+        z: Math.round(camera.getActiveCamera().position.z * 100) / 100 
       },
       rotation: { 
-        ax: Math.round(camera.camera3d.position.ax * 100) / 100, 
-        ay: Math.round(camera.camera3d.position.ay * 100) / 100, 
-        az: Math.round(camera.camera3d.position.az * 100) / 100 
+        ax: Math.round(camera.getActiveCamera().position.ax * 100) / 100, 
+        ay: Math.round(camera.getActiveCamera().position.ay * 100) / 100, 
+        az: Math.round(camera.getActiveCamera().position.az * 100) / 100 
       },
       origin: {
-        x: Math.round(camera.camera3d.position.originX * 100) / 100,
-        y: Math.round(camera.camera3d.position.originY * 100) / 100,
-        z: Math.round(camera.camera3d.position.originZ * 100) / 100
+        x: Math.round(camera.getActiveCamera().position.originX * 100) / 100,
+        y: Math.round(camera.getActiveCamera().position.originY * 100) / 100,
+        z: Math.round(camera.getActiveCamera().position.originZ * 100) / 100
       }
     };
 
@@ -546,13 +543,47 @@ export default class EngineDebugger {
     resetOriginBtn?.addEventListener('click', () => this.resetCameraOrigin());
   }
 
+  public enableDebugOnRightClick(): void {
+    this.canvas.addEventListener('contextmenu', (event) => {
+      event.preventDefault();
+
+      const debugMenu = document.createElement('div');
+      debugMenu.style.cssText = `
+        position: absolute;
+        top: ${event.clientY}px;
+        left: ${event.clientX}px;
+        background: #333;
+        color: white;
+        border: 1px solid #555;
+        padding: 10px;
+        border-radius: 5px;
+        z-index: 10001;
+      `;
+      debugMenu.innerHTML = '<button id="debug-toggle">Toggle Debug</button>';
+
+      document.body.appendChild(debugMenu);
+
+      const toggleButton = debugMenu.querySelector('#debug-toggle') as HTMLButtonElement;
+      toggleButton.addEventListener('click', () => {
+        this.toggle();
+        document.body.removeChild(debugMenu);
+      });
+
+      document.addEventListener('click', () => {
+        if (document.body.contains(debugMenu)) {
+          document.body.removeChild(debugMenu);
+        }
+      }, { once: true });
+    });
+  }
+
   private setCameraPosition(axis: string, value: string): void {
     if (!this.engineHelper || !this.engineHelper.camera) return;
     
     const numValue = parseFloat(value);
     if (isNaN(numValue)) return;
     
-    const camera = this.engineHelper.camera.camera3d;
+    const camera = this.engineHelper.camera.getActiveCamera();
     switch (axis) {
       case 'x':
         camera.position.x = numValue;
@@ -573,7 +604,7 @@ export default class EngineDebugger {
     const numValue = parseFloat(value);
     if (isNaN(numValue)) return;
     
-    const camera = this.engineHelper.camera.camera3d;
+    const camera = this.engineHelper.camera.getActiveCamera();
     switch (axis) {
       case 'ax':
         camera.position.ax = numValue;
@@ -594,7 +625,7 @@ export default class EngineDebugger {
     const numValue = parseFloat(value);
     if (isNaN(numValue)) return;
     
-    const camera = this.engineHelper.camera.camera3d;
+    const camera = this.engineHelper.camera.getActiveCamera();
     switch (axis) {
       case 'x':
         camera.position.originX = numValue;
@@ -615,7 +646,7 @@ export default class EngineDebugger {
   private resetCamera(): void {
     if (!this.engineHelper || !this.engineHelper.camera) return;
     
-    const camera = this.engineHelper.camera.camera3d;
+    const camera = this.engineHelper.camera.getActiveCamera();
     camera.center(0, 2, 5);
     camera.position.ax = 0;
     camera.position.ay = 0;
@@ -627,7 +658,7 @@ export default class EngineDebugger {
   private lookAtOrigin(): void {
     if (!this.engineHelper || !this.engineHelper.camera) return;
     
-    const camera = this.engineHelper.camera.camera3d;
+    const camera = this.engineHelper.camera.getActiveCamera();
     camera.lookAt(0, 0, 0);
     camera.updateProjectionView();
     console.log('Camera looking at origin');
@@ -636,7 +667,7 @@ export default class EngineDebugger {
   private resetCameraOrigin(): void {
     if (!this.engineHelper || !this.engineHelper.camera) return;
     
-    const camera = this.engineHelper.camera.camera3d;
+    const camera = this.engineHelper.camera.getActiveCamera();
     camera.position.originX = 0;
     camera.position.originY = 0;
     camera.position.originZ = 0;
