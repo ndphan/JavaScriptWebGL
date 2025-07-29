@@ -1,67 +1,91 @@
 var path = require("path");
-var CopyPlugin = require('copy-webpack-plugin');
-var CleanWebpackPlugin = require('clean-webpack-plugin');
-
 var nodeModulesPath = path.resolve(__dirname, "node_modules");
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-  devServer: {
-    contentBase: path.join(__dirname, "build"),
-    host: "localhost",
-    port: "3000",
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers": "*"
-    }
+  externals: {},
+  plugins: [
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, 'src/Core/WebGL/Shaders'),
+          to: path.resolve(__dirname, 'dist/Core/WebGL/Shaders'),
+          filter: (resourcePath) => resourcePath.endsWith('.glsl'),
+        },
+      ],
+    }),
+  ],
+  performance: {
+    hints: false
   },
-  entry: {
-    index: "./src/index.ts"
+  resolve: {
+    modules: ["src", "node_modules"],
+    extensions: [".js", ".ts", ".tsx", ".glsl", ".*"],
   },
   output: {
-    path: path.join(__dirname, "build"),
-    filename: "[name].js"
+    path: path.join(__dirname, "dist"),
+    filename: "[name].js",
+    library: {
+      type: "umd",
+      name: "SynarenEngine"
+    },
+    globalObject: "this"
   },
   module: {
-    rules: [{
+    rules: [
+      {
         test: /\.tsx?$/,
-        loaders: ["babel-loader"],
-        exclude: [/node_modules/, nodeModulesPath]
+        loader: "babel-loader",
+        options: {
+          presets: [
+            [
+              "@babel/preset-env"
+            ],
+          ],
+        },
+        exclude: [/node_modules/, nodeModulesPath],
       },
       {
         test: /\.tsx?$/,
-        use: [{
-          loader: "ts-loader",
-          options: {
-            // transpileOnly: true
-          }
-        }],
-        exclude: [/node_modules/, nodeModulesPath]
-      },
-      {
-        test: /\.(jsx?)$/,
-        loaders: ["babel-loader"],
-        exclude: [/node_modules/, nodeModulesPath]
+        use: [
+          {
+            loader: "ts-loader",
+            options: {
+              transpileOnly: true,
+            },
+          },
+        ],
+        exclude: [/node_modules/, nodeModulesPath],
       },
       {
         test: /\.(png|svg|jpg|gif)$/,
-        loader: "file-loader"
+        loader: "file-loader",
       },
       {
         test: /\.css$/,
-        use: ["style-loader", "css-loader"]
+        use: ["style-loader", "css-loader"],
+      },
+      {
+        test: /\.glsl$/i,
+        use: "raw-loader",
+      },
+      {
+        test: /\.js$/,
+        loader: "babel-loader",
+        options: {
+          presets: [
+            [
+              "@babel/preset-env"
+            ],
+          ],
+        },
       }
-    ]
+    ],
   },
-  externals: {},
-  plugins: [
-    new CleanWebpackPlugin(),
-    new CopyPlugin([{
-      from: 'public',
-      to: ''
-    }])
-  ],
-  resolve: {
-    modules: ["src", "node_modules"],
-    extensions: ["*", ".js", ".jsx", ".ts", ".tsx"]
+  devServer: {
+    static: path.join(__dirname, 'public'),
+    port: 3030,
+    hot: true,
+    open: true
   }
 };

@@ -1,0 +1,2 @@
+$source = /assets/missing-texture.png
+missing = 0 0 1184 1184
