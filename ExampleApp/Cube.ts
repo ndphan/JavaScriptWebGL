@@ -81,14 +81,14 @@ export default class Cube extends EntityManager {
     this.centerRect(rect);
     this.rotateOriginRect(rect);
 
-    this.planes[0].center(x, y, z + length);
-    this.planes[1].center(x, y, z);
-    this.planes[2].center(x, y, z);
-    this.planes[3].center(x, y + height, z);
-    this.planes[4].center(x + width, y, z);
-    this.planes[5].center(x, y, z);
+    this.planes[0].center(x, y, z + length / 2);
+    this.planes[1].center(x, y, z - length / 2);
+    this.planes[2].center(x, y - height / 2, z);
+    this.planes[3].center(x, y + height / 2, z);
+    this.planes[4].center(x + width / 2, y, z);
+    this.planes[5].center(x - width / 2, y, z);
 
-    this.rotateOriginRect(this.getRect().center());
+    this.rotateOriginRect(this.getRect());
 
     super.init(engineHelper);
   }

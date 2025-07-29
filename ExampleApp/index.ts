@@ -191,7 +191,7 @@ export default class World extends ObjectManager {
     };
     this.addEntity(this.ground);
 
-    this.cube = new Cube(new Rect3d(-4, 2, -12, 1, 1, 1), "assets/atlas.png", [
+    this.cube = new Cube(new Rect3d(-4, 2, -12, 0.9, 0.9, 0.9), "assets/atlas.png", [
       "wood",
       "cloth",
       "sky",
@@ -211,7 +211,7 @@ export default class World extends ObjectManager {
     };
     this.addEntity(this.cube);
 
-    this.cube2 = new Cube(new Rect3d(4, 2, 2, 1, 1, 1), "assets/atlas.png", [
+    this.cube2 = new Cube(new Rect3d(-2.2, 2, 9, .9, .9, .9), "assets/atlas.png", [
       "wood",
       "cloth",
       "sky",
