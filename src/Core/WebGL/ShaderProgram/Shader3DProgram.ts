@@ -40,6 +40,7 @@ export default class Shader3DProgram extends BaseProgram {
   shadowDepthTexture: WebGLTexture;
   shadowRenderBuffer: WebGLRenderbuffer;
 
+  isLightingEnabledUniform: ProgramReference;
   shadowPos: ProgramReference;
   shadowProjection: ProgramReference;
   shadowView: ProgramReference;
@@ -53,6 +54,8 @@ export default class Shader3DProgram extends BaseProgram {
 
   // this must be changed in shader as well.
   shadowDepthTextureSize = 1024.0;
+
+  isLightingEnabled: boolean = true;
 
   constructor(ctx: WebGLRenderingContext) {
     super(ctx);
@@ -134,6 +137,13 @@ export default class Shader3DProgram extends BaseProgram {
     );
     this.light1AmbCoeff = new ProgramReference(
       "u_light1_ambient_coefficient",
+      ctx,
+      false,
+      this.program
+    );
+
+    this.isLightingEnabledUniform = new ProgramReference(
+      "u_isLightingEnabled",
       ctx,
       false,
       this.program
@@ -293,6 +303,8 @@ export default class Shader3DProgram extends BaseProgram {
 
     this.bindProgram();
     const ctx = this.ctx;
+    ctx.uniform1i(this.isLightingEnabledUniform.ref, this.isLightingEnabled ? 1 : 0);
+
     ctx.uniform3fv(this.light1Pos.ref, light.pos);
     ctx.uniform3fv(this.light1Intensities.ref, light.in);
     ctx.uniform1f(this.light1AmbCoeff.ref, light.ambientCoeff);
@@ -316,6 +328,10 @@ export default class Shader3DProgram extends BaseProgram {
       ctx.uniformMatrix4fv(this.shadowView.ref, false, lookAt);
       ctx.uniformMatrix4fv(this.shadowProjection.ref, false, cameraFrustum);
     }
+  }
+
+  toggleLighting(enable: boolean) {
+    this.isLightingEnabled = enable;
   }
 
   prepareShadowTexture() {

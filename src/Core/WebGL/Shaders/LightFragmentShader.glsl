@@ -17,6 +17,8 @@ uniform sampler2D texture;
 uniform sampler2D shadowMap;
 uniform float numLights;
 
+uniform bool u_isLightingEnabled;
+
 struct Light {
   vec3 position;
   vec3 intensities;
@@ -25,6 +27,12 @@ struct Light {
 };
 
 void main(void) {
+  if (!u_isLightingEnabled) {
+    vec4 surfaceColor = texture2D(texture, v_texture_coords);
+    gl_FragColor = surfaceColor;
+    return;
+  }
+
   Light light1;
   light1.intensities = v_light1_intensities;
   light1.position = v_light1_pos;

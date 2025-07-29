@@ -14,6 +14,8 @@ uniform vec3 u_light1_intensities;
 uniform float u_light1_attenuation;
 uniform float u_light1_ambient_coefficient;
 
+uniform bool u_isLightingEnabled;
+
 varying vec2 v_texture_coords;
 varying vec3 v_position;
 varying vec3 v_normal;
@@ -129,7 +131,13 @@ vec3 pow2(vec3 x, vec3 y) {
   return vec3(pow3(x.x, y.x), pow3(x.y, y.y), pow3(x.z, y.z));
 }
 
+
 void main(void) {
+  if (!u_isLightingEnabled) {
+    gl_Position = u_projection * u_view * u_model * vec4(a_position, 1.0);
+    v_texture_coords = a_texture_coords;
+    return;
+  }
 
   v_texture_coords = a_texture_coords;
   v_position = a_position;

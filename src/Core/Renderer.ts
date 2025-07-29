@@ -107,6 +107,7 @@ class Renderer {
   subscriberPool: SubscriberPool;
   glContext: WebGLContext;
   cachedModelData: { [key: number]: number } = {};
+  private enableLighting: boolean;
 
   constructor(
     args: { [key: string]: any },
@@ -126,6 +127,7 @@ class Renderer {
     this.ctx = this.webGLContainer.getCtx();
     this.glContext = new WebGLContext(this.ctx);
     this.glContext.setupDefault();
+    this.enableLighting = args.enableLighting !== undefined ? args.enableLighting : true;
 
     this.subscriberPool.listen(RendererSubscription.CREATE_TEXTURE, (data) => {
       const [object, resourcesLoading] = data;
@@ -265,6 +267,7 @@ class Renderer {
 
   init() {
     this.readMessages(RendererNotification.NOTIFICATION_INIT_KEY);
+    this.shader3DProgram?.toggleLighting(this.enableLighting);
   }
 
   readMessages(key: string, isUniqueAction = false) {

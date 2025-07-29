@@ -178,6 +178,10 @@ class Entity3DProgram {
     object.rendererBufferId = this.program.arrayBuffer.bufferRegId;
     this.program.arrayBuffer.bufferRegId++;
   }
+
+  toggleLighting(enable: boolean) {
+    this.program.toggleLighting(enable);
+  }
 }
 
 export default Entity3DProgram;
