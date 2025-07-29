@@ -135,11 +135,11 @@ export default class Events {
 
   isBodyFocus(callback: (event: any) => void): (event: any) => void {
     return (_event: any[]) => {
-      if (window.document.activeElement === window.document.body) {
+      // if (window.document.activeElement === window.document.body) {
         callback(_event);
-      } else {
-        // console.trace('body is not focused when event triggered', event);
-      }
+      // } else {
+      //   console.trace('body is not focused when event triggered', event);
+      // }
     };
   }
 
@@ -255,6 +255,7 @@ export default class Events {
       rawEvent: evt,
       isDown: type === Events.DOWN,
       isUp: type === Events.UP,
+      code: evt instanceof KeyboardEvent ? evt.code : undefined,
     };
   };
 

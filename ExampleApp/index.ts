@@ -21,6 +21,7 @@ import {
 import Cube from "./Cube";
 import Ground3d from "./Ground3d";
 import Sphere from "./Sphere";
+import { CrystalCollectorGame, createCrystalCollectorApp } from "./CrystalCollectorGame";
 
 
 export default class World extends ObjectManager {
@@ -329,7 +330,25 @@ const createApp = () => {
 
 window.onload = function () {
   try {
-    createApp();
+    // Check URL parameter to decide which app to load
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameMode = urlParams.get('game');
+    
+    if (gameMode === 'crystal-collector') {
+      // Load Crystal Collector Game
+      createCrystalCollectorApp();
+      
+      // Expose game instance for UI updates
+      setTimeout(() => {
+        const canvas = document.getElementById('app-game');
+        if (canvas && (canvas as any).app && (canvas as any).app.world) {
+          (window as any).gameInstance = (canvas as any).app.world;
+        }
+      }, 1000);
+    } else {
+      // Load default example app
+      createApp();
+    }
   } catch (error) {
     console.error(error);
   }
