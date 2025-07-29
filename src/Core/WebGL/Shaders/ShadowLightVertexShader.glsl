@@ -17,6 +17,8 @@ uniform float u_light1_ambient_coefficient;
 uniform mat4 u_light1_view;
 uniform mat4 u_light1_projection;
 
+uniform bool u_isLightingEnabled;
+
 varying vec2 v_texture_coords;
 varying vec3 v_position;
 varying vec3 v_normal;
@@ -129,7 +131,12 @@ mat4 inverse(mat4 m) {
 const mat4 norm_shadow_coords = mat4(0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);
 
 void main(void) {
-
+  if (!u_isLightingEnabled) {
+    gl_Position = u_projection * u_view * u_model * vec4(a_position, 1.0);
+    v_texture_coords = a_texture_coords;
+    return;
+  }
+  
   v_texture_coords = a_texture_coords;
   v_position = a_position;
   v_normal = a_normal;

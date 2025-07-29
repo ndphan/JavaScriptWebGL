@@ -136,7 +136,7 @@ export default class World extends ObjectManager {
     this.engineHelper.camera.camera3d.updateProjectionView();
 
     this.sky = new Sphere(
-      new Rect3d(0.0, 2.0, 0.0, 30.0, 32.0, 30.0),
+      new Rect3d(0.0, 2.0, 0.0, 100.0, 100.0, 100.0),
       "background"
     );
     this.addEntity(this.sky);
@@ -281,7 +281,7 @@ export default class World extends ObjectManager {
 
     this.engineHelper.setLighting(
       new Light({
-        pos: [-20, 15, -20],
+        pos: [0.0, 10, -15],
         // intensity and color in rgb
         in: [1.0, 1.0, 1.0],
         // rate of loss in light intensity from source pos
@@ -295,18 +295,6 @@ export default class World extends ObjectManager {
     );
   }
 }
-
-// Utility to compute frustum params based on aspect ratio
-const getFrustum = (aspect) => {
-  const frustumHeight = 1;
-  const frustumWidth = frustumHeight * aspect;
-  return {
-    left: -frustumWidth / 2,
-    right: frustumWidth / 2,
-    bottom: -frustumHeight / 2,
-    top: frustumHeight / 2
-  };
-};
 
 const createApp = () => {
   const aspect = window.innerWidth / window.innerHeight;
@@ -324,8 +312,7 @@ const createApp = () => {
       maxFov: 120.0, // Set reasonable max FOV
       isFovMax: false, // Don't use max FOV calculation
       projection: 'perspective', // Use perspective projection
-      aspect,
-      ...getFrustum(aspect),
+      aspect
     },
     aspectRatio: aspect,
     eventThrottle: 1000.0 / 60.0,

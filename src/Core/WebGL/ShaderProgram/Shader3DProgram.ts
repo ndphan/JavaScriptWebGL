@@ -48,7 +48,7 @@ export default class Shader3DProgram extends BaseProgram {
 
   shadowTextureUnit: number;
 
-  isShadowEnabled: boolean;
+  isShadowEnabled: boolean = true;
 
   light: Light;
 
