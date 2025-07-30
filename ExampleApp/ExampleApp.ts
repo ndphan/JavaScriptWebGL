@@ -311,8 +311,8 @@ const createExampleApp = () => {
     camera: {
       near: 0.01,
       far: 1000.0,
-      fov: 120.0,
-      maxFov: 120.0,
+      fov: 60.0,
+      maxFov: 60.0,
       isFovMax: false,
       projection: 'perspective',
       aspect
