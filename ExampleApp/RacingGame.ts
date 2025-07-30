@@ -170,10 +170,10 @@ export default class RacingGame extends ObjectManager {
   updatePlayerMovement() {
     if (!this.gameStarted || this.raceFinished) return;
 
-    // Handle acceleration/deceleration
-    if (this.keys['keys']) {
+    // Handle acceleration/deceleration - Fixed key mapping
+    if (this.keys['keyw']) {
       this.playerSpeed = Math.min(this.playerSpeed + this.acceleration, this.maxSpeed);
-    } else if (this.keys['keyw']) {
+    } else if (this.keys['keys']) {
       this.playerSpeed = Math.max(this.playerSpeed - this.deceleration, -this.maxSpeed * 0.5);
     } else {
       // Natural deceleration
@@ -184,17 +184,17 @@ export default class RacingGame extends ObjectManager {
       }
     }
 
-    // Handle turning
+    // Handle turning - Fixed left/right inversion
     if (this.keys['keya']) {
-      this.playerRotation += this.turnSpeed;
+      this.playerRotation -= this.turnSpeed; // Changed to -= for left turn
     }
     if (this.keys['keyd']) {
-      this.playerRotation -= this.turnSpeed;
+      this.playerRotation += this.turnSpeed; // Changed to += for right turn
     }
 
-    // Update position based on rotation and speed
+    // Update position based on rotation and speed - Fixed forward/backward direction
     this.playerPosition.x += Math.sin(this.playerRotation) * this.playerSpeed;
-    this.playerPosition.z += Math.cos(this.playerRotation) * this.playerSpeed;
+    this.playerPosition.z -= Math.cos(this.playerRotation) * this.playerSpeed; // Changed to -= for correct forward direction
 
     // Update player car position and rotation
     if (this.playerCar) {
@@ -285,15 +285,23 @@ export default class RacingGame extends ObjectManager {
       this.sky.center(x, y, z);
     }
 
-    // Update camera to follow player
+    // Update camera to follow player - Fixed camera logic with corrected directions
     if (this.playerCar && this.gameStarted) {
       const cameraOffset = 5;
       const cameraHeight = 3;
 
+      // Calculate camera position behind the player car - Fixed direction
       const cameraX = this.playerPosition.x - Math.sin(this.playerRotation) * cameraOffset;
-      const cameraZ = this.playerPosition.z - Math.cos(this.playerRotation) * cameraOffset;
+      const cameraZ = this.playerPosition.z + Math.cos(this.playerRotation) * cameraOffset; // Changed to + for correct behind position
 
+      // Use simple center positioning instead of lookAt to avoid rotation conflicts
       this.engineHelper.camera.camera3d.center(cameraX, cameraHeight, cameraZ);
+      
+      // Set camera angles to follow the car's direction
+      this.engineHelper.camera.camera3d.position.ay = this.playerRotation * (180 / Math.PI);
+      this.engineHelper.camera.camera3d.position.ax = -10; // Slight downward angle
+      this.engineHelper.camera.camera3d.position.az = 0;   // No roll
+      
       this.engineHelper.camera.camera3d.updateProjectionView();
     }
   }
