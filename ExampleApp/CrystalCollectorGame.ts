@@ -1,12 +1,12 @@
 import {
-    App,
-    EngineEvent,
-    EngineObject,
-    Events,
-    Light,
-    ObjectManager,
-    Rect3d,
-    ResourceResolver
+  App,
+  EngineEvent,
+  EngineObject,
+  Events,
+  Light,
+  ObjectManager,
+  Rect3d,
+  ResourceResolver
 } from "synaren-engine";
 import Cube from "./Cube";
 import Ground3d from "./Ground3d";

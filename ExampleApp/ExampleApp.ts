@@ -1,7 +1,9 @@
 import {
   App,
   BitmapConfigParser,
+  Coordinate,
   EngineEvent,
+  EngineHelper,
   EngineObject,
   Events,
   Light,
@@ -11,12 +13,7 @@ import {
   Plane3d,
   PlaneType,
   Rect3d,
-  Rect2d,
-  RenderType,
-  ResourceResolver,
-  Colour,
-  Coordinate,
-  EngineHelper
+  ResourceResolver
 } from "synaren-engine";
 import Cube from "./Cube";
 import Ground3d from "./Ground3d";

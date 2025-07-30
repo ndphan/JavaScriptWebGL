@@ -213,12 +213,6 @@ export class BaseCamera extends ModelPosition {
     if (this.cameraOptions?.projection === 'frustum') {
       this.frustum = this.frustumMatrix();
     } else {
-      console.log("panda2", {
-        fov: this.degreesToRadians(this.fov),
-        aspect: this.aspect,
-        near: this.near,
-        far: this.far
-      })
       this.frustum = this.perspective();
     }
   };
