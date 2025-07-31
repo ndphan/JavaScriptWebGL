@@ -607,7 +607,7 @@ export default class RacingGame extends ObjectManager {
       }
     }
 
-    // Handle turning
+    // Handle turning - this will rotate the camera direction
     if (this.keys['keya']) {
       this.playerRotation += this.turnSpeed;
     }
@@ -615,15 +615,24 @@ export default class RacingGame extends ObjectManager {
       this.playerRotation -= this.turnSpeed;
     }
 
-    // Update position based on rotation and speed
-    this.playerPosition.x -= Math.sin(this.playerRotation) * this.playerSpeed;
-    this.playerPosition.z -= Math.cos(this.playerRotation) * this.playerSpeed;
-
-    // Update player car visual position and rotation
-    if (this.playerCar) {
-      this.playerCar.position.x = this.playerPosition.x;
-      this.playerCar.position.z = this.playerPosition.z;
-      this.playerCar.angleY(this.playerRotation * (180 / Math.PI)); // Convert radians to degrees for proper rotation
+    // Position player car directly in front of camera based on camera direction
+    if (this.playerCar && this.engineHelper.camera.camera3d) {
+      const camera = this.engineHelper.camera.camera3d;
+      
+      // Calculate forward direction from camera rotation
+      const forwardX = -Math.sin(this.playerRotation);
+      const forwardZ = -Math.cos(this.playerRotation);
+      
+      // Move position forward based on speed
+      this.playerPosition.x += forwardX * this.playerSpeed;
+      this.playerPosition.z += forwardZ * this.playerSpeed;
+      
+      // Position car directly in front of camera
+      const carDistance = 5; // Distance in front of camera
+      this.playerCar.position.x = this.playerPosition.x + forwardX * carDistance;
+      this.playerCar.position.y = this.playerPosition.y;
+      this.playerCar.position.z = this.playerPosition.z + forwardZ * carDistance;
+      this.playerCar.angleY(this.playerRotation * (180 / Math.PI));
     }
 
     // Check waypoint progress
@@ -782,20 +791,20 @@ export default class RacingGame extends ObjectManager {
       this.sky.center(x, y, z);
     }
 
-    // Update camera to follow player - Sticky camera that follows all movements
+    // Update camera to follow player - Fixed camera system
     if (this.playerCar) {
       const cameraOffset = 15;  // Distance behind car
       const cameraHeight = 8;   // Height above car
       
-      // Calculate camera position that sticks behind the player car
+      // Calculate camera position based on player position and rotation
       const cameraX = this.playerPosition.x - Math.sin(this.playerRotation) * cameraOffset;
       const cameraZ = this.playerPosition.z + Math.cos(this.playerRotation) * cameraOffset;
       const cameraY = this.playerPosition.y + cameraHeight;
 
-      // Position camera behind and above car
+      // Position camera behind player
       this.engineHelper.camera.camera3d.center(cameraX, cameraY, cameraZ);
       
-      // Always look directly at the player car
+      // Look at the player position (not the car position which is offset)
       this.engineHelper.camera.camera3d.lookAt(
         this.playerPosition.x, 
         this.playerPosition.y + 1, 
