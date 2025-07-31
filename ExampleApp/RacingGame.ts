@@ -47,7 +47,9 @@ export default class RacingGame extends ObjectManager {
   ground: Plane3d;
   sky: Sphere;
   trackBarriers: Cube[] = [];
-  waypointTiles: Cube[] = []; // Visual tiles for waypoint path
+  waypointTiles: Cube[] = [];
+
+  // Movement speeds
   crowd: Object3d[] = []; // Low poly girls as crowd
   trees: Object3d[] = []; // Low poly trees for nature scenery
 
@@ -181,7 +183,7 @@ export default class RacingGame extends ObjectManager {
     treePositions.forEach((pos, index) => {
       try {
         const tree = new Object3d(
-          new Rect3d(pos.x, 3, pos.z, 6, 6, 6), // Trees at y=3 (half height above ground = 3 units tall)
+          new Rect3d(pos.x, 0, pos.z, 6, 6, 6), // Trees at y=3 (half height above ground = 3 units tall)
           "low_poly_tree"
         );
         
@@ -235,7 +237,7 @@ export default class RacingGame extends ObjectManager {
 
       // Create the car as an Object3d
       const carObject = new Object3d(
-        new Rect3d(startX, 0.5, startZ, 1.5, 1.5, 1.5),
+        new Rect3d(startX, 0, startZ, 1.5, 1.5, 1.5),
         "racing_car"
       );
       carObject.scale(0.6, 0.6, 0.6); // Slightly larger for visibility
@@ -249,7 +251,7 @@ export default class RacingGame extends ObjectManager {
 
       const bot: RacingBot = {
         car: moveableCar,
-        position: { x: startX, y: 0.5, z: startZ },
+        position: { x: startX, y: 0, z: startZ },
         speed: 0.12 + (Math.random() * 0.03), // Consistent moderate speed
         currentWaypoint: 0, // Start with waypoint 0 (origin)
         name: botNames[i],
@@ -305,20 +307,19 @@ export default class RacingGame extends ObjectManager {
 
   createWaypointTiles() {
     try {
-      // Create small tiles to visualize the waypoint path
+      // Create bigger tiles to visualize the waypoint path
       for (let i = 0; i < this.waypoints.length - 1; i++) { // -1 to avoid duplicate at start/end
         const waypoint = this.waypoints[i];
         
-        // Create a small cube tile at each waypoint
+        // Create a bigger cube tile at each waypoint
         const tile = new Cube(
-          new Rect3d(waypoint.x, 0.1, waypoint.z, 3, 0.1, 3), // Small, flat tiles
-          "sky", // Use grass texture from atlas instead of missing-texture
+          new Rect3d(waypoint.x, 0.2, waypoint.z, 5, 0.2, 5), // Bigger tiles: 5x5 instead of 3x3
+          "sky",
           ["sky", "sky", "sky", "sky", "sky", "sky"]
         );
         
         this.waypointTiles.push(tile);
         this.addEntity(tile);
-        // Initialize the cube entity immediately
         tile.init(this.engineHelper);
       }
       
@@ -332,30 +333,96 @@ export default class RacingGame extends ObjectManager {
         const dz = next.z - current.z;
         const distance = Math.sqrt(dx * dx + dz * dz);
         
-        // Create tiles along the path between waypoints
-        const tilesPerSegment = Math.floor(distance / 3); // One tile every 3 units
+        // Create bigger tiles along the path between waypoints
+        const tilesPerSegment = Math.floor(distance / 4); // One tile every 4 units (was 3)
         for (let j = 1; j < tilesPerSegment; j++) {
           const progress = j / tilesPerSegment;
           const x = current.x + dx * progress;
           const z = current.z + dz * progress;
           
           const pathTile = new Cube(
-            new Rect3d(x, 0.05, z, 3, 0.1, 3), // Even smaller path tiles
-            "ground", // Use ground texture from atlas
+            new Rect3d(x, 0.1, z, 4, 0.1, 4), // Bigger path tiles: 4x4 instead of 3x3
+            "ground",
             ["ground", "ground", "ground", "ground", "ground", "ground"]
           );
           
           this.waypointTiles.push(pathTile);
           this.addEntity(pathTile);
-          // Initialize the cube entity immediately
           pathTile.init(this.engineHelper);
         }
       }
       
-      console.log(`Created ${this.waypointTiles.length} waypoint path tiles`);
+      // Create course walls around the track edges
+      this.createCourseWalls();
+      
+      console.log(`Created ${this.waypointTiles.length} bigger waypoint path tiles and course walls`);
     } catch (error) {
       console.error('Error creating waypoint tiles:', error);
     }
+  }
+
+  createCourseWalls() {
+    // Create walls around the course perimeter
+    const wallHeight = 2;
+    const wallThickness = 1;
+    
+    // Outer walls - create a rectangular boundary around the track
+    const outerWalls = [
+      // North wall
+      { x: 0, z: -10, width: 70, height: wallHeight, depth: wallThickness },
+      // South wall  
+      { x: 0, z: 55, width: 70, height: wallHeight, depth: wallThickness },
+      // West wall
+      { x: -35, z: 22.5, width: wallThickness, height: wallHeight, depth: 65 },
+      // East wall
+      { x: 35, z: 22.5, width: wallThickness, height: wallHeight, depth: 65 }
+    ];
+
+    outerWalls.forEach((wall, index) => {
+      try {
+        const wallCube = new Cube(
+          new Rect3d(wall.x, wall.height / 2, wall.z, wall.width, wall.height, wall.depth),
+          "rock", // Use a distinct texture for walls
+          ["rock", "rock", "rock", "rock", "rock", "rock"]
+        );
+        
+        this.trackBarriers.push(wallCube);
+        this.addEntity(wallCube);
+        wallCube.init(this.engineHelper);
+      } catch (error) {
+        console.warn('Failed to create course wall:', error);
+      }
+    });
+
+    // Inner walls - create some barriers around key sections of the track
+    const innerBarriers = [
+      // Barriers around turns
+      { x: 25, z: 5, width: 2, height: wallHeight, depth: 8 },
+      { x: 25, z: 35, width: 2, height: wallHeight, depth: 8 },
+      { x: -25, z: 5, width: 2, height: wallHeight, depth: 8 },
+      { x: -25, z: 35, width: 2, height: wallHeight, depth: 8 },
+      // Center barriers
+      { x: 0, z: 15, width: 8, height: wallHeight, depth: 2 },
+      { x: 0, z: 25, width: 8, height: wallHeight, depth: 2 }
+    ];
+
+    innerBarriers.forEach((barrier, index) => {
+      try {
+        const barrierCube = new Cube(
+          new Rect3d(barrier.x, barrier.height / 2, barrier.z, barrier.width, barrier.height, barrier.depth),
+          "rock",
+          ["rock", "rock", "rock", "rock", "rock", "rock"]
+        );
+        
+        this.trackBarriers.push(barrierCube);
+        this.addEntity(barrierCube);
+        barrierCube.init(this.engineHelper);
+      } catch (error) {
+        console.warn('Failed to create inner barrier:', error);
+      }
+    });
+
+    console.log(`Created ${outerWalls.length + innerBarriers.length} course walls and barriers`);
   }
 
   startRace() {
@@ -527,17 +594,17 @@ export default class RacingGame extends ObjectManager {
       this.sky.center(x, y, z);
     }
 
-    // Update camera to follow player - Fixed camera that rotates on spot
+    // Update camera to follow player - Fixed camera that rotates properly
     if (this.playerCar) {
       const cameraOffset = 12;  // Distance behind car (increased for better view)
       const cameraHeight = 5;   // Height above ground
       
-      // Calculate camera position behind the player car
-      const cameraX = this.playerPosition.x + Math.sin(this.playerRotation) * cameraOffset;
+      // Calculate camera position behind the player car (fixed direction)
+      const cameraX = this.playerPosition.x - Math.sin(this.playerRotation) * cameraOffset;
       const cameraZ = this.playerPosition.z + Math.cos(this.playerRotation) * cameraOffset;
 
-      // Calculate look-at point in front of the car
-      const lookAtX = this.playerPosition.x - Math.sin(this.playerRotation) * 5;
+      // Calculate look-at point in front of the car (fixed direction)
+      const lookAtX = this.playerPosition.x + Math.sin(this.playerRotation) * 5;
       const lookAtZ = this.playerPosition.z - Math.cos(this.playerRotation) * 5;
 
       // Position camera behind car
