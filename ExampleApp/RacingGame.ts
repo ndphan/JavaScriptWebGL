@@ -53,56 +53,30 @@ export default class RacingGame extends ObjectManager {
   crowd: Object3d[] = []; // Low poly girls as crowd
   trees: Object3d[] = []; // Low poly trees for nature scenery
 
-  // Race track waypoints (defines the racing line) - Complex track within 1000x1000 ground
+  // Race track waypoints (defines the racing line) - Simplified track within 1000x1000 ground
   waypoints: Waypoint[] = [
     // Start/Finish line
     { x: 0, z: 0 },
     
-    // First sector - long straight and sweeping turns
-    { x: 100, z: 0 },
-    { x: 200, z: 20 },
-    { x: 280, z: 60 },
-    { x: 320, z: 120 },
-    { x: 340, z: 200 },
+    // First sector - right turn
+    { x: 150, z: 0 },
+    { x: 250, z: 100 },
+    { x: 250, z: 200 },
     
-    // Second sector - technical section with tight corners
-    { x: 350, z: 280 },
-    { x: 320, z: 350 },
-    { x: 280, z: 400 },
-    { x: 220, z: 430 },
-    { x: 150, z: 440 },
-    { x: 80, z: 430 },
-    { x: 20, z: 400 },
-    { x: -20, z: 350 },
+    // Second sector - top straight and left turn
+    { x: 200, z: 300 },
+    { x: 50, z: 350 },
+    { x: -100, z: 300 },
     
-    // Third sector - chicane and hairpin
-    { x: -10, z: 300 },
-    { x: 30, z: 280 },
-    { x: -10, z: 260 },
-    { x: -50, z: 240 },
-    { x: -100, z: 220 },
-    { x: -150, z: 180 },
-    { x: -180, z: 120 },
+    // Third sector - left side and hairpin
+    { x: -200, z: 200 },
+    { x: -250, z: 50 },
+    { x: -200, z: -100 },
     
-    // Fourth sector - back straight with curves
-    { x: -200, z: 60 },
-    { x: -220, z: 0 },
-    { x: -240, z: -60 },
-    { x: -250, z: -120 },
-    { x: -240, z: -180 },
-    { x: -200, z: -220 },
-    { x: -150, z: -240 },
-    
-    // Fifth sector - return to start with sweepers
-    { x: -100, z: -250 },
-    { x: -50, z: -240 },
-    { x: 0, z: -220 },
-    { x: 50, z: -180 },
-    { x: 80, z: -120 },
-    { x: 90, z: -60 },
-    { x: 80, z: -20 },
-    { x: 50, z: -10 },
-    { x: 20, z: -5 },
+    // Fourth sector - bottom straight and return
+    { x: -50, z: -150 },
+    { x: 100, z: -100 },
+    { x: 0, z: -50 },
     
     // Complete the loop back to start
     { x: 0, z: 0 }
@@ -162,15 +136,48 @@ export default class RacingGame extends ObjectManager {
   }
 
   createSimpleCrowd() {
-    // Create a simple crowd around the center
-    const crowdPositions = [
-      { x: 0, z: 20 },
-      { x: 10, z: 20 },
-      { x: -10, z: 20 },
-      { x: 0, z: 30 },
-      { x: 15, z: 15 },
-      { x: -15, z: 15 }
-    ];
+    // Create minimal crowd dynamically based on waypoints for performance
+    const crowdPositions: {x: number, z: number}[] = [];
+    
+    // Calculate the center point of the track
+    const centerX = this.waypoints.reduce((sum, wp) => sum + wp.x, 0) / this.waypoints.length;
+    const centerZ = this.waypoints.reduce((sum, wp) => sum + wp.z, 0) / this.waypoints.length;
+    
+    // Place crowd members around key waypoints (every 5th waypoint to reduce crowd)
+    for (let i = 0; i < this.waypoints.length; i += 5) {
+      const waypoint = this.waypoints[i];
+      
+      // Calculate direction from waypoint to track center
+      const dx = centerX - waypoint.x;
+      const dz = centerZ - waypoint.z;
+      const distance = Math.sqrt(dx * dx + dz * dz);
+      
+      if (distance > 0) {
+        // Normalize direction
+        const normalizedDx = dx / distance;
+        const normalizedDz = dz / distance;
+        
+        // Place crowd members on the inside of the track (toward center)
+        const crowdDistance = 15; // Distance from waypoint toward center
+        const crowdX = waypoint.x + normalizedDx * crowdDistance;
+        const crowdZ = waypoint.z + normalizedDz * crowdDistance;
+        
+        crowdPositions.push({ x: crowdX, z: crowdZ });
+        
+        // Add only one variation around each main position (was 2)
+        crowdPositions.push(
+          { x: crowdX + (Math.random() - 0.5) * 12, z: crowdZ + (Math.random() - 0.5) * 12 }
+        );
+      }
+    }
+    
+    // Add minimal crowd in the calculated center area (reduced from 8 to 4)
+    for (let i = 0; i < 4; i++) {
+      crowdPositions.push({
+        x: centerX + (Math.random() - 0.5) * 30,
+        z: centerZ + (Math.random() - 0.5) * 30
+      });
+    }
 
     crowdPositions.forEach((pos, index) => {
       try {
@@ -189,48 +196,105 @@ export default class RacingGame extends ObjectManager {
       }
     });
 
-    console.log(`Created ${this.crowd.length} crowd members`);
+    console.log(`Created ${this.crowd.length} crowd members dynamically based on waypoints`);
+    console.log(`Track center calculated at: (${centerX.toFixed(1)}, ${centerZ.toFixed(1)})`);
   }
 
   createTrees() {
-    // Create trees around the complex track layout - distributed across the 1000x1000 ground
-    const treePositions = [
-      // Trees around the outer perimeter of the 1000x1000 ground
-      { x: -450, z: -450 }, { x: -400, z: -450 }, { x: -350, z: -450 }, { x: -300, z: -450 }, { x: -250, z: -450 },
-      { x: 250, z: -450 }, { x: 300, z: -450 }, { x: 350, z: -450 }, { x: 400, z: -450 }, { x: 450, z: -450 },
-      { x: -450, z: 450 }, { x: -400, z: 450 }, { x: -350, z: 450 }, { x: -300, z: 450 }, { x: -250, z: 450 },
-      { x: 250, z: 450 }, { x: 300, z: 450 }, { x: 350, z: 450 }, { x: 400, z: 450 }, { x: 450, z: 450 },
+    // Create minimal trees dynamically based on waypoints for performance
+    const treePositions: {x: number, z: number}[] = [];
+    
+    // Calculate track bounds from waypoints
+    const minX = Math.min(...this.waypoints.map(wp => wp.x));
+    const maxX = Math.max(...this.waypoints.map(wp => wp.x));
+    const minZ = Math.min(...this.waypoints.map(wp => wp.z));
+    const maxZ = Math.max(...this.waypoints.map(wp => wp.z));
+    
+    // Calculate track center
+    const centerX = (minX + maxX) / 2;
+    const centerZ = (minZ + maxZ) / 2;
+    
+    // Create fewer perimeter trees around the track bounds (increased spacing)
+    const perimeterPadding = 60;
+    const treeSpacing = 50; // Increased from 25 to 50 for fewer trees
+    
+    // North and South perimeter (fewer trees)
+    for (let x = minX - perimeterPadding; x <= maxX + perimeterPadding; x += treeSpacing) {
+      treePositions.push(
+        { x: x, z: minZ - perimeterPadding },  // North
+        { x: x, z: maxZ + perimeterPadding }   // South
+      );
+    }
+    
+    // East and West perimeter (fewer trees)
+    for (let z = minZ - perimeterPadding; z <= maxZ + perimeterPadding; z += treeSpacing) {
+      treePositions.push(
+        { x: minX - perimeterPadding, z: z },  // West
+        { x: maxX + perimeterPadding, z: z }   // East
+      );
+    }
+    
+    // Create minimal trees around waypoints (every 4th waypoint instead of every 2nd)
+    for (let i = 0; i < this.waypoints.length - 1; i += 4) { // Reduced frequency
+      const current = this.waypoints[i];
+      const next = this.waypoints[i + 1];
       
-      // Trees along the sides
-      { x: -450, z: -300 }, { x: -450, z: -200 }, { x: -450, z: -100 }, { x: -450, z: 0 }, { x: -450, z: 100 }, { x: -450, z: 200 }, { x: -450, z: 300 },
-      { x: 450, z: -300 }, { x: 450, z: -200 }, { x: 450, z: -100 }, { x: 450, z: 0 }, { x: 450, z: 100 }, { x: 450, z: 200 }, { x: 450, z: 300 },
+      // Calculate perpendicular direction for placing trees beside the track
+      const dx = next.x - current.x;
+      const dz = next.z - current.z;
+      const length = Math.sqrt(dx * dx + dz * dz);
       
-      // Trees in center areas away from the track
-      { x: 0, z: 150 }, { x: 0, z: 180 }, { x: 0, z: 210 },
-      { x: -80, z: 50 }, { x: -80, z: 80 }, { x: -80, z: 110 },
-      { x: 150, z: -50 }, { x: 180, z: -50 }, { x: 210, z: -50 },
-      
-      // Scattered trees for atmosphere
-      { x: -200, z: 100 }, { x: -180, z: 150 }, { x: -220, z: 200 },
-      { x: 200, z: 100 }, { x: 180, z: 150 }, { x: 220, z: 200 },
-      { x: 100, z: -200 }, { x: 150, z: -180 }, { x: 200, z: -220 },
-      { x: -100, z: -200 }, { x: -150, z: -180 }, { x: -200, z: -220 },
-      
-      // Trees around key corners (but not blocking the track)
-      { x: 380, z: 80 }, { x: 380, z: 160 }, { x: 380, z: 240 },
-      { x: 380, z: 320 }, { x: 380, z: 380 },
-      { x: -80, z: 380 }, { x: -120, z: 380 }, { x: -160, z: 380 },
-      { x: -280, z: 80 }, { x: -280, z: 40 }, { x: -280, z: 0 },
-      { x: -280, z: -40 }, { x: -280, z: -80 }, { x: -280, z: -120 },
-      
-      // Additional forest clusters
-      { x: 250, z: 250 }, { x: 280, z: 280 }, { x: 310, z: 250 },
-      { x: -250, z: 250 }, { x: -280, z: 280 }, { x: -310, z: 250 },
-      { x: 250, z: -250 }, { x: 280, z: -280 }, { x: 310, z: -250 },
-      { x: -250, z: -250 }, { x: -280, z: -280 }, { x: -310, z: -250 }
+      if (length > 0) {
+        // Normalize direction vector
+        const normalizedDx = dx / length;
+        const normalizedDz = dz / length;
+        
+        // Perpendicular vectors for track sides
+        const perpX = -normalizedDz;
+        const perpZ = normalizedDx;
+        
+        const treeDistance = 25 + Math.random() * 10; // 25-35 units from track
+        
+        // Only one tree per side (not both sides)
+        treePositions.push({
+          x: current.x + perpX * treeDistance,
+          z: current.z + perpZ * treeDistance
+        });
+      }
+    }
+    
+    // Create fewer forest clusters (reduced from 8 to 4 clusters)
+    const clusterCenters = [
+      { x: centerX + 120, z: centerZ + 120 },
+      { x: centerX - 120, z: centerZ + 120 },
+      { x: centerX + 120, z: centerZ - 120 },
+      { x: centerX - 120, z: centerZ - 120 }
     ];
+    
+    clusterCenters.forEach(cluster => {
+      // Create fewer trees per cluster (3-5 instead of 8-12)
+      const treesPerCluster = 3 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < treesPerCluster; i++) {
+        treePositions.push({
+          x: cluster.x + (Math.random() - 0.5) * 30,
+          z: cluster.z + (Math.random() - 0.5) * 30
+        });
+      }
+    });
+    
+    // Filter out trees that are too close to the racing line
+    const filteredTreePositions = treePositions.filter(treePos => {
+      // Check distance to all waypoints
+      return this.waypoints.every(waypoint => {
+        const distance = Math.sqrt(
+          Math.pow(treePos.x - waypoint.x, 2) + 
+          Math.pow(treePos.z - waypoint.z, 2)
+        );
+        return distance > 12; // Minimum 12 units from racing line
+      });
+    });
 
-    treePositions.forEach((pos, index) => {
+    filteredTreePositions.forEach((pos, index) => {
       try {
         const tree = new Object3d(
           new Rect3d(pos.x, 0.5, pos.z, 6, 6, 6), // Trees at ground level
@@ -249,7 +313,9 @@ export default class RacingGame extends ObjectManager {
       }
     });
 
-    console.log(`Created ${this.trees.length} trees around the complex track`);
+    console.log(`Created ${this.trees.length} trees dynamically around the track`);
+    console.log(`Track bounds: X(${minX.toFixed(1)} to ${maxX.toFixed(1)}), Z(${minZ.toFixed(1)} to ${maxZ.toFixed(1)})`);
+    console.log(`Filtered ${treePositions.length - filteredTreePositions.length} trees too close to racing line`);
   }
 
  
@@ -259,7 +325,7 @@ export default class RacingGame extends ObjectManager {
       "racing_car"
     );
     this.playerCar.scale(1.5, 1.5, 1.5); // Bigger player car - was 0.5, now 0.8
-    this.playerCar.angleY(0); // Start facing forward (0 degrees)
+    this.playerCar.angleY(90); // Start facing forward (0 degrees)
     this.addEntity(this.playerCar);
   }
 
@@ -282,9 +348,9 @@ export default class RacingGame extends ObjectManager {
         console.warn('Font creation failed, using fallback:', error);
       }
 
-      // Position bots in a line behind the start, spread out
-      const startX = -5 + (i * 2); // Spread bots across starting line
-      const startZ = -5; // Behind the start line
+      // Position bots in a line behind the start, spread out more
+      const startX = -12 + (i * 6); // Increased spread: was (i * 4), now (i * 6) for more separation
+      const startZ = -10 - (i * 2); // Stagger Z positions more: each bot further back
 
       // Create the car as an Object3d
       const carObject = new Object3d(
@@ -303,7 +369,7 @@ export default class RacingGame extends ObjectManager {
       const bot: RacingBot = {
         car: moveableCar,
         position: { x: startX, y: 0, z: startZ },
-        speed: 0.12 + (Math.random() * 0.03), // Consistent moderate speed
+        speed: 0.08 + (Math.random() * 0.08), // Increased variance: 0.08 to 0.16 (wider spread)
         currentWaypoint: 0, // Start with waypoint 0 (origin)
         name: botNames[i],
         rotation: 0, // Start facing forward
@@ -568,33 +634,66 @@ export default class RacingGame extends ObjectManager {
     if (!this.gameStarted || this.raceFinished) return;
 
     this.bots.forEach((bot, index) => {
-      const targetWaypoint = this.waypoints[bot.currentWaypoint];
+      const baseWaypoint = this.waypoints[bot.currentWaypoint];
+      
+      // Add variance to target waypoint to prevent bots from clustering
+      const lateralOffset = (index - 1.5) * 3; // Spread bots across track width (-4.5 to 4.5)
+      const randomVariance = (Math.sin(Date.now() * 0.002 + index * 3) * 2); // Small random movement
+      
+      // Calculate perpendicular direction for lateral positioning
+      const nextWaypointIndex = (bot.currentWaypoint + 1) % this.waypoints.length;
+      const nextWaypoint = this.waypoints[nextWaypointIndex];
+      const trackDx = nextWaypoint.x - baseWaypoint.x;
+      const trackDz = nextWaypoint.z - baseWaypoint.z;
+      const trackLength = Math.sqrt(trackDx * trackDx + trackDz * trackDz);
+      
+      let perpX = 0, perpZ = 0;
+      if (trackLength > 0) {
+        // Perpendicular to track direction for lateral offset
+        perpX = -trackDz / trackLength;
+        perpZ = trackDx / trackLength;
+      }
+      
+      // Create varied target waypoint
+      const targetWaypoint = {
+        x: baseWaypoint.x + perpX * (lateralOffset + randomVariance),
+        z: baseWaypoint.z + perpZ * (lateralOffset + randomVariance)
+      };
 
-      // Calculate direction to target waypoint
+      // Calculate direction to varied target waypoint
       const dx = targetWaypoint.x - bot.position.x;
       const dz = targetWaypoint.z - bot.position.z;
       const distance = Math.sqrt(dx * dx + dz * dz);
 
       // Debug logging for first bot (reduced frequency)
       if (index === 0 && Math.random() < 0.01) { // Less frequent logging
-        console.log(`Bot ${bot.name}: pos(${bot.position.x.toFixed(1)}, ${bot.position.z.toFixed(1)}) -> waypoint ${bot.currentWaypoint} at (${targetWaypoint.x}, ${targetWaypoint.z}) distance: ${distance.toFixed(1)}`);
+        console.log(`Bot ${bot.name}: pos(${bot.position.x.toFixed(1)}, ${bot.position.z.toFixed(1)}) -> varied waypoint ${bot.currentWaypoint} at (${targetWaypoint.x.toFixed(1)}, ${targetWaypoint.z.toFixed(1)}) distance: ${distance.toFixed(1)}`);
       }
 
-      // Check if reached waypoint
-      if (distance < 5) { // Larger threshold for more reliable waypoint detection
+      // Check if reached base waypoint (use original waypoint for progression)
+      const baseDistance = Math.sqrt(
+        Math.pow(bot.position.x - baseWaypoint.x, 2) + 
+        Math.pow(bot.position.z - baseWaypoint.z, 2)
+      );
+      if (baseDistance < 5) { // Larger threshold for more reliable waypoint detection
         bot.currentWaypoint = (bot.currentWaypoint + 1) % this.waypoints.length;
         console.log(`Bot ${bot.name} reached waypoint, moving to waypoint ${bot.currentWaypoint}`);
       }
 
-      // Direct movement for reliable bot AI
+      // Direct movement for reliable bot AI with left-right variance
       if (distance > 0.1 && distance < 200) { // Prevent extreme movements
         // Normalize direction vector
         const normalizedDx = dx / distance;
         const normalizedDz = dz / distance;
         
-        // Move bot towards target waypoint
-        bot.position.x += normalizedDx * bot.speed;
-        bot.position.z += normalizedDz * bot.speed;
+        // Add left-right variance to prevent bots driving on top of each other
+        const lateralVariance = (Math.sin(Date.now() * 0.001 + index * 2) * 0.3) + (index - 1.5) * 0.1; // Different pattern per bot
+        const perpX = -normalizedDz; // Perpendicular to direction
+        const perpZ = normalizedDx;
+        
+        // Move bot towards target waypoint with lateral variance
+        bot.position.x += (normalizedDx * bot.speed) + (perpX * lateralVariance * 0.05);
+        bot.position.z += (normalizedDz * bot.speed) + (perpZ * lateralVariance * 0.05);
 
         // Calculate rotation to face movement direction
         // Fix the rotation calculation - use correct coordinate system
