@@ -53,19 +53,59 @@ export default class RacingGame extends ObjectManager {
   crowd: Object3d[] = []; // Low poly girls as crowd
   trees: Object3d[] = []; // Low poly trees for nature scenery
 
-  // Race track waypoints (defines the racing line) - Simplified track
+  // Race track waypoints (defines the racing line) - Complex track within 1000x1000 ground
   waypoints: Waypoint[] = [
-    { x: 0, z: 0 },     // Start line
-    { x: 20, z: 0 },    // First turn
-    { x: 30, z: 15 },   // Corner 1
-    { x: 30, z: 30 },   // Straight
-    { x: 15, z: 40 },   // Corner 2
-    { x: 0, z: 40 },    // Back straight
-    { x: -15, z: 40 },  // Corner 3
-    { x: -30, z: 30 },  // Left side
-    { x: -30, z: 15 },  // Corner 4
-    { x: -20, z: 0 },   // Return to start
-    { x: 0, z: 0 }      // Complete loop
+    // Start/Finish line
+    { x: 0, z: 0 },
+    
+    // First sector - long straight and sweeping turns
+    { x: 100, z: 0 },
+    { x: 200, z: 20 },
+    { x: 280, z: 60 },
+    { x: 320, z: 120 },
+    { x: 340, z: 200 },
+    
+    // Second sector - technical section with tight corners
+    { x: 350, z: 280 },
+    { x: 320, z: 350 },
+    { x: 280, z: 400 },
+    { x: 220, z: 430 },
+    { x: 150, z: 440 },
+    { x: 80, z: 430 },
+    { x: 20, z: 400 },
+    { x: -20, z: 350 },
+    
+    // Third sector - chicane and hairpin
+    { x: -10, z: 300 },
+    { x: 30, z: 280 },
+    { x: -10, z: 260 },
+    { x: -50, z: 240 },
+    { x: -100, z: 220 },
+    { x: -150, z: 180 },
+    { x: -180, z: 120 },
+    
+    // Fourth sector - back straight with curves
+    { x: -200, z: 60 },
+    { x: -220, z: 0 },
+    { x: -240, z: -60 },
+    { x: -250, z: -120 },
+    { x: -240, z: -180 },
+    { x: -200, z: -220 },
+    { x: -150, z: -240 },
+    
+    // Fifth sector - return to start with sweepers
+    { x: -100, z: -250 },
+    { x: -50, z: -240 },
+    { x: 0, z: -220 },
+    { x: 50, z: -180 },
+    { x: 80, z: -120 },
+    { x: 90, z: -60 },
+    { x: 80, z: -20 },
+    { x: 50, z: -10 },
+    { x: 20, z: -5 },
+    
+    // Complete the loop back to start
+    { x: 0, z: 0 }
   ];
 
   // Player controls - Slower for better visibility
@@ -75,7 +115,7 @@ export default class RacingGame extends ObjectManager {
   deceleration: number = 0.02;   // Reduced deceleration
   turnSpeed: number = 0.025;     // Reduced turn speed
   playerRotation: number = 0;
-  playerPosition: { x: number, y: number, z: number } = { x: 0, y: 0.5, z: 0 }; // Better starting position on ground
+  playerPosition: { x: number, y: number, z: number } = { x: 0, y: 0, z: 0 }; // Better starting position on ground
   keys: { [key: string]: boolean } = {};
 
   // Game timer
@@ -91,7 +131,7 @@ export default class RacingGame extends ObjectManager {
 
       // Create simple ground plane
       this.ground = new Plane3d(
-        new Rect3d(0.0, 0.0, 0.0, 100, 0, 100),
+        new Rect3d(0.0, 0.0, 0.0, 1000, 0, 1000),
         this.engineHelper.newVertexModel("grass", PlaneType.XZ)
       );
       this.addEntity(this.ground);
@@ -153,42 +193,52 @@ export default class RacingGame extends ObjectManager {
   }
 
   createTrees() {
-    // Create bigger trees for natural scenery around the track - more and bigger trees
+    // Create trees around the complex track layout - distributed across the 1000x1000 ground
     const treePositions = [
-      // Trees around the track perimeter - outer ring
-      { x: -50, z: -10 }, { x: -50, z: 0 }, { x: -50, z: 10 }, { x: -50, z: 20 }, { x: -50, z: 30 }, { x: -50, z: 40 }, { x: -50, z: 50 },
-      { x: 50, z: -10 }, { x: 50, z: 0 }, { x: 50, z: 10 }, { x: 50, z: 20 }, { x: 50, z: 30 }, { x: 50, z: 40 }, { x: 50, z: 50 },
+      // Trees around the outer perimeter of the 1000x1000 ground
+      { x: -450, z: -450 }, { x: -400, z: -450 }, { x: -350, z: -450 }, { x: -300, z: -450 }, { x: -250, z: -450 },
+      { x: 250, z: -450 }, { x: 300, z: -450 }, { x: 350, z: -450 }, { x: 400, z: -450 }, { x: 450, z: -450 },
+      { x: -450, z: 450 }, { x: -400, z: 450 }, { x: -350, z: 450 }, { x: -300, z: 450 }, { x: -250, z: 450 },
+      { x: 250, z: 450 }, { x: 300, z: 450 }, { x: 350, z: 450 }, { x: 400, z: 450 }, { x: 450, z: 450 },
       
-      // Trees along the north and south edges
-      { x: -40, z: -25 }, { x: -30, z: -25 }, { x: -20, z: -25 }, { x: -10, z: -25 }, { x: 0, z: -25 }, { x: 10, z: -25 }, { x: 20, z: -25 }, { x: 30, z: -25 }, { x: 40, z: -25 },
-      { x: -40, z: 65 }, { x: -30, z: 65 }, { x: -20, z: 65 }, { x: -10, z: 65 }, { x: 0, z: 65 }, { x: 10, z: 65 }, { x: 20, z: 65 }, { x: 30, z: 65 }, { x: 40, z: 65 },
+      // Trees along the sides
+      { x: -450, z: -300 }, { x: -450, z: -200 }, { x: -450, z: -100 }, { x: -450, z: 0 }, { x: -450, z: 100 }, { x: -450, z: 200 }, { x: -450, z: 300 },
+      { x: 450, z: -300 }, { x: 450, z: -200 }, { x: 450, z: -100 }, { x: 450, z: 0 }, { x: 450, z: 100 }, { x: 450, z: 200 }, { x: 450, z: 300 },
       
-      // Trees in clusters around the track
-      { x: -35, z: 5 }, { x: -38, z: 8 }, { x: -32, z: 12 },
-      { x: 35, z: 5 }, { x: 38, z: 8 }, { x: 32, z: 12 },
-      { x: -35, z: 35 }, { x: -38, z: 32 }, { x: -32, z: 38 },
-      { x: 35, z: 35 }, { x: 38, z: 32 }, { x: 32, z: 38 },
+      // Trees in center areas away from the track
+      { x: 0, z: 150 }, { x: 0, z: 180 }, { x: 0, z: 210 },
+      { x: -80, z: 50 }, { x: -80, z: 80 }, { x: -80, z: 110 },
+      { x: 150, z: -50 }, { x: 180, z: -50 }, { x: 210, z: -50 },
       
-      // Trees in center areas (outside the track)
-      { x: -12, z: 20 }, { x: -15, z: 25 }, { x: -10, z: 30 },
-      { x: 12, z: 20 }, { x: 15, z: 25 }, { x: 10, z: 30 },
+      // Scattered trees for atmosphere
+      { x: -200, z: 100 }, { x: -180, z: 150 }, { x: -220, z: 200 },
+      { x: 200, z: 100 }, { x: 180, z: 150 }, { x: 220, z: 200 },
+      { x: 100, z: -200 }, { x: 150, z: -180 }, { x: 200, z: -220 },
+      { x: -100, z: -200 }, { x: -150, z: -180 }, { x: -200, z: -220 },
       
-      // Additional scattered trees for atmosphere
-      { x: -25, z: -15 }, { x: -28, z: -10 }, { x: -22, z: -18 },
-      { x: 25, z: -15 }, { x: 28, z: -10 }, { x: 22, z: -18 },
-      { x: -25, z: 55 }, { x: -28, z: 58 }, { x: -22, z: 52 },
-      { x: 25, z: 55 }, { x: 28, z: 58 }, { x: 22, z: 52 }
+      // Trees around key corners (but not blocking the track)
+      { x: 380, z: 80 }, { x: 380, z: 160 }, { x: 380, z: 240 },
+      { x: 380, z: 320 }, { x: 380, z: 380 },
+      { x: -80, z: 380 }, { x: -120, z: 380 }, { x: -160, z: 380 },
+      { x: -280, z: 80 }, { x: -280, z: 40 }, { x: -280, z: 0 },
+      { x: -280, z: -40 }, { x: -280, z: -80 }, { x: -280, z: -120 },
+      
+      // Additional forest clusters
+      { x: 250, z: 250 }, { x: 280, z: 280 }, { x: 310, z: 250 },
+      { x: -250, z: 250 }, { x: -280, z: 280 }, { x: -310, z: 250 },
+      { x: 250, z: -250 }, { x: 280, z: -280 }, { x: 310, z: -250 },
+      { x: -250, z: -250 }, { x: -280, z: -280 }, { x: -310, z: -250 }
     ];
 
     treePositions.forEach((pos, index) => {
       try {
         const tree = new Object3d(
-          new Rect3d(pos.x, 0, pos.z, 6, 6, 6), // Trees at y=3 (half height above ground = 3 units tall)
+          new Rect3d(pos.x, 0.5, pos.z, 6, 6, 6), // Trees at ground level
           "low_poly_tree"
         );
         
-        // Make trees even bigger and more varied
-        const scale = 2.0 + Math.random() * 1.5; // Scale between 2.0 and 3.5 (much bigger)
+        // Make trees bigger and more varied
+        const scale = 2.5 + Math.random() * 2.0; // Scale between 2.5 and 4.5 (bigger trees)
         tree.scale(scale, scale, scale);
         tree.angleY(Math.random() * 360);
         
@@ -199,7 +249,7 @@ export default class RacingGame extends ObjectManager {
       }
     });
 
-    console.log(`Created ${this.trees.length} bigger trees`);
+    console.log(`Created ${this.trees.length} trees around the complex track`);
   }
 
  
@@ -209,6 +259,7 @@ export default class RacingGame extends ObjectManager {
       "racing_car"
     );
     this.playerCar.scale(1.5, 1.5, 1.5); // Bigger player car - was 0.5, now 0.8
+    this.playerCar.angleY(0); // Start facing forward (0 degrees)
     this.addEntity(this.playerCar);
   }
 
@@ -362,20 +413,34 @@ export default class RacingGame extends ObjectManager {
   }
 
   createCourseWalls() {
-    // Create walls around the course perimeter
+    // Create walls derived from waypoints
     const wallHeight = 2;
     const wallThickness = 1;
+    const trackWidth = 8; // Distance from track center to wall
     
-    // Outer walls - create a rectangular boundary around the track
+    // Calculate bounding box from waypoints
+    let minX = Math.min(...this.waypoints.map(wp => wp.x));
+    let maxX = Math.max(...this.waypoints.map(wp => wp.x));
+    let minZ = Math.min(...this.waypoints.map(wp => wp.z));
+    let maxZ = Math.max(...this.waypoints.map(wp => wp.z));
+    
+    // Add padding around the track
+    const padding = 15;
+    minX -= padding;
+    maxX += padding;
+    minZ -= padding;
+    maxZ += padding;
+    
+    // Create outer boundary walls based on waypoint extents
     const outerWalls = [
-      // North wall
-      { x: 0, z: -10, width: 70, height: wallHeight, depth: wallThickness },
-      // South wall  
-      { x: 0, z: 55, width: 70, height: wallHeight, depth: wallThickness },
-      // West wall
-      { x: -35, z: 22.5, width: wallThickness, height: wallHeight, depth: 65 },
-      // East wall
-      { x: 35, z: 22.5, width: wallThickness, height: wallHeight, depth: 65 }
+      // North wall (top)
+      { x: (minX + maxX) / 2, z: minZ, width: maxX - minX, height: wallHeight, depth: wallThickness },
+      // South wall (bottom)
+      { x: (minX + maxX) / 2, z: maxZ, width: maxX - minX, height: wallHeight, depth: wallThickness },
+      // West wall (left)
+      { x: minX, z: (minZ + maxZ) / 2, width: wallThickness, height: wallHeight, depth: maxZ - minZ },
+      // East wall (right)
+      { x: maxX, z: (minZ + maxZ) / 2, width: wallThickness, height: wallHeight, depth: maxZ - minZ }
     ];
 
     outerWalls.forEach((wall, index) => {
@@ -394,35 +459,59 @@ export default class RacingGame extends ObjectManager {
       }
     });
 
-    // Inner walls - create some barriers around key sections of the track
-    const innerBarriers = [
-      // Barriers around turns
-      { x: 25, z: 5, width: 2, height: wallHeight, depth: 8 },
-      { x: 25, z: 35, width: 2, height: wallHeight, depth: 8 },
-      { x: -25, z: 5, width: 2, height: wallHeight, depth: 8 },
-      { x: -25, z: 35, width: 2, height: wallHeight, depth: 8 },
-      // Center barriers
-      { x: 0, z: 15, width: 8, height: wallHeight, depth: 2 },
-      { x: 0, z: 25, width: 8, height: wallHeight, depth: 2 }
-    ];
-
-    innerBarriers.forEach((barrier, index) => {
-      try {
-        const barrierCube = new Cube(
-          new Rect3d(barrier.x, barrier.height / 2, barrier.z, barrier.width, barrier.height, barrier.depth),
-          "rock",
-          ["rock", "rock", "rock", "rock", "rock", "rock"]
-        );
+    // Create inner barriers along the track path
+    for (let i = 0; i < this.waypoints.length - 1; i++) {
+      const current = this.waypoints[i];
+      const next = this.waypoints[i + 1];
+      
+      // Calculate perpendicular direction for track width
+      const dx = next.x - current.x;
+      const dz = next.z - current.z;
+      const length = Math.sqrt(dx * dx + dz * dz);
+      
+      if (length > 0) {
+        // Normalize direction vector
+        const normalizedDx = dx / length;
+        const normalizedDz = dz / length;
         
-        this.trackBarriers.push(barrierCube);
-        this.addEntity(barrierCube);
-        barrierCube.init(this.engineHelper);
-      } catch (error) {
-        console.warn('Failed to create inner barrier:', error);
+        // Perpendicular vectors for track sides
+        const perpX = -normalizedDz;
+        const perpZ = normalizedDx;
+        
+        // Create barriers on both sides of track segments at turns
+        if (i % 3 === 0) { // Only at some waypoints to avoid cluttering
+          // Left side barrier
+          const leftBarrierX = current.x + perpX * trackWidth;
+          const leftBarrierZ = current.z + perpZ * trackWidth;
+          
+          // Right side barrier  
+          const rightBarrierX = current.x - perpX * trackWidth;
+          const rightBarrierZ = current.z - perpZ * trackWidth;
+          
+          [
+            { x: leftBarrierX, z: leftBarrierZ },
+            { x: rightBarrierX, z: rightBarrierZ }
+          ].forEach((barrierPos) => {
+            try {
+              const barrierCube = new Cube(
+                new Rect3d(barrierPos.x, wallHeight / 2, barrierPos.z, 2, wallHeight, 2),
+                "rock",
+                ["rock", "rock", "rock", "rock", "rock", "rock"]
+              );
+              
+              this.trackBarriers.push(barrierCube);
+              this.addEntity(barrierCube);
+              barrierCube.init(this.engineHelper);
+            } catch (error) {
+              console.warn('Failed to create track barrier:', error);
+            }
+          });
+        }
       }
-    });
+    }
 
-    console.log(`Created ${outerWalls.length + innerBarriers.length} course walls and barriers`);
+    console.log(`Created ${this.trackBarriers.length} course walls and barriers derived from ${this.waypoints.length} waypoints`);
+    console.log(`Track bounds: X(${minX.toFixed(1)} to ${maxX.toFixed(1)}), Z(${minZ.toFixed(1)} to ${maxZ.toFixed(1)})`);
   }
 
   startRace() {
@@ -468,7 +557,7 @@ export default class RacingGame extends ObjectManager {
     if (this.playerCar) {
       this.playerCar.position.x = this.playerPosition.x;
       this.playerCar.position.z = this.playerPosition.z;
-      this.playerCar.angleY(this.playerRotation * (180 / Math.PI));
+      this.playerCar.angleY(this.playerRotation * (180 / Math.PI)); // Convert radians to degrees for proper rotation
     }
 
     // Check waypoint progress
@@ -594,27 +683,24 @@ export default class RacingGame extends ObjectManager {
       this.sky.center(x, y, z);
     }
 
-    // Update camera to follow player - Fixed camera that rotates properly
+    // Update camera to follow player - Sticky camera that follows all movements
     if (this.playerCar) {
-      const cameraOffset = 12;  // Distance behind car (increased for better view)
-      const cameraHeight = 5;   // Height above ground
+      const cameraOffset = 15;  // Distance behind car
+      const cameraHeight = 8;   // Height above car
       
-      // Calculate camera position behind the player car (fixed direction)
+      // Calculate camera position that sticks behind the player car
       const cameraX = this.playerPosition.x - Math.sin(this.playerRotation) * cameraOffset;
       const cameraZ = this.playerPosition.z + Math.cos(this.playerRotation) * cameraOffset;
+      const cameraY = this.playerPosition.y + cameraHeight;
 
-      // Calculate look-at point in front of the car (fixed direction)
-      const lookAtX = this.playerPosition.x + Math.sin(this.playerRotation) * 5;
-      const lookAtZ = this.playerPosition.z - Math.cos(this.playerRotation) * 5;
-
-      // Position camera behind car
-      this.engineHelper.camera.camera3d.center(cameraX, cameraHeight, cameraZ);
+      // Position camera behind and above car
+      this.engineHelper.camera.camera3d.center(cameraX, cameraY, cameraZ);
       
-      // Look at a point in front of the car to match car's direction
+      // Always look directly at the player car
       this.engineHelper.camera.camera3d.lookAt(
-        lookAtX, 
+        this.playerPosition.x, 
         this.playerPosition.y + 1, 
-        lookAtZ
+        this.playerPosition.z
       );
       
       this.engineHelper.camera.camera3d.updateProjectionView();
