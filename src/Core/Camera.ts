@@ -33,9 +33,9 @@ export class BaseCamera extends ModelPosition {
 
   protected zoomScale: Coordinate = { x: 2, y: 2, z: 2 };
   protected baseTranslate: Coordinate = { x: -1, y: -1, z: 0 };
-  protected fov: number;
-  protected near: number;
-  protected far: number;
+  public fov: number;
+  public near: number;
+  public far: number;
   protected cameraOptions: CameraOptions;
 
   protected _isUpdateView = true;
