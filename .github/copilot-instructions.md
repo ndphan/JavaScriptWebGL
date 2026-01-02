@@ -1,5 +1,10 @@
 # Synaren Engine - WebGL Game Development
 
+## Generation Guidelines
+
+- Do not add comments or explanations. Only provide it for edge cases.
+- Use concise language and bullet points where appropriate.
+
 ## Architecture Overview
 
 This is a **TypeScript WebGL 3D game engine** with two main repositories:

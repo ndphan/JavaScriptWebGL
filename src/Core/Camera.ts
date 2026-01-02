@@ -67,10 +67,7 @@ export class BaseCamera extends ModelPosition {
     y?: number,
     z?: number
   ) {
-    if (this.interval) {
-      clearInterval(this.interval);
-      this.interval = undefined;
-    }
+    this.clearPan();
     this.steps = time;
     this._moveTime = time;
     if (x !== undefined) {
@@ -107,10 +104,7 @@ export class BaseCamera extends ModelPosition {
           this.position.x = this.tx;
           this.position.y = this.ty;
           this.position.z = this.tz;
-          if (this.interval) {
-            clearInterval(this.interval);
-            this.interval = undefined;
-          }
+          this.clearPan();
         } else {
           this.position.x += (this.dx * time) / this._moveTime;
           this.position.y += (this.dy * time) / this._moveTime;
@@ -121,10 +115,7 @@ export class BaseCamera extends ModelPosition {
         this.position.x = this.tx;
         this.position.y = this.ty;
         this.position.z = this.tz;
-        if (this.interval) {
-          clearInterval(this.interval);
-          this.interval = undefined;
-        }
+        this.clearPan();
         this.updateProjectionView();
       }
       this.timer.start();
@@ -183,8 +174,8 @@ export class BaseCamera extends ModelPosition {
   };
 
   frustumMatrix = (): mat4 => {
-    const left = this.cameraOptions.left ?? -this.aspect ?? -1;
-    const right = this.cameraOptions.right ?? this.aspect ?? 1;
+    const left = this.cameraOptions.left ?? -this.aspect;
+    const right = this.cameraOptions.right ?? this.aspect;
     const bottom = this.cameraOptions.bottom ?? -1;
     const top = this.cameraOptions.top ?? 1;
 
