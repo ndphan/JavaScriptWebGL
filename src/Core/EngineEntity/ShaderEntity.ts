@@ -26,7 +26,7 @@ export class ShaderEntity {
     return this.opt;
   }
   getModel(): Float32List {
-    return this.model();
+    return this.model() as Float32List;
   }
   getTextureSource(): string | undefined {
     return this.src;

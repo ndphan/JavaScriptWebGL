@@ -321,12 +321,12 @@ export default class Shader3DProgram extends BaseProgram {
         vec3.squaredDistance(light.posVec(), light.atVec())
       );
 
-      ctx.uniformMatrix4fv(this.light1View.ref, false, lookAt);
-      ctx.uniformMatrix4fv(this.light1Projection.ref, false, cameraFrustum);
+      ctx.uniformMatrix4fv(this.light1View.ref, false, lookAt as Float32List);
+      ctx.uniformMatrix4fv(this.light1Projection.ref, false, cameraFrustum as Float32List);
 
       this.bindShadowProgram();
-      ctx.uniformMatrix4fv(this.shadowView.ref, false, lookAt);
-      ctx.uniformMatrix4fv(this.shadowProjection.ref, false, cameraFrustum);
+      ctx.uniformMatrix4fv(this.shadowView.ref, false, lookAt as Float32List);
+      ctx.uniformMatrix4fv(this.shadowProjection.ref, false, cameraFrustum as Float32List);
     }
   }
 
