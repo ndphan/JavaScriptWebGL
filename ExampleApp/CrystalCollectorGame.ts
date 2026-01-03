@@ -222,17 +222,17 @@ export default class CrystalCollectorGame extends ObjectManager {
   update() {
     this.entities.forEach((ent: EngineObject) => ent.update(this.engineHelper));
     
-    // Update sky to follow camera
-    const { x, y, z } = this.engineHelper.camera.camera3d.position;
-    if (this.sky) {
-      this.sky.center(x, y, z);
-    }
-    
     this.updatePlayer();
     this.updateCrystals();
     this.updateObstacles();
     this.checkCollisions();
     this.updateUI();
+
+    const { x, y, z } = this.engineHelper.camera.camera3d.position;
+    if (this.sky) {
+      this.sky.center(x, y, z);
+    }
+    
   }
 
   event(event: EngineEvent) {
