@@ -126,62 +126,6 @@
       background: rgba(255, 255, 255, 0.3);
       border-color: rgba(255, 255, 255, 0.5);
     }
-    #ui-overlay {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 1001;
-      color: white;
-      background: rgba(0,0,0,0.5);
-      padding: 15px;
-      border-radius: 10px;
-      font-size: 18px;
-      display: none;
-    }
-    #crystal-instructions {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      z-index: 1002;
-      background: rgba(0,0,0,0.8);
-      padding: 30px;
-      border-radius: 15px;
-      max-width: 500px;
-      border: 3px solid #4CAF50;
-      box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
-      color: white;
-      display: none;
-    }
-    #crystal-instructions h1 {
-      color: #4CAF50;
-      margin-bottom: 20px;
-      text-shadow: 0 0 10px rgba(76, 175, 80, 0.8);
-    }
-    #crystal-instructions.hidden {
-      display: none;
-    }
-    .highlight {
-      color: #FFD700;
-      font-weight: bold;
-      text-shadow: 0 0 5px rgba(255, 215, 0, 0.8);
-    }
-    .control-key {
-      background: #333;
-      padding: 4px 8px;
-      border-radius: 4px;
-      border: 1px solid #555;
-      font-family: monospace;
-      color: #FFD700;
-    }
-    .game-tip {
-      background: rgba(255, 193, 7, 0.1);
-      border-left: 4px solid #FFC107;
-      padding: 10px;
-      margin: 15px 0;
-      border-radius: 0 5px 5px 0;
-    }
     .container {
       z-index: 3;
       position: absolute;
@@ -246,41 +190,6 @@
   <!-- Back to Menu Button -->
   <button id="back-button" onclick="showGameMenu()">← Back to Menu</button>
   
-  <!-- Game UI Overlay -->
-  <div id="ui-overlay">
-    <div id="score">Score: 0</div>
-    <div id="time">Time: 60s</div>
-    <div id="crystals">Crystals: 0/8</div>
-  </div>
-  
-  <!-- Crystal Collector Instructions -->
-  <div id="crystal-instructions">
-    <h1>🔮 Crystal Collector 3D</h1>
-    <p>Welcome to an exciting 3D treasure hunt!</p>
-    <p>Collect all <span class="highlight">8 crystals</span> scattered around the world before time runs out!</p>
-    
-    <div class="game-tip">
-        <strong>🎯 Objective:</strong> Find and collect all 8 glowing crystals within 60 seconds
-    </div>
-    
-    <p><strong>🎮 Controls:</strong></p>
-    <p><span class="control-key">W A S D</span> - Move your character around</p>
-    <p><span class="control-key">Mouse Drag</span> - Look around and explore</p>
-    
-    <div class="game-tip">
-        <strong>⚠️ Watch out!</strong> Avoid the spinning red obstacles - they'll reduce your score!
-    </div>
-    
-    <p><strong>🏆 Scoring:</strong></p>
-    <p>• +10 points per crystal collected</p>
-    <p>• +2 points per second remaining when you finish</p>
-    <p>• -5 points for hitting obstacles</p>
-    
-    <br>
-    <p>Press <span class="highlight control-key">SPACEBAR</span> to start your adventure!</p>
-    <p>Press <span class="highlight control-key">R</span> to restart after the game ends</p>
-  </div>
-  
   <div class="container">
       <div class="row" id="app-container-wrapper">
         <div class="col" id="app-container">
@@ -291,77 +200,6 @@
 </body>
 <script src="index.js"></script>
 <script>
-// UI update system for Crystal Collector Game
-setInterval(() => {
-  if (window.gameInstance && window.gameInstance.constructor.name === 'CrystalCollectorGame') {
-    const game = window.gameInstance;
-    const uiOverlay = document.getElementById('ui-overlay');
-    const instructions = document.getElementById('crystal-instructions');
-    
-    if (uiOverlay) {
-      uiOverlay.style.display = 'block';
-      
-      const scoreElement = document.getElementById('score');
-      const timeElement = document.getElementById('time');
-      const crystalsElement = document.getElementById('crystals');
-      
-      if (scoreElement) scoreElement.textContent = `Score: ${game.score}`;
-      if (timeElement) timeElement.textContent = `Time: ${game.timeLeft}s`;
-      
-      if (crystalsElement && game.crystals) {
-        const collectedCrystals = game.crystals.filter(c => c.collected).length;
-        crystalsElement.textContent = `Crystals: ${collectedCrystals}/8`;
-      }
-    }
-    
-    // Handle Crystal Collector instructions
-    if (instructions) {
-      if (game.gameStarted) {
-        instructions.style.display = 'none';
-      } else {
-        instructions.style.display = 'block';
-        
-        if (game.gameEnded) {
-          const allCrystalsCollected = game.crystals.every(c => c.collected);
-          if (allCrystalsCollected) {
-            instructions.innerHTML = `
-              <h1>🎉 VICTORY!</h1>
-              <p>Congratulations! You collected all the crystals!</p>
-              <p>Final Score: <span class="highlight">${game.score}</span></p>
-              <div class="game-tip">
-                Amazing work! You're a true crystal collector master!
-              </div>
-              <p>Press <span class="highlight control-key">R</span> to play again!</p>
-            `;
-          } else {
-            const collectedCrystals = game.crystals.filter(c => c.collected).length;
-            instructions.innerHTML = `
-              <h1>⏰ TIME'S UP!</h1>
-              <p>Good effort! You ran out of time.</p>
-              <p>Final Score: <span class="highlight">${game.score}</span></p>
-              <p>You collected <span class="highlight">${collectedCrystals}/8</span> crystals</p>
-              <div class="game-tip">
-                Don't give up! Try moving faster and plan your route next time.
-              </div>
-              <p>Press <span class="highlight control-key">R</span> to try again!</p>
-            `;
-          }
-        }
-      }
-    }
-  } else {
-    // Hide UI overlay and instructions for other games
-    const uiOverlay = document.getElementById('ui-overlay');
-    const instructions = document.getElementById('crystal-instructions');
-    if (uiOverlay) {
-      uiOverlay.style.display = 'none';
-    }
-    if (instructions) {
-      instructions.style.display = 'none';
-    }
-  }
-}, 100);
-
 // Focus canvas for keyboard input when game is loaded
 document.addEventListener('DOMContentLoaded', () => {
   const observer = new MutationObserver(() => {

@@ -1,8 +1,10 @@
 import {
   App,
+  Coordinate,
   EngineEvent,
   EngineObject,
   Events,
+  FontReference,
   Light,
   ObjectManager,
   Rect3d,
@@ -46,6 +48,15 @@ export default class CrystalCollectorGame extends ObjectManager {
   
   // Game timer
   gameTimer: number | null = null;
+
+  // Font UI elements
+  scoreText: FontReference;
+  timeText: FontReference;
+  crystalsText: FontReference;
+  titleText: FontReference;
+  instructionsText: FontReference;
+  startPromptText: FontReference;
+  gameOverText: FontReference;
 
   constructor() {
     super();
@@ -206,18 +217,63 @@ export default class CrystalCollectorGame extends ObjectManager {
   }
 
   updateUI() {
-    if (this.gameEnded) {
-      const allCrystalsCollected = this.crystals.every(c => c.collected);
-      if (allCrystalsCollected) {
-        console.log(`🎉 YOU WIN! Final Score: ${this.score} | Press R to restart`);
-      } else {
-        console.log(`⏰ TIME'S UP! Final Score: ${this.score} | Press R to restart`);
+    // Update score text
+    if (this.scoreText) {
+      this.scoreText.setText(`Score: ${this.score}`);
+    }
+    
+    // Update time text
+    if (this.timeText) {
+      this.timeText.setText(`Time: ${this.timeLeft}s`);
+    }
+    
+    // Update crystals text
+    if (this.crystalsText) {
+      const collected = this.crystals.filter(c => c.collected).length;
+      this.crystalsText.setText(`Crystals: ${collected}/8`);
+    }
+    
+    // Handle game state text
+    if (!this.gameStarted && !this.gameEnded) {
+      // Show start instructions
+      if (this.titleText) this.titleText.hidden = false;
+      if (this.instructionsText) this.instructionsText.hidden = false;
+      if (this.startPromptText) this.startPromptText.hidden = false;
+      if (this.gameOverText) this.gameOverText.hidden = true;
+    } else if (this.gameStarted) {
+      // Hide all instruction text during gameplay
+      if (this.titleText) this.titleText.hidden = true;
+      if (this.instructionsText) this.instructionsText.hidden = true;
+      if (this.startPromptText) this.startPromptText.hidden = true;
+      if (this.gameOverText) this.gameOverText.hidden = true;
+    } else if (this.gameEnded) {
+      // Show game over message
+      if (this.titleText) this.titleText.hidden = true;
+      if (this.instructionsText) this.instructionsText.hidden = true;
+      if (this.startPromptText) this.startPromptText.hidden = true;
+      if (this.gameOverText) {
+        this.gameOverText.hidden = false;
+        const allCollected = this.crystals.every(c => c.collected);
+        if (allCollected) {
+          this.gameOverText.setText(`VICTORY! Score: ${this.score} - Press R to restart`);
+        } else {
+          this.gameOverText.setText(`TIME UP! Score: ${this.score} - Press R to restart`);
+        }
       }
     }
   }
 
   render() {
     this.entities.forEach((ent: EngineObject, index: number) => ent.render(this.engineHelper));
+    
+    // Render font UI
+    if (this.scoreText) this.scoreText.render(this.engineHelper);
+    if (this.timeText) this.timeText.render(this.engineHelper);
+    if (this.crystalsText) this.crystalsText.render(this.engineHelper);
+    if (this.titleText) this.titleText.render(this.engineHelper);
+    if (this.instructionsText) this.instructionsText.render(this.engineHelper);
+    if (this.startPromptText) this.startPromptText.render(this.engineHelper);
+    if (this.gameOverText) this.gameOverText.render(this.engineHelper);
   }
 
   update() {
@@ -270,6 +326,16 @@ export default class CrystalCollectorGame extends ObjectManager {
   loadResources() {
     console.log('Loading Crystal Collector game resources...');
     
+    // Load font for UI
+    this.engineHelper
+      .getResource("assets/paprika.fnt")
+      .then(ResourceResolver.bmFontResolver(this.engineHelper))
+      .then(() => {
+        console.log('Font resources loaded');
+        this.initFontUI();
+      })
+      .catch(err => console.error('Font resource error:', err));
+
     this.engineHelper
       .getResource("assets/sphere.txt")
       .then(
@@ -286,6 +352,34 @@ export default class CrystalCollectorGame extends ObjectManager {
         ResourceResolver.bitmapResolver(this.engineHelper, 1024, 1024, 20e-3)
       ).then(() => console.log('Atlas resources loaded'))
       .catch(err => console.error('Atlas resource error:', err));
+  }
+
+  initFontUI() {
+    // HUD elements (top of screen)
+    this.scoreText = FontReference.newFont(new Coordinate(0.12, 0.85, 0), "score-text", 0);
+    this.scoreText.setText("Score: 0").setFontSize(24).setTop(true);
+
+    this.timeText = FontReference.newFont(new Coordinate(0.42, 0.85, 0), "time-text", 0);
+    this.timeText.setText("Time: 60s").setFontSize(24).setTop(true);
+
+    this.crystalsText = FontReference.newFont(new Coordinate(0.82, 0.85, 0), "crystals-text", 0);
+    this.crystalsText.setText("Crystals: 0/8").setFontSize(24).setTop(true);
+
+    // Title and instructions (center of screen)
+    this.titleText = FontReference.newFont(new Coordinate(0.5, 0.6, 0), "title-text", 0);
+    this.titleText.setText("Crystal Collector 3D").setFontSize(36).setTop(true);
+
+    this.instructionsText = FontReference.newFont(new Coordinate(0.5, 0.5, 0), "instructions-text", 0);
+    this.instructionsText.setText("WASD to move - Collect all 8 crystals!").setFontSize(20).setTop(true);
+
+    this.startPromptText = FontReference.newFont(new Coordinate(0.5, 0.35, 0), "start-text", 0);
+    this.startPromptText.setText("Press SPACE to start").setFontSize(24).setTop(true);
+
+    this.gameOverText = FontReference.newFont(new Coordinate(0.5, 0.5, 0), "gameover-text", 0);
+    this.gameOverText.setText("").setFontSize(28).setTop(true);
+    this.gameOverText.hidden = true;
+
+    console.log('Font UI initialized');
   }
 
   init() {
