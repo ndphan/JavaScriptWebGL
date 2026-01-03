@@ -231,6 +231,9 @@ class Renderer {
       (e) => !!e[0].isTop === isTop
     );
     if (colourModel.length > 0) {
+      if (this.camera.renderMode === '3d') {
+        this.shaderColourProgram.updatePerspective(this.camera.camera2d.frustum);
+      }
       this.shaderColourProgram.render(colourModel, this.camera.camera2d);
     }
 
@@ -238,6 +241,9 @@ class Renderer {
       (e) => !!e[0].isTop === isTop
     );
     if (model3d.length > 0) {
+      if (this.camera.renderMode === '3d') {
+        this.shader3DProgram.updatePerspective(this.camera.camera3d.frustum);
+      }
       this.shader3DProgram.render3DShadowMap(model3d, this.resizeViewPort);
       this.shader3DProgram.render(
         model3d,
@@ -251,6 +257,9 @@ class Renderer {
       (e) => !!e[0].isTop === isTop
     );
     if (model2d.length > 0) {
+      if (this.camera.renderMode === '3d') {
+        this.shader3DProgram.updatePerspective(this.camera.camera2d.frustum);
+      }
       this.shader3DProgram.render(
         model2d,
         this.camera.camera2d,

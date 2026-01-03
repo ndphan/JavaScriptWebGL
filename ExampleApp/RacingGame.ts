@@ -345,7 +345,7 @@ export default class RacingGame extends ObjectManager {
           `bot-${i}-name`
         );
         nameText.setText(botNames[i])
-          .setFontSize(18)
+          .setFontSize(15)
           .setTop(true);
       } catch (error) {
         console.warn('Font creation failed, using fallback:', error);
@@ -715,12 +715,21 @@ export default class RacingGame extends ObjectManager {
         }
       }
 
-      // Update name text position (screen overlay)
+      // Update name text position - project 3D position to screen
       if (bot.nameText) {
         try {
-          const screenX = 0.1 + (index * 0.2); // Spread names across top
-          const screenY = 0.9; // Near top of screen
-          bot.nameText.center(screenX, screenY);
+          const nameHeight = bot.position.y + 3;
+          const screenPos = this.engineHelper.camera.camera3d.worldToScreen(
+            bot.position.x,
+            nameHeight,
+            bot.position.z
+          );
+          if (screenPos.visible) {
+            bot.nameText.hidden = false;
+            bot.nameText.center(screenPos.x, screenPos.y);
+          } else {
+            bot.nameText.hidden = true;
+          }
         } catch (error) {
           // Font system may not be ready, ignore silently
         }
@@ -757,17 +766,15 @@ export default class RacingGame extends ObjectManager {
   render() {
     this.entities.forEach((ent: EngineObject, index: number) => ent.render(this.engineHelper));
 
-    // Temporarily disable font rendering to focus on bot movement
-    // TODO: Re-enable when font system is stable
-    // if (this.gameStarted) {
-    //   this.bots.forEach((bot) => {
-    //     try {
-    //       bot.nameText.render(this.engineHelper);
-    //     } catch (error) {
-    //       console.warn('Font rendering error:', error);
-    //     }
-    //   });
-    // }
+    if (this.gameStarted) {
+      this.bots.forEach((bot) => {
+        try {
+          bot.nameText.render(this.engineHelper);
+        } catch (error) {
+          console.warn('Font rendering error:', error);
+        }
+      });
+    }
   }
 
   update() {

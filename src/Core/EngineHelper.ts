@@ -65,7 +65,7 @@ export default class EngineHelper {
       model = model.slice(0);
     }
 
-    if (this.camera.renderMode === '3d') {
+    if (this.camera.renderMode === '3d' && shaderProgram === ShaderType.THREE_DIMENSION) {
       this.renderWithCulling(entity, model);
       return;
     }

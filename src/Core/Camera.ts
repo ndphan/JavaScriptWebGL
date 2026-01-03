@@ -1,4 +1,4 @@
-import { mat4, quat, vec3 } from "gl-matrix";
+import { mat4, quat, vec3, vec4 } from "gl-matrix";
 import ModelPosition from "./EngineEntity/ModelPosition";
 import { EngineEvent } from "./Events";
 import Coordinate from "./Data/Coordinate";
@@ -124,6 +124,30 @@ export class BaseCamera extends ModelPosition {
 
   isOutOfBound(bound: Rect3d, pos: Rect3d): boolean {
     return false;
+  }
+
+  worldToScreen(worldX: number, worldY: number, worldZ: number): { x: number, y: number, visible: boolean } {
+    if (!this.frustum || !this.viewMatrix) {
+      return { x: 0.5, y: 0.5, visible: false };
+    }
+
+    const mvp = mat4.multiply(mat4.create(), this.frustum, this.viewMatrix);
+    const clipSpace = vec4.transformMat4(
+      vec4.create(),
+      vec4.fromValues(worldX, worldY, worldZ, 1.0),
+      mvp
+    );
+
+    if (clipSpace[3] <= 0) {
+      return { x: 0, y: 0, visible: false };
+    }
+
+    const ndc = vec4.scale(vec4.create(), clipSpace, 1.0 / clipSpace[3]);
+    const screenX = (ndc[0] + 1.0) / 2.0;
+    const screenY = (ndc[1] + 1.0) / 2.0;
+    const visible = screenX >= 0 && screenX <= 1 && screenY >= 0 && screenY <= 1 && ndc[2] >= -1 && ndc[2] <= 1;
+
+    return { x: screenX, y: screenY, visible };
   }
 
   updateProjectionView = () => {
@@ -467,14 +491,12 @@ class Camera {
     canvas: HTMLCanvasElement,
     renderMode?: '2d' | '3d'
   ) {
-    // Set render mode, default to 2D unless 3D is explicitly requested
     this.renderMode = renderMode || cameraOptions.renderMode || '2d';
 
     if (this.renderMode === '3d') {
       this.camera3d.setupCamera(cameraOptions, aspectRatio || 1, canvas);
-    } else {
-      this.camera2d.setupCamera(cameraOptions, aspectRatio || 1, canvas);
     }
+    this.camera2d.setupCamera(cameraOptions, aspectRatio || 1, canvas);
 
     this.height = canvas.height;
     this.width = canvas.width;
@@ -485,10 +507,9 @@ class Camera {
       if (this.camera3d.isUpdateView()) {
         this.camera3d.commitProjectionView();
       }
-    } else {
-      if (this.camera2d.isUpdateView()) {
-        this.camera2d.commitProjectionView();
-      }
+    }
+    if (this.camera2d.isUpdateView()) {
+      this.camera2d.commitProjectionView();
     }
   }
 
