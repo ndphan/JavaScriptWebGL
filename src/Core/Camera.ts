@@ -21,8 +21,8 @@ export interface CameraOptions {
   right?: number;
   bottom?: number;
   top?: number;
-  projection?: 'frustum' | 'perspective';
-  renderMode: '2d' | '3d';
+  projection?: "frustum" | "perspective";
+  renderMode: "2d" | "3d";
   aspect?: number;
 }
 
@@ -40,7 +40,7 @@ export class BaseCamera extends ModelPosition {
 
   protected _isUpdateView = true;
 
-  private interval: NodeJS.Timeout | undefined;
+  private interval: ReturnType<typeof setInterval> | undefined;
   private steps: number;
   private _moveTime: number;
   private dx: number;
@@ -50,8 +50,6 @@ export class BaseCamera extends ModelPosition {
   private ty: number;
   private tz: number;
   private timer: Timer = new Timer();
-
-
 
   public clearPan() {
     if (this.interval) {
@@ -126,7 +124,11 @@ export class BaseCamera extends ModelPosition {
     return false;
   }
 
-  worldToScreen(worldX: number, worldY: number, worldZ: number): { x: number, y: number, visible: boolean } {
+  worldToScreen(
+    worldX: number,
+    worldY: number,
+    worldZ: number
+  ): { x: number; y: number; visible: boolean } {
     if (!this.frustum || !this.viewMatrix) {
       return { x: 0.5, y: 0.5, visible: false };
     }
@@ -145,7 +147,13 @@ export class BaseCamera extends ModelPosition {
     const ndc = vec4.scale(vec4.create(), clipSpace, 1.0 / clipSpace[3]);
     const screenX = (ndc[0] + 1.0) / 2.0;
     const screenY = (ndc[1] + 1.0) / 2.0;
-    const visible = screenX >= 0 && screenX <= 1 && screenY >= 0 && screenY <= 1 && ndc[2] >= -1 && ndc[2] <= 1;
+    const visible =
+      screenX >= 0 &&
+      screenX <= 1 &&
+      screenY >= 0 &&
+      screenY <= 1 &&
+      ndc[2] >= -1 &&
+      ndc[2] <= 1;
 
     return { x: screenX, y: screenY, visible };
   }
@@ -160,7 +168,6 @@ export class BaseCamera extends ModelPosition {
 
   commitProjectionView = () => {
     this._isUpdateView = false;
-
 
     let quatRotationxyz = quat.create();
     quatRotationxyz = quat.rotateX(
@@ -194,7 +201,6 @@ export class BaseCamera extends ModelPosition {
     mat4.translate(dest, dest, pos);
 
     this.viewMatrix = dest;
-
   };
 
   frustumMatrix = (): mat4 => {
@@ -222,10 +228,10 @@ export class BaseCamera extends ModelPosition {
       this.near,
       this.far
     );
-  };
+  }
 
   updateProjectionMatrix = () => {
-    if (this.cameraOptions?.projection === 'frustum') {
+    if (this.cameraOptions?.projection === "frustum") {
       this.frustum = this.frustumMatrix();
     } else {
       this.frustum = this.perspective();
@@ -303,7 +309,7 @@ export class BaseCamera extends ModelPosition {
     this.aspect = aspect;
 
     // Set frustum projection parameters if provided
-    if (cameraOptions.projection === 'frustum') {
+    if (cameraOptions.projection === "frustum") {
       // Ensure frustum values are properly set based on aspect ratio if not provided
       if (!this.cameraOptions.left) {
         this.cameraOptions.left = cameraOptions.left ?? -aspect;
@@ -336,7 +342,7 @@ export class BaseCamera extends ModelPosition {
       });
     }
 
-    if (cameraOptions.projection !== 'frustum') {
+    if (cameraOptions.projection !== "frustum") {
       let fov = cameraOptions.fov ?? 45.0;
       if (cameraOptions.isFovMax) {
         const maxFovAspect = (Math.atan(1.0 / aspect) * 360.0) / Math.PI;
@@ -369,11 +375,11 @@ export class BaseCamera extends ModelPosition {
     const dz = targetZ - this.position.z;
 
     // Calculate yaw (ay) - rotation around Y axis
-    this.position.ay = Math.atan2(-dx, -dz) * 180 / Math.PI;
+    this.position.ay = (Math.atan2(-dx, -dz) * 180) / Math.PI;
 
     // Calculate pitch (ax) - rotation around X axis
     const horizontalDistance = Math.sqrt(dx * dx + dz * dz);
-    this.position.ax = Math.atan2(-dy, horizontalDistance) * 180 / Math.PI;
+    this.position.ax = (Math.atan2(-dy, horizontalDistance) * 180) / Math.PI;
 
     // Reset roll (az) to 0
     this.position.az = 0;
@@ -407,10 +413,10 @@ export class BaseCamera extends ModelPosition {
 
     // Position camera
     this.center(cameraX, cameraY, cameraZ);
-    
+
     // Match camera rotation to target
     this.position.ay = targetRotation * (180 / Math.PI);
-    
+
     this.updateProjectionView();
   }
 }
@@ -483,17 +489,17 @@ class Camera {
   public camera2d = new Camera2d();
   public height: number;
   public width: number;
-  public renderMode: '2d' | '3d' = '2d'; // Default to 2D mode
+  public renderMode: "2d" | "3d" = "2d"; // Default to 2D mode
 
   public setupCamera(
     cameraOptions: CameraOptions,
     aspectRatio: number,
     canvas: HTMLCanvasElement,
-    renderMode?: '2d' | '3d'
+    renderMode?: "2d" | "3d"
   ) {
-    this.renderMode = renderMode || cameraOptions.renderMode || '2d';
+    this.renderMode = renderMode || cameraOptions.renderMode || "2d";
 
-    if (this.renderMode === '3d') {
+    if (this.renderMode === "3d") {
       this.camera3d.setupCamera(cameraOptions, aspectRatio || 1, canvas);
     }
     this.camera2d.setupCamera(cameraOptions, aspectRatio || 1, canvas);
@@ -503,7 +509,7 @@ class Camera {
   }
 
   public commitProjectionView() {
-    if (this.renderMode === '3d') {
+    if (this.renderMode === "3d") {
       if (this.camera3d.isUpdateView()) {
         this.camera3d.commitProjectionView();
       }
@@ -514,11 +520,13 @@ class Camera {
   }
 
   public getActiveCamera(): BaseCamera {
-    return this.renderMode === '3d' ? this.camera3d : this.camera2d;
+    return this.renderMode === "3d" ? this.camera3d : this.camera2d;
   }
 
   public getActiveFrustum(): any {
-    return this.renderMode === '3d' ? this.camera3d.frustum : this.camera2d.frustum;
+    return this.renderMode === "3d"
+      ? this.camera3d.frustum
+      : this.camera2d.frustum;
   }
 }
 

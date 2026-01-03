@@ -22,7 +22,7 @@ class FntFontReader extends FontMetaData {
     const lines = raw.split("\n");
     this.context = new FontMeta();
     for (const lineIdx in lines) {
-      if (!lines.hasOwnProperty(lineIdx)) {
+      if (!Object.prototype.hasOwnProperty.call(lines, lineIdx)) {
         continue;
       }
       const line = lines[lineIdx];

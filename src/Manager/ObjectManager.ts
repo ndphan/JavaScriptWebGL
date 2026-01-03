@@ -4,7 +4,7 @@ import { EngineEvent } from "../Core/Events";
 
 export default class ObjectManager extends WorldDelegate {
   entities: EngineObject[] = [];
-  deferred: Function[] = [];
+  deferred: (() => void)[] = [];
   isLoaded = false;
   constructor() {
     super();
@@ -16,7 +16,7 @@ export default class ObjectManager extends WorldDelegate {
 
   update() {
     const lowPriorityQueue: EngineObject[] = [];
-    
+
     for (const entity of this.entities) {
       if (entity.isLowPriority) {
         lowPriorityQueue.push(entity);
@@ -24,7 +24,7 @@ export default class ObjectManager extends WorldDelegate {
         entity.update(this.engineHelper);
       }
     }
-    
+
     lowPriorityQueue.forEach((ent) => ent.update(this.engineHelper));
   }
 
@@ -43,7 +43,7 @@ export default class ObjectManager extends WorldDelegate {
       }
     }
   }
-  loadTexture(onLoad: Function) {
+  loadTexture(onLoad: () => void) {
     if (!this.isLoaded) {
       this.deferred.push(onLoad);
     } else {

@@ -33,7 +33,7 @@ export default class EngineHelper {
   time: number;
   cacheId = 0;
   fps: number;
-  
+
   constructor(
     notificationQueue: NotificationQueue,
     subscriberPool: SubscriberPool,
@@ -52,7 +52,7 @@ export default class EngineHelper {
   render(entity: ShaderEntity) {
     const shaderProgram = entity.opt.shaderType;
     if (
-      this.camera.renderMode === '2d' &&
+      this.camera.renderMode === "2d" &&
       (shaderProgram === ShaderType.TWO_DIMENSION ||
         shaderProgram === ShaderType.COLOUR) &&
       this.camera.camera2d.isOutOfBound(entity.modelPosition())
@@ -65,7 +65,10 @@ export default class EngineHelper {
       model = model.slice(0);
     }
 
-    if (this.camera.renderMode === '3d' && shaderProgram === ShaderType.THREE_DIMENSION) {
+    if (
+      this.camera.renderMode === "3d" &&
+      shaderProgram === ShaderType.THREE_DIMENSION
+    ) {
       this.renderWithCulling(entity, model);
       return;
     }
@@ -79,14 +82,18 @@ export default class EngineHelper {
     this.render(entity.shaderEntity.renderCopy(pos));
   }
 
-    /**
+  /**
    * Distance-based culling - objects beyond a certain distance are not rendered
    * @param entity The engine object to test
    * @param cameraPosition Camera position
    * @param maxDistance Maximum rendering distance
-   * @returns true if the object should be rendered
+   * @return true if the object should be rendered
    */
-  isEntityWithinDistance(entity: EngineObject, cameraPosition: vec3, maxDistance: number): boolean {
+  isEntityWithinDistance(
+    entity: EngineObject,
+    cameraPosition: vec3,
+    maxDistance: number
+  ): boolean {
     if (!entity || !entity.position) {
       return true;
     }
@@ -101,11 +108,10 @@ export default class EngineHelper {
     return distance <= maxDistance;
   }
 
-
   /**
    * Render an EngineObject with frustum and distance culling
    * @param entity The EngineObject to render
-   * @returns true if the entity was rendered, false if culled
+   * @return true if the entity was rendered, false if culled
    */
   renderWithCulling(entity: ShaderEntity, model: Float32List): boolean {
     if (!entity) {
@@ -113,13 +119,13 @@ export default class EngineHelper {
     }
 
     const entityPosition = entity.modelPosition();
-    
+
     const entitySize = Math.max(
       entityPosition.width || 1,
       entityPosition.height || 1,
       entityPosition.length || 1
     );
-    
+
     // If entity is very large (> 100 units), likely a sky/background object - always render
     if (entitySize > 100) {
       this.notificationQueue.pushPayload(
@@ -129,63 +135,63 @@ export default class EngineHelper {
     }
 
     const camera3d = this.camera.camera3d;
-    
+
     const cameraPos = vec3.fromValues(
       camera3d.position.x || 0,
       camera3d.position.y || 0,
       camera3d.position.z || 0
     );
-    
+
     const entityPos3d = vec3.fromValues(
       entityPosition.x || 0,
       entityPosition.y || 0,
       entityPosition.z || 0
     );
-    
+
     const yawRad = camera3d.degreesToRadians(camera3d.position.ay);
     const pitchRad = camera3d.degreesToRadians(camera3d.position.ax);
-    
+
     const cameraForward = vec3.fromValues(
       Math.sin(yawRad) * Math.cos(pitchRad),
       -Math.sin(pitchRad),
       -Math.cos(yawRad) * Math.cos(pitchRad)
     );
     vec3.normalize(cameraForward, cameraForward);
-    
+
     const toEntity = vec3.create();
     vec3.subtract(toEntity, entityPos3d, cameraPos);
     const distance = vec3.length(toEntity);
-    
+
     if (distance < camera3d.near) {
       this.notificationQueue.pushPayload(
         RendererNotification.renderEntity(entity, model)
       );
       return true;
     }
-    
+
     if (distance > camera3d.far) {
       return false;
     }
-    
+
     vec3.normalize(toEntity, toEntity);
-    
+
     const dot = vec3.dot(cameraForward, toEntity);
-    
+
     if (dot <= 0) {
       return false;
     }
-    
+
     const angle = Math.acos(Math.max(0, Math.min(1, dot)));
-    
+
     const fov = camera3d.fov;
     const fovRadians = (fov * Math.PI) / 180;
     const halfFov = fovRadians / 2;
-    
+
     const angularSize = Math.atan(entitySize / Math.max(distance, 1));
     const padding = angularSize + 0.3;
-    
+
     const effectiveHalfFov = halfFov + padding;
-    
+
     if (angle > effectiveHalfFov) {
       return false;
     }
@@ -338,7 +344,7 @@ export default class EngineHelper {
 
   initFont() {
     for (const fontType in this.fontCache) {
-      if (!this.fontCache.hasOwnProperty(fontType)) {
+      if (!Object.prototype.hasOwnProperty.call(this.fontCache, fontType)) {
         continue;
       }
       const font = this.fontCache[fontType].font;
@@ -348,7 +354,7 @@ export default class EngineHelper {
 
   renderFont() {
     for (const fontType in this.fontCache) {
-      if (!this.fontCache.hasOwnProperty(fontType)) {
+      if (!Object.prototype.hasOwnProperty.call(this.fontCache, fontType)) {
         continue;
       }
       const font = this.fontCache[fontType].font;
@@ -358,7 +364,7 @@ export default class EngineHelper {
 
   updateFont() {
     for (const fontType in this.fontCache) {
-      if (!this.fontCache.hasOwnProperty(fontType)) {
+      if (!Object.prototype.hasOwnProperty.call(this.fontCache, fontType)) {
         continue;
       }
       const font = this.fontCache[fontType].font;

@@ -9,7 +9,11 @@ export default class CameraFollower implements Feature {
   private offset: Coordinate;
   private rotateOffset: boolean;
 
-  constructor(camera: Camera, offset?: Coordinate, rotateOffset: boolean = false) {
+  constructor(
+    camera: Camera,
+    offset?: Coordinate,
+    rotateOffset: boolean = false
+  ) {
     this.camera = camera;
     this.offset = new Coordinate(
       offset?.x ?? 0,
@@ -26,9 +30,9 @@ export default class CameraFollower implements Feature {
   update(entity: EngineObject, engineHelper: EngineHelper): void {
     const cam = this.camera.camera3d || this.camera;
     const { x, y, z, ay } = cam.position;
-    
+
     let offsetX = this.offset.x;
-    let offsetY = this.offset.y;
+    const offsetY = this.offset.y;
     let offsetZ = this.offset.z;
 
     if (this.rotateOffset) {

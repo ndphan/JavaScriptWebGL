@@ -26,7 +26,7 @@ class ResourceResolver {
       );
       const textureSource = bitmapLoader.getTextureSource();
       for (const key in bitmapLoader.getMap()) {
-        if (bitmapLoader.map.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(bitmapLoader.map, key)) {
           const uv = bitmapLoader.map[key];
           engineHelper.addUVCache(textureSource, key, uv);
         }

@@ -72,8 +72,8 @@ export default class EngineDebugger {
 
   private createDebugUI(): void {
     // Create debug overlay container
-    this.debugElement = document.createElement('div');
-    this.debugElement.id = 'engine-debugger';
+    this.debugElement = document.createElement("div");
+    this.debugElement.id = "engine-debugger";
     this.debugElement.style.cssText = `
       position: absolute;
       top: 10px;
@@ -99,7 +99,7 @@ export default class EngineDebugger {
 
     // Add to canvas parent or body
     const parent = this.canvas.parentElement || document.body;
-    parent.style.position = 'relative'; // Ensure parent can contain absolute positioned children
+    parent.style.position = "relative"; // Ensure parent can contain absolute positioned children
     parent.appendChild(this.debugElement);
   }
 
@@ -205,8 +205,8 @@ export default class EngineDebugger {
     `;
 
     // Add toggle button
-    const toggleButton = document.createElement('button');
-    toggleButton.textContent = '×';
+    const toggleButton = document.createElement("button");
+    toggleButton.textContent = "×";
     toggleButton.style.cssText = `
       position: absolute;
       top: 5px;
@@ -238,7 +238,9 @@ export default class EngineDebugger {
       this.frameTimeHistory.shift();
     }
 
-    const avgFrameTime = this.frameTimeHistory.reduce((a, b) => a + b, 0) / this.frameTimeHistory.length;
+    const avgFrameTime =
+      this.frameTimeHistory.reduce((a, b) => a + b, 0) /
+      this.frameTimeHistory.length;
     return Math.round(1000 / avgFrameTime);
   }
 
@@ -266,18 +268,20 @@ export default class EngineDebugger {
 
   private buildEntityInfo(entity: EngineObject): DebugEntityInfo {
     return {
-      type: entity ? entity.constructor.name : 'null',
-      position: entity ? {
-        x: Math.round(entity.position.x * 100) / 100,
-        y: Math.round(entity.position.y * 100) / 100,
-        z: Math.round(entity.position.z * 100) / 100
-      } : { x: 0, y: 0, z: 0 },
+      type: entity ? entity.constructor.name : "null",
+      position: entity
+        ? {
+            x: Math.round(entity.position.x * 100) / 100,
+            y: Math.round(entity.position.y * 100) / 100,
+            z: Math.round(entity.position.z * 100) / 100,
+          }
+        : { x: 0, y: 0, z: 0 },
       hidden: entity ? entity.hidden : true,
       hasShaderEntity: entity ? !!entity.shaderEntity : false,
       textureRef: entity?.shaderEntity?.rendererTextureRef,
       bufferId: entity?.shaderEntity?.rendererBufferId,
-      features: entity?.features?.map(f => f.constructor.name) || [],
-      isLowPriority: entity?.isLowPriority || false
+      features: entity?.features?.map((f) => f.constructor.name) || [],
+      isLowPriority: entity?.isLowPriority || false,
     };
   }
 
@@ -286,68 +290,83 @@ export default class EngineDebugger {
 
     // Get WebGL context info from the canvas
     const canvas = this.canvas;
-    const glContext = canvas.getContext('webgl') || canvas.getContext('experimental-webgl') as WebGLRenderingContext;
-    const webglInfo = glContext ? {
-      faceCullingEnabled: glContext.isEnabled(glContext.CULL_FACE),
-      depthTestEnabled: glContext.isEnabled(glContext.DEPTH_TEST),
-      blendEnabled: glContext.isEnabled(glContext.BLEND),
-      clearColor: this.getClearColorString(glContext)
-    } : {
-      faceCullingEnabled: false,
-      depthTestEnabled: false,
-      blendEnabled: false,
-      clearColor: 'unknown'
-    };
+    const glContext =
+      canvas.getContext("webgl") ||
+      (canvas.getContext("experimental-webgl") as WebGLRenderingContext);
+    const webglInfo = glContext
+      ? {
+          faceCullingEnabled: glContext.isEnabled(glContext.CULL_FACE),
+          depthTestEnabled: glContext.isEnabled(glContext.DEPTH_TEST),
+          blendEnabled: glContext.isEnabled(glContext.BLEND),
+          clearColor: this.getClearColorString(glContext),
+        }
+      : {
+          faceCullingEnabled: false,
+          depthTestEnabled: false,
+          blendEnabled: false,
+          clearColor: "unknown",
+        };
 
     // Get camera info
     const cameraInfo = {
       position: {
         x: Math.round(camera.getActiveCamera().position.x * 100) / 100,
         y: Math.round(camera.getActiveCamera().position.y * 100) / 100,
-        z: Math.round(camera.getActiveCamera().position.z * 100) / 100
+        z: Math.round(camera.getActiveCamera().position.z * 100) / 100,
       },
       rotation: {
         ax: Math.round(camera.getActiveCamera().position.ax * 100) / 100,
         ay: Math.round(camera.getActiveCamera().position.ay * 100) / 100,
-        az: Math.round(camera.getActiveCamera().position.az * 100) / 100
+        az: Math.round(camera.getActiveCamera().position.az * 100) / 100,
       },
       origin: {
         x: Math.round(camera.getActiveCamera().position.originX * 100) / 100,
         y: Math.round(camera.getActiveCamera().position.originY * 100) / 100,
-        z: Math.round(camera.getActiveCamera().position.originZ * 100) / 100
-      }
+        z: Math.round(camera.getActiveCamera().position.originZ * 100) / 100,
+      },
     };
 
-    const entities = this.world instanceof ObjectManager && this.world?.entities?.flatMap((entity: EngineObject, index) => {
-      if (entity instanceof EntityManager) {
-        return entity.entities.map(obj => this.buildEntityInfo(obj));
-      }
-      return this.buildEntityInfo(entity)
-    }) || [];
+    const entities =
+      (this.world instanceof ObjectManager &&
+        this.world?.entities?.flatMap((entity: EngineObject, index) => {
+          if (entity instanceof EntityManager) {
+            return entity.entities.map((obj) => this.buildEntityInfo(obj));
+          }
+          return this.buildEntityInfo(entity);
+        })) ||
+      [];
 
     return {
       fps: this.fpsCounter,
-      frameTime: this.frameTimeHistory.length > 0 ?
-        Math.round(this.frameTimeHistory[this.frameTimeHistory.length - 1] * 100) / 100 : 0,
+      frameTime:
+        this.frameTimeHistory.length > 0
+          ? Math.round(
+              this.frameTimeHistory[this.frameTimeHistory.length - 1] * 100
+            ) / 100
+          : 0,
       entityCount: entities.length,
       camera: cameraInfo,
       entities: entities,
       webglInfo: webglInfo,
       renderCalls: this.renderCallCount,
-      lastError: this.lastError
+      lastError: this.lastError,
     };
   }
 
   private getClearColorString(ctx: WebGLRenderingContext): string {
     const color = ctx.getParameter(ctx.COLOR_CLEAR_VALUE) as Float32Array;
-    return `rgba(${Math.round(color[0] * 255)}, ${Math.round(color[1] * 255)}, ${Math.round(color[2] * 255)}, ${color[3]})`;
+    return `rgba(${Math.round(color[0] * 255)}, ${Math.round(
+      color[1] * 255
+    )}, ${Math.round(color[2] * 255)}, ${color[3]})`;
   }
 
   private renderDebugInfo(info: DebugInfo): void {
-    const perfContent = this.debugElement.querySelector('#perf-content');
+    const perfContent = this.debugElement.querySelector("#perf-content");
     if (perfContent) {
       perfContent.innerHTML = `
-        FPS: <span style="color: ${info.fps > 50 ? '#4CAF50' : info.fps > 30 ? '#FFA500' : '#FF4444'}">${info.fps}</span><br>
+        FPS: <span style="color: ${
+          info.fps > 50 ? "#4CAF50" : info.fps > 30 ? "#FFA500" : "#FF4444"
+        }">${info.fps}</span><br>
         Frame Time: ${info.frameTime}ms<br>
         Render Calls: ${info.renderCalls}
       `;
@@ -357,18 +376,24 @@ export default class EngineDebugger {
     this.updateCameraControls(info.camera);
 
     // Update WebGL state
-    const webglContent = this.debugElement.querySelector('#webgl-content');
+    const webglContent = this.debugElement.querySelector("#webgl-content");
     if (webglContent) {
       webglContent.innerHTML = `
-        Face Culling: <span style="color: ${info.webglInfo.faceCullingEnabled ? '#4CAF50' : '#FF4444'}">${info.webglInfo.faceCullingEnabled ? 'ON' : 'OFF'}</span><br>
-        Depth Test: <span style="color: ${info.webglInfo.depthTestEnabled ? '#4CAF50' : '#FF4444'}">${info.webglInfo.depthTestEnabled ? 'ON' : 'OFF'}</span><br>
-        Blend: <span style="color: ${info.webglInfo.blendEnabled ? '#4CAF50' : '#FF4444'}">${info.webglInfo.blendEnabled ? 'ON' : 'OFF'}</span><br>
+        Face Culling: <span style="color: ${
+          info.webglInfo.faceCullingEnabled ? "#4CAF50" : "#FF4444"
+        }">${info.webglInfo.faceCullingEnabled ? "ON" : "OFF"}</span><br>
+        Depth Test: <span style="color: ${
+          info.webglInfo.depthTestEnabled ? "#4CAF50" : "#FF4444"
+        }">${info.webglInfo.depthTestEnabled ? "ON" : "OFF"}</span><br>
+        Blend: <span style="color: ${
+          info.webglInfo.blendEnabled ? "#4CAF50" : "#FF4444"
+        }">${info.webglInfo.blendEnabled ? "ON" : "OFF"}</span><br>
         Clear Color: ${info.webglInfo.clearColor}
       `;
     }
 
     // Update entity count
-    const entityCountEl = this.debugElement.querySelector('#entity-count');
+    const entityCountEl = this.debugElement.querySelector("#entity-count");
     if (entityCountEl) {
       entityCountEl.textContent = info.entityCount.toString();
     }
@@ -380,18 +405,36 @@ export default class EngineDebugger {
     this.updateErrorDisplay(info.lastError);
   }
 
-  private updateCameraControls(camera: DebugInfo['camera']): void {
-    const posX = this.debugElement.querySelector('#cam-pos-x') as HTMLInputElement;
-    const posY = this.debugElement.querySelector('#cam-pos-y') as HTMLInputElement;
-    const posZ = this.debugElement.querySelector('#cam-pos-z') as HTMLInputElement;
-    const rotX = this.debugElement.querySelector('#cam-rot-x') as HTMLInputElement;
-    const rotY = this.debugElement.querySelector('#cam-rot-y') as HTMLInputElement;
-    const rotZ = this.debugElement.querySelector('#cam-rot-z') as HTMLInputElement;
+  private updateCameraControls(camera: DebugInfo["camera"]): void {
+    const posX = this.debugElement.querySelector(
+      "#cam-pos-x"
+    ) as HTMLInputElement;
+    const posY = this.debugElement.querySelector(
+      "#cam-pos-y"
+    ) as HTMLInputElement;
+    const posZ = this.debugElement.querySelector(
+      "#cam-pos-z"
+    ) as HTMLInputElement;
+    const rotX = this.debugElement.querySelector(
+      "#cam-rot-x"
+    ) as HTMLInputElement;
+    const rotY = this.debugElement.querySelector(
+      "#cam-rot-y"
+    ) as HTMLInputElement;
+    const rotZ = this.debugElement.querySelector(
+      "#cam-rot-z"
+    ) as HTMLInputElement;
 
     // Origin input elements
-    const originX = this.debugElement.querySelector('#cam-origin-x') as HTMLInputElement;
-    const originY = this.debugElement.querySelector('#cam-origin-y') as HTMLInputElement;
-    const originZ = this.debugElement.querySelector('#cam-origin-z') as HTMLInputElement;
+    const originX = this.debugElement.querySelector(
+      "#cam-origin-x"
+    ) as HTMLInputElement;
+    const originY = this.debugElement.querySelector(
+      "#cam-origin-y"
+    ) as HTMLInputElement;
+    const originZ = this.debugElement.querySelector(
+      "#cam-origin-z"
+    ) as HTMLInputElement;
 
     if (posX && posX !== document.activeElement) {
       posX.value = camera.position.x.toString();
@@ -415,20 +458,20 @@ export default class EngineDebugger {
     // Update origin input fields with proper styling based on values
     if (originX && originX !== document.activeElement) {
       originX.value = camera.origin.x.toString();
-      originX.style.borderColor = camera.origin.x === 0 ? '#4CAF50' : '#FF4444';
+      originX.style.borderColor = camera.origin.x === 0 ? "#4CAF50" : "#FF4444";
     }
     if (originY && originY !== document.activeElement) {
       originY.value = camera.origin.y.toString();
-      originY.style.borderColor = camera.origin.y === 0 ? '#4CAF50' : '#FF4444';
+      originY.style.borderColor = camera.origin.y === 0 ? "#4CAF50" : "#FF4444";
     }
     if (originZ && originZ !== document.activeElement) {
       originZ.value = camera.origin.z.toString();
-      originZ.style.borderColor = camera.origin.z === 0 ? '#4CAF50' : '#FF4444';
+      originZ.style.borderColor = camera.origin.z === 0 ? "#4CAF50" : "#FF4444";
     }
   }
 
-  private updateEntitiesList(entities: DebugInfo['entities']): void {
-    const container = this.debugElement.querySelector('#entities-container');
+  private updateEntitiesList(entities: DebugInfo["entities"]): void {
+    const container = this.debugElement.querySelector("#entities-container");
     if (!container) return;
 
     if (this.lastEntityCount === entities.length) return;
@@ -436,49 +479,79 @@ export default class EngineDebugger {
 
     const scrollTop = container.scrollTop;
 
-    const entitiesHtml = entities.map((entity, index) => `
-      <div style="margin-bottom: 5px; padding: 4px; border-left: 3px solid ${entity.hidden ? '#FF4444' : entity.isLowPriority ? '#FFA500' : '#4CAF50'}; background: rgba(255,255,255,0.05); border-radius: 2px;">
-        <strong style="color: #87CEEB;">${index}: ${entity.type}</strong>${entity.isLowPriority ? ' <span style="color: #FFA500; font-size: 10px;">[LOW PRIORITY]</span>' : ''}<br>
+    const entitiesHtml = entities
+      .map(
+        (entity, index) => `
+      <div style="margin-bottom: 5px; padding: 4px; border-left: 3px solid ${
+        entity.hidden ? "#FF4444" : entity.isLowPriority ? "#FFA500" : "#4CAF50"
+      }; background: rgba(255,255,255,0.05); border-radius: 2px;">
+        <strong style="color: #87CEEB;">${index}: ${entity.type}</strong>${
+          entity.isLowPriority
+            ? ' <span style="color: #FFA500; font-size: 10px;">[LOW PRIORITY]</span>'
+            : ""
+        }<br>
         <span style="font-size: 11px;">
-          Pos: (${entity.position.x}, ${entity.position.y}, ${entity.position.z})<br>
-          Hidden: ${entity.hidden ? 'YES' : 'NO'} | 
-          Shader: ${entity.hasShaderEntity ? 'YES' : 'NO'}<br>
-          ${entity.textureRef ? `Texture: <span style="color: #90EE90;">${entity.textureRef}</span><br>` : ''}
-          ${entity.bufferId !== undefined ? `Buffer ID: <span style="color: #FFB6C1;">${entity.bufferId}</span><br>` : '<span style="color: #FF6B6B;">No Buffer</span><br>'}
-          ${entity.features.length > 0 ? `Features: <span style="color: #FFD700;">${entity.features.join(', ')}</span>` : '<span style="color: #888;">No Features</span>'}
+          Pos: (${entity.position.x}, ${entity.position.y}, ${
+          entity.position.z
+        })<br>
+          Hidden: ${entity.hidden ? "YES" : "NO"} | 
+          Shader: ${entity.hasShaderEntity ? "YES" : "NO"}<br>
+          ${
+            entity.textureRef
+              ? `Texture: <span style="color: #90EE90;">${entity.textureRef}</span><br>`
+              : ""
+          }
+          ${
+            entity.bufferId !== undefined
+              ? `Buffer ID: <span style="color: #FFB6C1;">${entity.bufferId}</span><br>`
+              : '<span style="color: #FF6B6B;">No Buffer</span><br>'
+          }
+          ${
+            entity.features.length > 0
+              ? `Features: <span style="color: #FFD700;">${entity.features.join(
+                  ", "
+                )}</span>`
+              : '<span style="color: #888;">No Features</span>'
+          }
         </span>
       </div>
-    `).join('');
+    `
+      )
+      .join("");
 
     container.innerHTML = entitiesHtml;
     container.scrollTop = scrollTop;
   }
 
   private updateErrorDisplay(lastError?: string): void {
-    const errorDiv = this.debugElement.querySelector('#debug-error') as HTMLElement;
-    const errorContent = this.debugElement.querySelector('#error-content') as HTMLElement;
+    const errorDiv = this.debugElement.querySelector(
+      "#debug-error"
+    ) as HTMLElement;
+    const errorContent = this.debugElement.querySelector(
+      "#error-content"
+    ) as HTMLElement;
 
     if (lastError && errorDiv && errorContent) {
-      errorDiv.style.display = 'block';
+      errorDiv.style.display = "block";
       errorContent.textContent = lastError;
     } else if (errorDiv) {
-      errorDiv.style.display = 'none';
+      errorDiv.style.display = "none";
     }
   }
 
   public toggle(): void {
     this.isVisible = !this.isVisible;
-    this.debugElement.style.display = this.isVisible ? 'block' : 'none';
+    this.debugElement.style.display = this.isVisible ? "block" : "none";
   }
 
   public show(): void {
     this.isVisible = true;
-    this.debugElement.style.display = 'block';
+    this.debugElement.style.display = "block";
   }
 
   public hide(): void {
     this.isVisible = false;
-    this.debugElement.style.display = 'none';
+    this.debugElement.style.display = "none";
   }
 
   public incrementRenderCalls(): void {
@@ -491,54 +564,94 @@ export default class EngineDebugger {
 
   public logError(error: string): void {
     this.lastError = error;
-    console.error('Engine Error:', error);
+    console.error("Engine Error:", error);
   }
-
-
 
   private setupCameraControlEventListeners(): void {
     // Position controls
-    const posX = this.debugElement.querySelector('#cam-pos-x') as HTMLInputElement;
-    const posY = this.debugElement.querySelector('#cam-pos-y') as HTMLInputElement;
-    const posZ = this.debugElement.querySelector('#cam-pos-z') as HTMLInputElement;
+    const posX = this.debugElement.querySelector(
+      "#cam-pos-x"
+    ) as HTMLInputElement;
+    const posY = this.debugElement.querySelector(
+      "#cam-pos-y"
+    ) as HTMLInputElement;
+    const posZ = this.debugElement.querySelector(
+      "#cam-pos-z"
+    ) as HTMLInputElement;
 
-    posX?.addEventListener('change', (e) => this.setCameraPosition('x', (e.target as HTMLInputElement).value));
-    posY?.addEventListener('change', (e) => this.setCameraPosition('y', (e.target as HTMLInputElement).value));
-    posZ?.addEventListener('change', (e) => this.setCameraPosition('z', (e.target as HTMLInputElement).value));
+    posX?.addEventListener("change", (e) =>
+      this.setCameraPosition("x", (e.target as HTMLInputElement).value)
+    );
+    posY?.addEventListener("change", (e) =>
+      this.setCameraPosition("y", (e.target as HTMLInputElement).value)
+    );
+    posZ?.addEventListener("change", (e) =>
+      this.setCameraPosition("z", (e.target as HTMLInputElement).value)
+    );
 
     // Rotation controls
-    const rotX = this.debugElement.querySelector('#cam-rot-x') as HTMLInputElement;
-    const rotY = this.debugElement.querySelector('#cam-rot-y') as HTMLInputElement;
-    const rotZ = this.debugElement.querySelector('#cam-rot-z') as HTMLInputElement;
+    const rotX = this.debugElement.querySelector(
+      "#cam-rot-x"
+    ) as HTMLInputElement;
+    const rotY = this.debugElement.querySelector(
+      "#cam-rot-y"
+    ) as HTMLInputElement;
+    const rotZ = this.debugElement.querySelector(
+      "#cam-rot-z"
+    ) as HTMLInputElement;
 
-    rotX?.addEventListener('change', (e) => this.setCameraRotation('ax', (e.target as HTMLInputElement).value));
-    rotY?.addEventListener('change', (e) => this.setCameraRotation('ay', (e.target as HTMLInputElement).value));
-    rotZ?.addEventListener('change', (e) => this.setCameraRotation('az', (e.target as HTMLInputElement).value));
+    rotX?.addEventListener("change", (e) =>
+      this.setCameraRotation("ax", (e.target as HTMLInputElement).value)
+    );
+    rotY?.addEventListener("change", (e) =>
+      this.setCameraRotation("ay", (e.target as HTMLInputElement).value)
+    );
+    rotZ?.addEventListener("change", (e) =>
+      this.setCameraRotation("az", (e.target as HTMLInputElement).value)
+    );
 
     // Origin controls
-    const originX = this.debugElement.querySelector('#cam-origin-x') as HTMLInputElement;
-    const originY = this.debugElement.querySelector('#cam-origin-y') as HTMLInputElement;
-    const originZ = this.debugElement.querySelector('#cam-origin-z') as HTMLInputElement;
+    const originX = this.debugElement.querySelector(
+      "#cam-origin-x"
+    ) as HTMLInputElement;
+    const originY = this.debugElement.querySelector(
+      "#cam-origin-y"
+    ) as HTMLInputElement;
+    const originZ = this.debugElement.querySelector(
+      "#cam-origin-z"
+    ) as HTMLInputElement;
 
-    originX?.addEventListener('change', (e) => this.setCameraOrigin('x', (e.target as HTMLInputElement).value));
-    originY?.addEventListener('change', (e) => this.setCameraOrigin('y', (e.target as HTMLInputElement).value));
-    originZ?.addEventListener('change', (e) => this.setCameraOrigin('z', (e.target as HTMLInputElement).value));
+    originX?.addEventListener("change", (e) =>
+      this.setCameraOrigin("x", (e.target as HTMLInputElement).value)
+    );
+    originY?.addEventListener("change", (e) =>
+      this.setCameraOrigin("y", (e.target as HTMLInputElement).value)
+    );
+    originZ?.addEventListener("change", (e) =>
+      this.setCameraOrigin("z", (e.target as HTMLInputElement).value)
+    );
 
     // Buttons
-    const resetBtn = this.debugElement.querySelector('#reset-camera-btn') as HTMLButtonElement;
-    const lookAtBtn = this.debugElement.querySelector('#look-at-origin-btn') as HTMLButtonElement;
-    const resetOriginBtn = this.debugElement.querySelector('#reset-origin-btn') as HTMLButtonElement;
+    const resetBtn = this.debugElement.querySelector(
+      "#reset-camera-btn"
+    ) as HTMLButtonElement;
+    const lookAtBtn = this.debugElement.querySelector(
+      "#look-at-origin-btn"
+    ) as HTMLButtonElement;
+    const resetOriginBtn = this.debugElement.querySelector(
+      "#reset-origin-btn"
+    ) as HTMLButtonElement;
 
-    resetBtn?.addEventListener('click', () => this.resetCamera());
-    lookAtBtn?.addEventListener('click', () => this.lookAtOrigin());
-    resetOriginBtn?.addEventListener('click', () => this.resetCameraOrigin());
+    resetBtn?.addEventListener("click", () => this.resetCamera());
+    lookAtBtn?.addEventListener("click", () => this.lookAtOrigin());
+    resetOriginBtn?.addEventListener("click", () => this.resetCameraOrigin());
   }
 
   public enableDebugOnRightClick(): void {
-    this.canvas.addEventListener('contextmenu', (event) => {
+    this.canvas.addEventListener("contextmenu", (event) => {
       event.preventDefault();
 
-      const debugMenu = document.createElement('div');
+      const debugMenu = document.createElement("div");
       debugMenu.style.cssText = `
         position: absolute;
         top: ${event.clientY}px;
@@ -554,17 +667,23 @@ export default class EngineDebugger {
 
       document.body.appendChild(debugMenu);
 
-      const toggleButton = debugMenu.querySelector('#debug-toggle') as HTMLButtonElement;
-      toggleButton.addEventListener('click', () => {
+      const toggleButton = debugMenu.querySelector(
+        "#debug-toggle"
+      ) as HTMLButtonElement;
+      toggleButton.addEventListener("click", () => {
         this.toggle();
         document.body.removeChild(debugMenu);
       });
 
-      document.addEventListener('click', () => {
-        if (document.body.contains(debugMenu)) {
-          document.body.removeChild(debugMenu);
-        }
-      }, { once: true });
+      document.addEventListener(
+        "click",
+        () => {
+          if (document.body.contains(debugMenu)) {
+            document.body.removeChild(debugMenu);
+          }
+        },
+        { once: true }
+      );
     });
   }
 
@@ -576,13 +695,13 @@ export default class EngineDebugger {
 
     const camera = this.engineHelper.camera.getActiveCamera();
     switch (axis) {
-      case 'x':
+      case "x":
         camera.position.x = numValue;
         break;
-      case 'y':
+      case "y":
         camera.position.y = numValue;
         break;
-      case 'z':
+      case "z":
         camera.position.z = numValue;
         break;
     }
@@ -597,13 +716,13 @@ export default class EngineDebugger {
 
     const camera = this.engineHelper.camera.getActiveCamera();
     switch (axis) {
-      case 'ax':
+      case "ax":
         camera.position.ax = numValue;
         break;
-      case 'ay':
+      case "ay":
         camera.position.ay = numValue;
         break;
-      case 'az':
+      case "az":
         camera.position.az = numValue;
         break;
     }
@@ -618,13 +737,13 @@ export default class EngineDebugger {
 
     const camera = this.engineHelper.camera.getActiveCamera();
     switch (axis) {
-      case 'x':
+      case "x":
         camera.position.originX = numValue;
         break;
-      case 'y':
+      case "y":
         camera.position.originY = numValue;
         break;
-      case 'z':
+      case "z":
         camera.position.originZ = numValue;
         break;
     }
@@ -643,7 +762,7 @@ export default class EngineDebugger {
     camera.position.ay = 0;
     camera.position.az = 0;
     camera.updateProjectionView();
-    console.log('Camera reset to default position');
+    console.log("Camera reset to default position");
   }
 
   private lookAtOrigin(): void {
@@ -652,7 +771,7 @@ export default class EngineDebugger {
     const camera = this.engineHelper.camera.getActiveCamera();
     camera.lookAt(0, 0, 0);
     camera.updateProjectionView();
-    console.log('Camera looking at origin');
+    console.log("Camera looking at origin");
   }
 
   private resetCameraOrigin(): void {
@@ -666,6 +785,6 @@ export default class EngineDebugger {
     camera.dirtyQuat = true;
     camera.dirtyModel = true;
     camera.updateProjectionView();
-    console.log('Camera rotation origin reset to (0,0,0)');
+    console.log("Camera rotation origin reset to (0,0,0)");
   }
 }

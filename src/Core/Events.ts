@@ -73,7 +73,7 @@ export default class Events {
     }
   };
 
-  delete(cb: Function) {
+  delete(cb: EngineEventCallback) {
     this.callback = this.callback.filter((c) => c !== cb);
   }
 
@@ -96,11 +96,13 @@ export default class Events {
     window.addEventListener("keydown", this.isBodyFocus(this.keyDown), true);
     window.addEventListener("keyup", this.isBodyFocus(this.keyUp), true);
 
-    if (window.hasOwnProperty("DeviceMotionEvent")) {
+    if (Object.prototype.hasOwnProperty.call(window, "DeviceMotionEvent")) {
       window.addEventListener("devicemotion", this.handleMotion, true);
     }
 
-    if (window.hasOwnProperty("DeviceOrientationEvent")) {
+    if (
+      Object.prototype.hasOwnProperty.call(window, "DeviceOrientationEvent")
+    ) {
       window.addEventListener(
         "orientationchange",
         this.handleOrientationChange,
@@ -136,7 +138,7 @@ export default class Events {
   isBodyFocus(callback: (event: any) => void): (event: any) => void {
     return (_event: any[]) => {
       // if (window.document.activeElement === window.document.body) {
-        callback(_event);
+      callback(_event);
       // } else {
       //   console.trace('body is not focused when event triggered', event);
       // }

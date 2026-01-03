@@ -264,11 +264,13 @@ class Moveable extends EntityManager {
     let dx = physics.v.x * time;
     let dy = physics.v.y * time;
 
-    let model: ModelPosition = this;
+    let model: ModelPosition;
     if (physics.collisionSize) {
       physics.modelPos.setRect(physics.collisionSize);
       physics.modelPos.$physicsId = this.$physicsId;
       model = physics.modelPos;
+    } else {
+      model = this as unknown as ModelPosition;
     }
     const [_dx, _dy, collision] = this.resolveCollision(model, dx, dy);
     if (this.shouldTranslate(collision)) {
@@ -338,11 +340,13 @@ class Moveable extends EntityManager {
 
   translateCollision(simulationId: number, dx: number, dy: number, dz: number) {
     const physics = this.physics;
-    let model: ModelPosition = this;
+    let model: ModelPosition;
     if (physics.collisionSize) {
       physics.modelPos.setRect(physics.collisionSize);
       physics.modelPos.$physicsId = this.$physicsId;
       model = physics.modelPos;
+    } else {
+      model = this as unknown as ModelPosition;
     }
     const colliding = Physics.isCollidingOffset2d(model, dx, dy);
     if (this.shouldTranslate(colliding)) {
@@ -369,7 +373,9 @@ class Moveable extends EntityManager {
   }
 
   copyTexture(obj: EngineObject) {
-    this.shaderEntity ? super.copyTexture(obj) : undefined;
+    if (this.shaderEntity) {
+      super.copyTexture(obj);
+    }
     this.entities.forEach((entity) => entity.copyTexture(obj));
   }
 }

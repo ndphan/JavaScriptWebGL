@@ -192,7 +192,7 @@ export default class ModelPosition {
   getIntermediateModel(point: number, dest: mat4) {
     const org = this.intermediateModels[point];
     for (const index in dest) {
-      if (dest.hasOwnProperty(index)) {
+      if (Object.prototype.hasOwnProperty.call(dest, index)) {
         dest[index] = org[index];
       }
     }
@@ -203,7 +203,7 @@ export default class ModelPosition {
     // faster copy - preserve existing reference to prevent GC
     const org = this.intermediateModels[point];
     for (const index in dest) {
-      if (dest.hasOwnProperty(index)) {
+      if (Object.prototype.hasOwnProperty.call(dest, index)) {
         org[index] = dest[index];
       }
     }

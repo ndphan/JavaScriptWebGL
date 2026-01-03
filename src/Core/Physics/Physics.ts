@@ -88,7 +88,7 @@ export default class Physics {
     const _dx: number[] = [];
     const _dy: number[] = [];
     for (const key in this.physicsEntities) {
-      if (this.physicsEntities.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(this.physicsEntities, key)) {
         const physicsEntity = this.physicsEntities[key];
         const node = physicsEntity.entity;
         if (physicsEntity.enabled && node.$physicsId !== entity.$physicsId) {
@@ -139,10 +139,10 @@ export default class Physics {
       }
     }
     if (_dx.length > 0) {
-      dx = Math.min.apply(Math, _dx);
+      dx = Math.min(..._dx);
     }
     if (_dy.length > 0) {
-      dy = Math.min.apply(Math, _dy);
+      dy = Math.min(..._dy);
     }
     if (Math.abs(dx) < 10e-6) {
       dx = 0;
@@ -180,7 +180,7 @@ export default class Physics {
   ): ModelPosition[] {
     const collision: ModelPosition[] = [];
     for (const key in this.physicsEntities) {
-      if (this.physicsEntities.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(this.physicsEntities, key)) {
         const physicsEntity = this.physicsEntities[key];
         const pEntityRoot = physicsEntity.entity;
         if (
@@ -239,7 +239,9 @@ export default class Physics {
   static physicsLoop() {
     let simulationCount = 0;
     for (const simulationId in this.simulations) {
-      if (this.simulations.hasOwnProperty(simulationId)) {
+      if (
+        Object.prototype.hasOwnProperty.call(this.simulations, simulationId)
+      ) {
         const data = this.simulations[simulationId];
         if (!data) continue;
         if (data.cancelled) {
@@ -268,7 +270,7 @@ export default class Physics {
         }
       }
     }
-    
+
     if (simulationCount === 0 && this.simulationLoop !== undefined) {
       clearInterval(this.simulationLoop);
       this.simulationLoop = undefined;

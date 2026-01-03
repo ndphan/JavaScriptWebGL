@@ -62,7 +62,7 @@ abstract class EngineObject extends ModelPosition implements EngineEntity {
     this.shaderEntity.clone = clone;
   }
   update(engineHelper: EngineHelper) {
-    this.features.forEach(feature => feature.update(this, engineHelper));
+    this.features.forEach((feature) => feature.update(this, engineHelper));
   }
   render(engineHelper: EngineHelper) {}
   event(event: EngineEvent, engineHelper: EngineHelper): boolean | undefined {

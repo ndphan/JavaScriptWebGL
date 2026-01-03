@@ -44,7 +44,7 @@ class EngineMap extends EntityManager2d {
 
   restore() {
     for (const prop in this.$ref) {
-      if (this.$ref.hasOwnProperty(prop)) {
+      if (Object.prototype.hasOwnProperty.call(this.$ref, prop)) {
         const entityData = this.$ref[prop];
         entityData.entity.setPosition(entityData.position);
       }

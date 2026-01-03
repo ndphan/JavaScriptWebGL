@@ -89,7 +89,7 @@ class Entity3DProgram {
 
   render3DShadowMap(
     entities: [ShaderEntity, Float32List][],
-    setOriginalViewport: Function
+    setOriginalViewport: () => void
   ) {
     if (!this.program.isShadowEnabled) {
       return;
@@ -129,7 +129,10 @@ class Entity3DProgram {
       if (!this.ctx.isEnabled(this.ctx.DEPTH_TEST)) {
         this.ctx.enable(this.ctx.DEPTH_TEST);
       }
-      this.ctx.uniform1i(this.program.isLightingEnabledUniform.ref, this.program.isLightingEnabled ? 1 : 0);
+      this.ctx.uniform1i(
+        this.program.isLightingEnabledUniform.ref,
+        this.program.isLightingEnabled ? 1 : 0
+      );
     }
 
     for (let index = 0; index < entities.length; index++) {

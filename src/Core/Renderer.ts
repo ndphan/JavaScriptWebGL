@@ -127,7 +127,8 @@ class Renderer {
     this.ctx = this.webGLContainer.getCtx();
     this.glContext = new WebGLContext(this.ctx);
     this.glContext.setupDefault();
-    this.enableLighting = args.enableLighting !== undefined ? args.enableLighting : true;
+    this.enableLighting =
+      args.enableLighting !== undefined ? args.enableLighting : true;
 
     this.subscriberPool.listen(RendererSubscription.CREATE_TEXTURE, (data) => {
       const [object, resourcesLoading] = data;
@@ -144,19 +145,23 @@ class Renderer {
   };
 
   updatePerspective = () => {
-    if (this.camera.renderMode === '3d') {
+    if (this.camera.renderMode === "3d") {
       if (this.shader3DProgram) {
         this.shader3DProgram.updatePerspective(this.camera.camera3d.frustum);
       }
       if (this.shaderColourProgram) {
-        this.shaderColourProgram.updatePerspective(this.camera.camera3d.frustum);
+        this.shaderColourProgram.updatePerspective(
+          this.camera.camera3d.frustum
+        );
       }
     } else {
       if (this.shader3DProgram) {
         this.shader3DProgram.updatePerspective(this.camera.camera2d.frustum);
       }
       if (this.shaderColourProgram) {
-        this.shaderColourProgram.updatePerspective(this.camera.camera2d.frustum);
+        this.shaderColourProgram.updatePerspective(
+          this.camera.camera2d.frustum
+        );
       }
     }
   };
@@ -183,7 +188,10 @@ class Renderer {
 
   setLighting = (light: Light) => {
     if (this.shader3DProgram) {
-      const activeCamera = this.camera.renderMode === '3d' ? this.camera.camera3d : this.camera.camera2d;
+      const activeCamera =
+        this.camera.renderMode === "3d"
+          ? this.camera.camera3d
+          : this.camera.camera2d;
       this.shader3DProgram.setLight(light, activeCamera);
     } else {
       throw new Error("Lighting is set without any 3D entities");
@@ -231,8 +239,10 @@ class Renderer {
       (e) => !!e[0].isTop === isTop
     );
     if (colourModel.length > 0) {
-      if (this.camera.renderMode === '3d') {
-        this.shaderColourProgram.updatePerspective(this.camera.camera2d.frustum);
+      if (this.camera.renderMode === "3d") {
+        this.shaderColourProgram.updatePerspective(
+          this.camera.camera2d.frustum
+        );
       }
       this.shaderColourProgram.render(colourModel, this.camera.camera2d);
     }
@@ -241,7 +251,7 @@ class Renderer {
       (e) => !!e[0].isTop === isTop
     );
     if (model3d.length > 0) {
-      if (this.camera.renderMode === '3d') {
+      if (this.camera.renderMode === "3d") {
         this.shader3DProgram.updatePerspective(this.camera.camera3d.frustum);
       }
       this.shader3DProgram.render3DShadowMap(model3d, this.resizeViewPort);
@@ -257,7 +267,7 @@ class Renderer {
       (e) => !!e[0].isTop === isTop
     );
     if (model2d.length > 0) {
-      if (this.camera.renderMode === '3d') {
+      if (this.camera.renderMode === "3d") {
         this.shader3DProgram.updatePerspective(this.camera.camera2d.frustum);
       }
       this.shader3DProgram.render(

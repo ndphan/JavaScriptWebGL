@@ -89,3 +89,21 @@ this.engineHelper.getResource("assets/model.txt")
 ```
 
 This engine powers 3D games with AI, physics, and complex 3D scenes - focus on the entity lifecycle and WebGL rendering pipeline.
+
+## Duplicate Avoidance and CI Checks
+
+- **Run checks:** Before generating or adding code, run `npm run lint` and `npm run check-duplicates` (if available) to detect duplicates and lint issues.
+- **Prefer central types:** Reuse existing central types (`Coordinate`, `Vector2d`, `Rect3d`, etc.) instead of creating inline types or repeating field groups.
+- **When duplicates found:** Extract repeated code into shared helpers or base classes (e.g., transform helpers, initialization utilities).
+- **AI agent rules:** Agents must not introduce structural duplicates. Steps:
+  - Run the duplicate checker and lint rules.
+  - If the proposed code duplicates existing logic, refactor to reuse or call the existing implementation.
+  - Add unit tests for behavior when refactoring shared logic.
+
+- **Commands:**
+  - `npm install` (to install `eslint-plugin-sonarjs` and `jscpd` if added to devDependencies)
+  - `npm run lint` (lint + sonarjs checks)
+  - `npm run check-duplicates` (jscpd duplicate detection)
+   - `yarn quality:check` (runs TypeScript check, lint, duplicate detection, and tests)
+
+  **AI agent requirement:** After generating or modifying code, agents MUST run `yarn quality:check` and fix any failures before committing. If `yarn quality:check` fails, the agent should not commit the changes and must provide a short remediation plan.

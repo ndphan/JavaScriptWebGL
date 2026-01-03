@@ -27,7 +27,7 @@ export default class Ground3d extends EntityManager {
   isPointInGround(coordinate: Coordinate): Plane3d | null {
     let insideElement: Plane3d | null = null;
     for (const key in this.entities) {
-      if (this.entities.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(this.entities, key)) {
         const element = this.entities[key];
         const isInside = CollisionDetection.isPointInPlane3d(
           this.camera.camera3d,

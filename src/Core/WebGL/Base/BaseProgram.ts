@@ -28,13 +28,16 @@ export default class BaseProgram {
     ctx.compileShader(fragmentShader);
 
     if (!ctx.getShaderParameter(vertexShader, ctx.COMPILE_STATUS)) {
-      const error = "could not compile vertex shader:" + ctx.getShaderInfoLog(vertexShader);
+      const error =
+        "could not compile vertex shader:" + ctx.getShaderInfoLog(vertexShader);
       console.error(error);
       throw new Error(error);
     }
 
     if (!ctx.getShaderParameter(fragmentShader, ctx.COMPILE_STATUS)) {
-      const error = "could not compile fragment shader:" + ctx.getShaderInfoLog(fragmentShader);
+      const error =
+        "could not compile fragment shader:" +
+        ctx.getShaderInfoLog(fragmentShader);
       console.error(error);
       throw new Error(error);
     }
@@ -52,7 +55,7 @@ export default class BaseProgram {
       throw new Error(error);
     }
 
-    console.log('Shader program compiled successfully');
+    console.log("Shader program compiled successfully");
     return program;
   }
 

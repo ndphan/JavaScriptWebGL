@@ -303,7 +303,10 @@ export default class Shader3DProgram extends BaseProgram {
 
     this.bindProgram();
     const ctx = this.ctx;
-    ctx.uniform1i(this.isLightingEnabledUniform.ref, this.isLightingEnabled ? 1 : 0);
+    ctx.uniform1i(
+      this.isLightingEnabledUniform.ref,
+      this.isLightingEnabled ? 1 : 0
+    );
 
     ctx.uniform3fv(this.light1Pos.ref, light.pos);
     ctx.uniform3fv(this.light1Intensities.ref, light.in);
@@ -322,11 +325,19 @@ export default class Shader3DProgram extends BaseProgram {
       );
 
       ctx.uniformMatrix4fv(this.light1View.ref, false, lookAt as Float32List);
-      ctx.uniformMatrix4fv(this.light1Projection.ref, false, cameraFrustum as Float32List);
+      ctx.uniformMatrix4fv(
+        this.light1Projection.ref,
+        false,
+        cameraFrustum as Float32List
+      );
 
       this.bindShadowProgram();
       ctx.uniformMatrix4fv(this.shadowView.ref, false, lookAt as Float32List);
-      ctx.uniformMatrix4fv(this.shadowProjection.ref, false, cameraFrustum as Float32List);
+      ctx.uniformMatrix4fv(
+        this.shadowProjection.ref,
+        false,
+        cameraFrustum as Float32List
+      );
     }
   }
 

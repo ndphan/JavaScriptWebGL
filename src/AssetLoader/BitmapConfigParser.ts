@@ -44,9 +44,8 @@ class BitmapConfigParser {
       }
 
       return;
-    } else {
-      return this.processTextureLine(line);
     }
+    return this.processTextureLine(line);
   }
 
   private processTextureLine(line: string) {

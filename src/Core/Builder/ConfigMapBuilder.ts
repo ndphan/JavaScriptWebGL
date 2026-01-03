@@ -42,7 +42,7 @@ class ConfigMapBuilder {
 
   build(map: any) {
     for (const prop in map) {
-      if (map.hasOwnProperty(prop)) {
+      if (Object.prototype.hasOwnProperty.call(map, prop)) {
         if (prop.startsWith("$")) {
           this.ref[prop] = map[prop];
         } else if (prop.startsWith("+")) {

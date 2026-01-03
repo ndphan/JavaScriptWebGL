@@ -6,7 +6,7 @@ export class VertexBuilder {
   toArray2D(vertexes: TextureRenderUnit[]): number[] {
     const vertexConstruct: number[] = [];
     for (const key in vertexes) {
-      if (vertexes.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(vertexes, key)) {
         const _vertex = vertexes[key];
         vertexConstruct.push(_vertex.vertex.x);
         vertexConstruct.push(_vertex.vertex.y);
@@ -21,26 +21,12 @@ export class VertexBuilder {
     return vertexConstruct;
   }
   toTextureArray(vertexes: TextureRenderUnit[]): number[] {
-    const vertexConstruct: number[] = [];
-    for (const key in vertexes) {
-      if (vertexes.hasOwnProperty(key)) {
-        const _vertex = vertexes[key];
-        vertexConstruct.push(_vertex.vertex.x);
-        vertexConstruct.push(_vertex.vertex.y);
-        vertexConstruct.push(_vertex.vertex.z);
-        vertexConstruct.push(_vertex.normal.x);
-        vertexConstruct.push(_vertex.normal.y);
-        vertexConstruct.push(_vertex.normal.z);
-        vertexConstruct.push(_vertex.texture.u);
-        vertexConstruct.push(_vertex.texture.v);
-      }
-    }
-    return vertexConstruct;
+    return this.toArray2D(vertexes);
   }
   toColourArray(vertexes: ColourRenderUnit[]): number[] {
     const vertexConstruct: number[] = [];
     for (const key in vertexes) {
-      if (vertexes.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(vertexes, key)) {
         const _vertex = vertexes[key];
         vertexConstruct.push(_vertex.vertex.x);
         vertexConstruct.push(_vertex.vertex.y);
@@ -58,37 +44,14 @@ export class VertexBuilder {
     const g = colour.g / 255.0;
     const b = colour.b / 255.0;
     const a = colour.a / 255.0;
-    const _colour = [
-      1,
-      1,
-      0,
-      r,
-      g,
-      b,
-      a,
-      0,
-      1,
-      0,
-      r,
-      g,
-      b,
-      a,
-      0,
-      0,
-      0,
-      r,
-      g,
-      b,
-      a,
-    ];
-    return _colour;
+    return [1, 1, 0, r, g, b, a, 0, 1, 0, r, g, b, a, 0, 0, 0, r, g, b, a];
   }
   planeXYColour(colour: Colour): number[] {
     const r = colour.r / 255.0;
     const g = colour.g / 255.0;
     const b = colour.b / 255.0;
     const a = colour.a / 255.0;
-    const _colour = [
+    return [
       -0.5,
       -0.5,
       0,
@@ -118,14 +81,13 @@ export class VertexBuilder {
       b,
       a,
     ];
-    return _colour;
   }
   planeCCW(loc: number[], width: number, height: number) {
     const left = loc[0];
     const top = loc[1];
     const right = loc[2];
     const bottom = loc[3];
-    const uv = [
+    return [
       left / width,
       bottom / height,
       left / width,
@@ -135,14 +97,13 @@ export class VertexBuilder {
       right / width,
       bottom / height,
     ];
-    return uv;
   }
   planeCW(loc: number[], width: number, height: number): number[] {
     const left = loc[0];
     const top = loc[1];
     const right = loc[2];
     const bottom = loc[3];
-    const uv = [
+    return [
       right / width,
       bottom / height,
       right / width,
@@ -152,7 +113,6 @@ export class VertexBuilder {
       left / width,
       bottom / height,
     ];
-    return uv;
   }
   planeUV(vertices: TextureRenderUnit[], uv: number[]) {
     vertices[0].texture.u = uv[4];

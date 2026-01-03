@@ -104,7 +104,7 @@ export default class App {
   timer: Timer;
   interval: any;
   camera: Camera;
-  errorCallback: Function;
+  errorCallback: ((err?: any) => void) | undefined;
   args: { [key: string]: any };
   fps: number;
   isStepRender: boolean;
@@ -170,7 +170,7 @@ export default class App {
       args.camera,
       args.aspectRatio,
       this.webGLContainer.canvas,
-      args.renderMode || args.camera?.renderMode || '2d' // Default to 2D mode
+      args.renderMode || args.camera?.renderMode || "2d" // Default to 2D mode
     );
     this.engineHelper = new EngineHelper(
       this.notificationQueue,
@@ -182,7 +182,7 @@ export default class App {
 
     this.world = this.args.world;
     this.world.setEngineHelper(this.engineHelper);
-    
+
     if (this.debugger) {
       this.debugger.setReferences(this.world, this.renderer);
       this.debugger.setEngineHelper(this.engineHelper);
@@ -203,14 +203,12 @@ export default class App {
     clearInterval(this.interval);
     this.renderer.delete();
     event.delete(this.onEvent);
-    
 
-    
     if (this.debugger) {
       this.debugger.destroy();
       this.debugger = undefined;
     }
-    
+
     this.webGLContainer.delete();
 
     console.log("destroying", this);
@@ -223,12 +221,12 @@ export default class App {
     try {
       this.updater.update(this.timer.peak(), this.engineHelper);
       this.renderer.render(this.timer.peak(), this.engineHelper);
-      
+
       if (this.debugger) {
         this.debugger.resetRenderCalls();
         this.debugger.updateDebugInfo(this.engineHelper);
       }
-      
+
       this.notifyFrames();
       this.timer.start();
     } catch (error) {
@@ -348,7 +346,7 @@ export default class App {
       this.args.camera,
       this.args.aspectRatio,
       this.webGLContainer.canvas,
-      this.args.renderMode || this.args.camera?.renderMode || '2d'
+      this.args.renderMode || this.args.camera?.renderMode || "2d"
     );
     this.notificationQueue.push(RendererNotification.RESIZE_SCREEN);
     if (this.isStepRender && this.ready) {
