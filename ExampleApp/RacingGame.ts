@@ -718,7 +718,7 @@ export default class RacingGame extends ObjectManager {
       // Update name text position - project 3D position to screen
       if (bot.nameText) {
         try {
-          const nameHeight = bot.position.y + 3;
+          const nameHeight = bot.position.y + 2;
           const screenPos = this.engineHelper.camera.camera3d.worldToScreen(
             bot.position.x,
             nameHeight,
