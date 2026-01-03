@@ -20,7 +20,7 @@ import Colour from '../../src/Core/Data/Colour';
 /**
  * Test world that mimics real game setup pattern
  */
-export class TestWorld extends ObjectManager {
+class TestWorld extends ObjectManager {
   ground!: Plane3d;
   colourPlane!: PlaneColour;
   triangle!: TriangleColour2d;
@@ -211,4 +211,28 @@ export function cleanupTestEngine(): void {
   document.querySelectorAll('#test-canvas').forEach(el => el.remove());
   document.querySelectorAll('#test-container').forEach(el => el.remove());
   jest.clearAllTimers();
+}
+
+/**
+ * EngineTestHelper class for cleaner test setup
+ */
+export class EngineTestHelper {
+  app!: App;
+  world!: TestWorld;
+  engineHelper!: EngineHelper;
+  canvas!: HTMLCanvasElement;
+  container!: HTMLDivElement;
+
+  async initializeTestEngine(): Promise<void> {
+    const result = await initializeTestEngine();
+    this.app = result.app;
+    this.world = result.world;
+    this.engineHelper = result.engineHelper;
+    this.canvas = result.canvas;
+    this.container = result.container;
+  }
+
+  cleanup(): void {
+    cleanupTestEngine();
+  }
 }
