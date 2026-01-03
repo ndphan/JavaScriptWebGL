@@ -253,8 +253,8 @@ export default class Events {
       prevTimeStamp: this.prevTimeStamp,
       orientationQuaternion: this.orientationQuaternion,
       rawEvent: evt,
-      isDown: type === Events.DOWN,
-      isUp: type === Events.UP,
+      isDown: type === Events.DOWN || type === Events.KEY_DOWN,
+      isUp: type === Events.UP || type === Events.KEY_UP,
       code: evt instanceof KeyboardEvent ? evt.code : undefined,
     };
   };
