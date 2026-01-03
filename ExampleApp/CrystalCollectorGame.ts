@@ -8,6 +8,7 @@ import {
   Rect3d,
   ResourceResolver
 } from "synaren-engine";
+import CameraFollower from "../src/Core/EngineEntity/CameraFollower";
 import Cube from "./Cube";
 import Ground3d from "./Ground3d";
 import Sphere from "./Sphere";
@@ -220,19 +221,13 @@ export default class CrystalCollectorGame extends ObjectManager {
   }
 
   update() {
-    this.entities.forEach((ent: EngineObject) => ent.update(this.engineHelper));
-    
     this.updatePlayer();
     this.updateCrystals();
     this.updateObstacles();
     this.checkCollisions();
     this.updateUI();
-
-    const { x, y, z } = this.engineHelper.camera.camera3d.position;
-    if (this.sky) {
-      this.sky.center(x, y, z);
-    }
     
+    super.update();
   }
 
   event(event: EngineEvent) {
@@ -306,6 +301,7 @@ export default class CrystalCollectorGame extends ObjectManager {
       new Rect3d(0.0, 2.0, 0.0, 100.0, 100.0, 100.0),
       "background"
     );
+    this.sky.addFeature(new CameraFollower(this.engineHelper.camera));
     this.addEntity(this.sky);
 
     // Create ground

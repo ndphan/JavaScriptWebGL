@@ -3,11 +3,14 @@ import EngineHelper from "../EngineHelper";
 import { EngineEvent } from "../Events";
 import { ShaderEntity } from "./ShaderEntity";
 import { generateId } from "../Common/IdGenerator";
+import Feature from "./Feature";
 
 abstract class EngineObject extends ModelPosition implements EngineEntity {
   private $hidden = false;
   data: object;
   $id: string = generateId();
+  isLowPriority: boolean = false;
+  features: Feature[] = [];
   copyTexture(obj: EngineObject) {
     this.shaderEntity.rendererTextureRef = obj.shaderEntity.rendererTextureRef;
     this.shaderEntity.vertexModel = obj.shaderEntity.vertexModel;
@@ -38,6 +41,10 @@ abstract class EngineObject extends ModelPosition implements EngineEntity {
   set hidden(value: boolean) {
     this.setHidden(value);
   }
+  addFeature(feature: Feature): void {
+    feature.init(this);
+    this.features.push(feature);
+  }
   setHidden(value: boolean) {
     this.$hidden = value;
     if (this.shaderEntity) {
@@ -54,7 +61,9 @@ abstract class EngineObject extends ModelPosition implements EngineEntity {
     if (!this.shaderEntity) return;
     this.shaderEntity.clone = clone;
   }
-  update(engineHelper: EngineHelper) {}
+  update(engineHelper: EngineHelper) {
+    this.features.forEach(feature => feature.update(this, engineHelper));
+  }
   render(engineHelper: EngineHelper) {}
   event(event: EngineEvent, engineHelper: EngineHelper): boolean | undefined {
     return;

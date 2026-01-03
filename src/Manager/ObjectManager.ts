@@ -15,7 +15,17 @@ export default class ObjectManager extends WorldDelegate {
   }
 
   update() {
-    this.entities.forEach((ent: EngineObject) => ent.update(this.engineHelper));
+    const lowPriorityQueue: EngineObject[] = [];
+    
+    for (const entity of this.entities) {
+      if (entity.isLowPriority) {
+        lowPriorityQueue.push(entity);
+      } else {
+        entity.update(this.engineHelper);
+      }
+    }
+    
+    lowPriorityQueue.forEach((ent) => ent.update(this.engineHelper));
   }
 
   addEntity(entity: EngineObject) {
