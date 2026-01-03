@@ -14,6 +14,7 @@ import {
   Light,
   Moveable
 } from "synaren-engine";
+import CameraFollower from "../src/Core/EngineEntity/CameraFollower";
 import Cube from "./Cube";
 import Sphere from "./Sphere";
 
@@ -89,7 +90,7 @@ export default class RacingGame extends ObjectManager {
   deceleration: number = 0.02;   // Reduced deceleration
   turnSpeed: number = 0.025;     // Reduced turn speed
   playerRotation: number = 0;
-  playerPosition: { x: number, y: number, z: number } = { x: 0, y: 0, z: 0 }; // Better starting position on ground
+  playerPosition: Coordinate = { x: 0, y: 0, z: 0 }; // Better starting position on ground
   keys: { [key: string]: boolean } = {};
 
   // Game timer
@@ -110,11 +111,12 @@ export default class RacingGame extends ObjectManager {
       );
       this.addEntity(this.ground);
 
-      // Create sky sphere
+      // Create sky sphere with camera follower
       this.sky = new Sphere(
         new Rect3d(0.0, 10.0, 0.0, 200.0, 200.0, 200.0),
         "background"
       );
+      this.sky.addFeature(new CameraFollower(this.engineHelper.camera));
       this.addEntity(this.sky);
 
       // Create player car
@@ -129,7 +131,7 @@ export default class RacingGame extends ObjectManager {
       // Create trees for atmosphere
       this.createTrees();
 
-      console.log('🏎️ Game objects created successfully!');
+      console.log('Game objects created successfully!');
     } catch (error) {
       console.error('Error creating game objects:', error);
     }
@@ -582,7 +584,7 @@ export default class RacingGame extends ObjectManager {
 
   startRace() {
     this.gameStarted = true;
-    console.log('🏁 Race started! Use WASD to control your car.');
+    console.log('Race started! Use WASD to control your car.');
     console.log('Bot initial positions and targets:');
     this.bots.forEach((bot, index) => {
       const target = this.waypoints[bot.currentWaypoint];
@@ -609,29 +611,22 @@ export default class RacingGame extends ObjectManager {
 
     // Handle turning - this will rotate the camera direction
     if (this.keys['keya']) {
-      this.playerRotation += this.turnSpeed;
+      this.playerRotation += this.turnSpeed; // Turn left
     }
     if (this.keys['keyd']) {
-      this.playerRotation -= this.turnSpeed;
+      this.playerRotation -= this.turnSpeed; // Turn right
     }
 
-    // Position player car directly in front of camera based on camera direction
-    if (this.playerCar && this.engineHelper.camera.camera3d) {
-      const camera = this.engineHelper.camera.camera3d;
-      
-      // Calculate forward direction from camera rotation
-      const forwardX = -Math.sin(this.playerRotation);
-      const forwardZ = -Math.cos(this.playerRotation);
-      
-      // Move position forward based on speed
-      this.playerPosition.x += forwardX * this.playerSpeed;
-      this.playerPosition.z += forwardZ * this.playerSpeed;
-      
-      // Position car directly in front of camera
-      const carDistance = 5; // Distance in front of camera
-      this.playerCar.position.x = this.playerPosition.x + forwardX * carDistance;
-      this.playerCar.position.y = this.playerPosition.y;
-      this.playerCar.position.z = this.playerPosition.z + forwardZ * carDistance;
+    // Move position based on current rotation and speed
+    const forwardX = Math.sin(this.playerRotation);
+    const forwardZ = Math.cos(this.playerRotation);
+    
+    this.playerPosition.x -= forwardX * this.playerSpeed;
+    this.playerPosition.z -= forwardZ * this.playerSpeed;
+    
+    // Update player car position and rotation
+    if (this.playerCar) {
+      this.playerCar.center(this.playerPosition.x, this.playerPosition.y, this.playerPosition.z);
       this.playerCar.angleY(this.playerRotation * (180 / Math.PI));
     }
 
@@ -745,7 +740,7 @@ export default class RacingGame extends ObjectManager {
       // Check if completed a lap
       if (this.lastWaypoint === 0) {
         this.currentLap++;
-        console.log(`🏁 Lap ${this.currentLap - 1} completed!`);
+        console.log(`Lap ${this.currentLap - 1} completed!`);
 
         if (this.currentLap > this.totalLaps) {
           this.finishRace();
@@ -756,7 +751,7 @@ export default class RacingGame extends ObjectManager {
 
   finishRace() {
     this.raceFinished = true;
-    console.log('🏆 Race finished!');
+    console.log('Race finished!');
   }
 
   render() {
@@ -782,35 +777,23 @@ export default class RacingGame extends ObjectManager {
 
     this.updatePlayerMovement();
     this.updateBots();
+    this.checkWaypoints();
 
+    // Update all entities (sky camera following handled by CameraFollower feature)
     this.entities.forEach((ent: EngineObject) => ent.update(this.engineHelper));
 
-    // Update sky position to follow camera
-    const { x, y, z } = this.engineHelper.camera.camera3d.position;
-    if (this.sky) {
-      this.sky.center(x, y, z);
-    }
-
-    // Update camera to follow player - Fixed camera system
+    // Update camera - fixed position behind player with rotating view
     if (this.playerCar) {
-      const cameraOffset = 15;  // Distance behind car
-      const cameraHeight = 8;   // Height above car
+      const cameraOffset = 8;
+      const cameraHeight = 3;
       
-      // Calculate camera position based on player position and rotation
-      const cameraX = this.playerPosition.x - Math.sin(this.playerRotation) * cameraOffset;
-      const cameraZ = this.playerPosition.z + Math.cos(this.playerRotation) * cameraOffset;
+      // Camera position follows player with fixed offset (no rotation)
+      const cameraX = this.playerPosition.x;
+      const cameraZ = this.playerPosition.z - cameraOffset;
       const cameraY = this.playerPosition.y + cameraHeight;
 
-      // Position camera behind player
       this.engineHelper.camera.camera3d.center(cameraX, cameraY, cameraZ);
-      
-      // Look at the player position (not the car position which is offset)
-      this.engineHelper.camera.camera3d.lookAt(
-        this.playerPosition.x, 
-        this.playerPosition.y + 1, 
-        this.playerPosition.z
-      );
-      
+      this.engineHelper.camera.camera3d.position.ay = -this.playerRotation * (180 / Math.PI);
       this.engineHelper.camera.camera3d.updateProjectionView();
     }
   }
@@ -841,7 +824,7 @@ export default class RacingGame extends ObjectManager {
 
   init() {
     // Simplified initialization
-    console.log('🏎️ Initializing Racing Game...');
+    console.log('Initializing Racing Game...');
 
     // Set up basic lighting
     this.engineHelper.setLighting(
@@ -867,13 +850,13 @@ export default class RacingGame extends ObjectManager {
     // Create waypoint tiles for visual debugging
     this.createWaypointTiles();
     
-    console.log('🏎️ Racing Game initialized! Press SPACE to start racing!');
-    console.log('🎮 Controls: W/S - Accelerate/Brake, A/D - Turn Left/Right');
+    console.log('Racing Game initialized! Press SPACE to start racing!');
+    console.log('Controls: W/S - Accelerate/Brake, A/D - Turn Left/Right');
     
     // Auto-start the race after 2 seconds
     setTimeout(() => {
       if (!this.gameStarted) {
-        console.log('🚀 Auto-starting race...');
+        console.log('Auto-starting race...');
         this.startRace();
       }
     }, 2000);
@@ -971,7 +954,7 @@ export default class RacingGame extends ObjectManager {
 
 // Export function to create and launch the racing game
 export const createRacingGame = (): void => {
-  console.log('🏎️ Starting Racing Game...');
+  console.log('Starting Racing Game...');
 
   const aspect = window.innerWidth / window.innerHeight;
   const args = {

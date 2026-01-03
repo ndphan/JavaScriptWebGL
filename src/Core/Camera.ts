@@ -354,6 +354,39 @@ export class BaseCamera extends ModelPosition {
     // Reset roll (az) to 0
     this.position.az = 0;
 
+    this.rotateOrigin(this.position.x, this.position.y, this.position.z);
+
+    this.updateProjectionView();
+  }
+
+  /**
+   * Third-person camera that follows a target from behind
+   * @param targetX Target's X position
+   * @param targetY Target's Y position
+   * @param targetZ Target's Z position
+   * @param targetRotation Target's rotation in radians
+   * @param distance Distance behind target
+   * @param height Height above target
+   */
+  followBehind(
+    targetX: number,
+    targetY: number,
+    targetZ: number,
+    targetRotation: number,
+    distance: number = 8,
+    height: number = 3
+  ) {
+    // Calculate camera position behind the target based on target rotation
+    const cameraX = targetX - Math.sin(targetRotation) * distance;
+    const cameraZ = targetZ - Math.cos(targetRotation) * distance;
+    const cameraY = targetY + height;
+
+    // Position camera
+    this.center(cameraX, cameraY, cameraZ);
+    
+    // Match camera rotation to target
+    this.position.ay = targetRotation * (180 / Math.PI);
+    
     this.updateProjectionView();
   }
 }
