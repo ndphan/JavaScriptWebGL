@@ -3,7 +3,7 @@ import {
   Rect3d,
   TextureVertexModel,
   EngineHelper
-} from "../dist/index";
+} from "synaren-engine";
 
 export default class Sphere extends ModelObject3d {
   vertexUvCacheId: string;

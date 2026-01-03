@@ -3,8 +3,14 @@
   "compilerOptions": {
     "outDir": "../dist/ExampleApp",
     "composite": false,
-    "declaration": false
+    "declaration": false,
+    "baseUrl": ".",
+    "typeRoots": ["../node_modules/@types", "../src"],
+    "paths": {
+      "synaren-engine": ["../src/index.ts"],
+      "synaren-engine/*": ["../src/*"]
+    }
   },
-  "include": ["*.ts"],
-  "exclude": ["../node_modules", "../public", "../build"]
+  "include": ["*.ts", "../src/glsl.d.ts"],
+  "exclude": ["../node_modules", "../public", "../build", "../dist"]
 }

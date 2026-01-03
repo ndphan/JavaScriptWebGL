@@ -1,4 +1,4 @@
-import { EntityManager, Plane3d, Rect3d, EngineHelper, EngineEvent, CollisionDetection, PlaneType } from "../dist";
+import { EntityManager, Plane3d, Rect3d, EngineHelper, EngineEvent, CollisionDetection, PlaneType } from "synaren-engine";
 
 export default class Cube extends EntityManager {
   planes: Plane3d[];

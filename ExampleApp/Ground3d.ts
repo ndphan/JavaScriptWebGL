@@ -7,7 +7,7 @@ import {
   Plane3d,
   CollisionDetection,
   PlaneType
-} from "../dist/index";
+} from "synaren-engine";
 
 export default class Ground3d extends EntityManager {
   cacheId: string;

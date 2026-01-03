@@ -15,6 +15,9 @@ module.exports = {
   },
   resolve: {
     extensions: ['.ts', '.js'],
+    alias: {
+      'synaren-engine': path.resolve(__dirname, 'src/index.ts'),
+    },
   },
   module: {
     rules: [
@@ -50,9 +53,10 @@ module.exports = {
       serveIndex: true,
       watch: true,
     },
+    hot: true,
     compress: true,
     port: 9000,
-    open: true,
+    open: false,
     setupMiddlewares: (middlewares, devServer) => {
       devServer.app.get('*.fnt', (req, res, next) => {
         res.type('text/plain');
@@ -60,6 +64,11 @@ module.exports = {
       });
       return middlewares;
     },
+  },
+  watchOptions: {
+    aggregateTimeout: 300,
+    poll: 1000,
+    ignored: /node_modules/,
   },
   devtool: 'source-map',
 };
