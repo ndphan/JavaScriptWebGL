@@ -1,7 +1,9 @@
 import {
   App,
   BitmapConfigParser,
+  Coordinate,
   EngineEvent,
+  EngineHelper,
   EngineObject,
   Events,
   Light,
@@ -11,12 +13,7 @@ import {
   Plane3d,
   PlaneType,
   Rect3d,
-  Rect2d,
-  RenderType,
-  ResourceResolver,
-  Colour,
-  Coordinate,
-  EngineHelper
+  ResourceResolver
 } from "synaren-engine";
 import Cube from "./Cube";
 import Ground3d from "./Ground3d";
@@ -314,8 +311,8 @@ const createExampleApp = () => {
     camera: {
       near: 0.01,
       far: 1000.0,
-      fov: 120.0,
-      maxFov: 120.0,
+      fov: 60.0,
+      maxFov: 60.0,
       isFovMax: false,
       projection: 'perspective',
       aspect

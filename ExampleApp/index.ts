@@ -1,5 +1,6 @@
 import { CrystalCollectorGame, createCrystalCollectorApp } from "./CrystalCollectorGame";
 import { ExampleWorld, createExampleApp } from "./ExampleApp";
+import { createRacingGame } from "./RacingGame";
 
 // Game registry
 const games = {
@@ -12,6 +13,11 @@ const games = {
     name: 'Crystal Collector 3D',
     description: 'Collect crystals in a 3D world before time runs out!',
     createFunction: createCrystalCollectorApp
+  },
+  'racing': {
+    name: '3D Racing Game',
+    description: 'Race against AI bots on a 3D track with realistic physics!',
+    createFunction: createRacingGame
   }
 };
 

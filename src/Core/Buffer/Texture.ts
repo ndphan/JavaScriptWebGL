@@ -24,11 +24,18 @@ class Texture extends TextureLoader {
   load: Promise<boolean>;
 
   static textureCount = 0;
-
+  static maxTextureUnits: number | null = null;
+  static readonly DEFAULT_MAX_TEXTURE_UNITS = 10;
   constructor(src: string, ctx: WebGLRenderingContext) {
     super();
     this.isLoaded = false;
     this.isError = false;
+    
+    if (Texture.maxTextureUnits === null) {
+      Texture.maxTextureUnits =
+        ctx.getParameter(ctx.MAX_TEXTURE_IMAGE_UNITS) || Texture.DEFAULT_MAX_TEXTURE_UNITS;
+    }
+    
     this.load = this.loadImage(src)
       .then(() => this.onLoad(ctx))
       .catch((error) => this.onError(error));
@@ -49,6 +56,13 @@ class Texture extends TextureLoader {
   }
 
   newTextureUnit(): number {
+    const maxUnits = Texture.maxTextureUnits || Texture.DEFAULT_MAX_TEXTURE_UNITS;
+    if (Texture.textureCount >= maxUnits) {
+      console.error(
+        `Texture units exceeded: requested index ${Texture.textureCount} >= max ${maxUnits}. Reusing texture units.`
+      );
+      return Texture.textureCount % maxUnits;
+    }
     return Texture.textureCount++;
   }
 

@@ -19,6 +19,8 @@ export interface DebugEntityInfo {
   hasShaderEntity: boolean;
   textureRef?: string;
   bufferId?: number;
+  features: string[];
+  isLowPriority: boolean;
 }
 
 export interface DebugInfo {
@@ -49,10 +51,12 @@ export default class EngineDebugger {
   private world: WorldDelegate | null = null;
   private engineHelper: EngineHelper | null = null;
   private renderer: Renderer | null = null;
+  private lastUpdateTime: number = 0;
+  private updateThrottleMs: number = 100;
+  private lastEntityCount: number = -1;
 
   constructor(private canvas: HTMLCanvasElement) {
     this.createDebugUI();
-    this.startUpdating();
     this.enableDebugOnRightClick();
     this.hide();
   }
@@ -61,11 +65,6 @@ export default class EngineDebugger {
    * Cleans up debugger UI and keyboard controls.
    */
   public destroy(): void {
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-      this.updateInterval = null;
-    }
-
     if (this.debugElement && this.debugElement.parentElement) {
       this.debugElement.parentElement.removeChild(this.debugElement);
     }
@@ -107,7 +106,7 @@ export default class EngineDebugger {
   private createStaticStructure(): void {
     this.debugElement.innerHTML = `
       <div style="margin-top: 25px;">
-        <h3 style="margin: 0 0 10px 0; color: #4CAF50; font-size: 14px;">🎮 Engine Debugger</h3>
+        <h3 style="margin: 0 0 10px 0; color: #4CAF50; font-size: 14px;">Engine Debugger</h3>
         
         <div id="debug-performance" style="margin-bottom: 10px;">
           <strong style="color: #FFD700;">Performance:</strong><br>
@@ -115,7 +114,7 @@ export default class EngineDebugger {
         </div>
 
         <div id="debug-camera-controls" style="margin-bottom: 15px; border: 1px solid #444; padding: 8px; border-radius: 4px;">
-          <strong style="color: #FFD700;">📹 Camera Controls:</strong><br>
+          <strong style="color: #FFD700;">Camera Controls:</strong><br>
           <div style="margin: 8px 0;">
             <strong>Position:</strong><br>
             <div style="display: flex; gap: 5px; margin: 5px 0;">
@@ -192,14 +191,14 @@ export default class EngineDebugger {
         </div>
 
         <div id="debug-entities" style="margin-bottom: 10px;">
-          <strong style="color: #FFD700;">📦 Entities (<span id="entity-count">0</span>):</strong><br>
+          <strong style="color: #FFD700;">Entities (<span id="entity-count">0</span>):</strong><br>
           <div id="entities-container" style="max-height: 180px; overflow-y: auto; overflow-x: hidden; border: 1px solid #444; padding: 5px; margin-top: 5px; background: rgba(0,0,0,0.3);">
             <!-- Entities will be populated here -->
           </div>
         </div>
 
         <div id="debug-error" style="margin-bottom: 10px; display: none;">
-          <strong style="color: #FF4444;">❌ Last Error:</strong><br>
+          <strong style="color: #FF4444;">Last Error:</strong><br>
           <span id="error-content" style="color: #FF4444; font-size: 11px; word-break: break-word;"></span>
         </div>
       </div>
@@ -229,32 +228,28 @@ export default class EngineDebugger {
     this.setupCameraControlEventListeners();
   }
 
-  private startUpdating(): void {
-    this.updateInterval = window.setInterval(() => {
-      if (this.isVisible) {
-        this.updateDisplay();
-      }
-    }, 100); // Update 10 times per second
-  }
-
   private calculateFPS(): number {
     const now = performance.now();
     const frameTime = now - this.lastFrameTime;
     this.lastFrameTime = now;
-    
+
     this.frameTimeHistory.push(frameTime);
     if (this.frameTimeHistory.length > 60) {
       this.frameTimeHistory.shift();
     }
-    
+
     const avgFrameTime = this.frameTimeHistory.reduce((a, b) => a + b, 0) / this.frameTimeHistory.length;
     return Math.round(1000 / avgFrameTime);
   }
 
   public updateDebugInfo(engineHelper: EngineHelper | null): void {
     this.fpsCounter = this.calculateFPS();
-    
+
     if (!engineHelper || !this.isVisible) return;
+
+    const now = performance.now();
+    if (now - this.lastUpdateTime < this.updateThrottleMs) return;
+    this.lastUpdateTime = now;
 
     const debugInfo = this.gatherDebugInfo(engineHelper);
     this.renderDebugInfo(debugInfo);
@@ -280,13 +275,15 @@ export default class EngineDebugger {
       hidden: entity ? entity.hidden : true,
       hasShaderEntity: entity ? !!entity.shaderEntity : false,
       textureRef: entity?.shaderEntity?.rendererTextureRef,
-      bufferId: entity?.shaderEntity?.rendererBufferId
+      bufferId: entity?.shaderEntity?.rendererBufferId,
+      features: entity?.features?.map(f => f.constructor.name) || [],
+      isLowPriority: entity?.isLowPriority || false
     };
   }
 
   private gatherDebugInfo(engineHelper: EngineHelper): DebugInfo {
     const camera = engineHelper.camera;
-    
+
     // Get WebGL context info from the canvas
     const canvas = this.canvas;
     const glContext = canvas.getContext('webgl') || canvas.getContext('experimental-webgl') as WebGLRenderingContext;
@@ -304,15 +301,15 @@ export default class EngineDebugger {
 
     // Get camera info
     const cameraInfo = {
-      position: { 
-        x: Math.round(camera.getActiveCamera().position.x * 100) / 100, 
-        y: Math.round(camera.getActiveCamera().position.y * 100) / 100, 
-        z: Math.round(camera.getActiveCamera().position.z * 100) / 100 
+      position: {
+        x: Math.round(camera.getActiveCamera().position.x * 100) / 100,
+        y: Math.round(camera.getActiveCamera().position.y * 100) / 100,
+        z: Math.round(camera.getActiveCamera().position.z * 100) / 100
       },
-      rotation: { 
-        ax: Math.round(camera.getActiveCamera().position.ax * 100) / 100, 
-        ay: Math.round(camera.getActiveCamera().position.ay * 100) / 100, 
-        az: Math.round(camera.getActiveCamera().position.az * 100) / 100 
+      rotation: {
+        ax: Math.round(camera.getActiveCamera().position.ax * 100) / 100,
+        ay: Math.round(camera.getActiveCamera().position.ay * 100) / 100,
+        az: Math.round(camera.getActiveCamera().position.az * 100) / 100
       },
       origin: {
         x: Math.round(camera.getActiveCamera().position.originX * 100) / 100,
@@ -330,7 +327,7 @@ export default class EngineDebugger {
 
     return {
       fps: this.fpsCounter,
-      frameTime: this.frameTimeHistory.length > 0 ? 
+      frameTime: this.frameTimeHistory.length > 0 ?
         Math.round(this.frameTimeHistory[this.frameTimeHistory.length - 1] * 100) / 100 : 0,
       entityCount: entities.length,
       camera: cameraInfo,
@@ -390,7 +387,7 @@ export default class EngineDebugger {
     const rotX = this.debugElement.querySelector('#cam-rot-x') as HTMLInputElement;
     const rotY = this.debugElement.querySelector('#cam-rot-y') as HTMLInputElement;
     const rotZ = this.debugElement.querySelector('#cam-rot-z') as HTMLInputElement;
-    
+
     // Origin input elements
     const originX = this.debugElement.querySelector('#cam-origin-x') as HTMLInputElement;
     const originY = this.debugElement.querySelector('#cam-origin-y') as HTMLInputElement;
@@ -434,45 +431,39 @@ export default class EngineDebugger {
     const container = this.debugElement.querySelector('#entities-container');
     if (!container) return;
 
-    // Save current scroll position
+    if (this.lastEntityCount === entities.length) return;
+    this.lastEntityCount = entities.length;
+
     const scrollTop = container.scrollTop;
 
-    // Generate new content
     const entitiesHtml = entities.map((entity, index) => `
-      <div style="margin-bottom: 5px; padding: 4px; border-left: 3px solid ${entity.hidden ? '#FF4444' : '#4CAF50'}; background: rgba(255,255,255,0.05); border-radius: 2px;">
-        <strong style="color: #87CEEB;">${index}: ${entity.type}</strong><br>
+      <div style="margin-bottom: 5px; padding: 4px; border-left: 3px solid ${entity.hidden ? '#FF4444' : entity.isLowPriority ? '#FFA500' : '#4CAF50'}; background: rgba(255,255,255,0.05); border-radius: 2px;">
+        <strong style="color: #87CEEB;">${index}: ${entity.type}</strong>${entity.isLowPriority ? ' <span style="color: #FFA500; font-size: 10px;">[LOW PRIORITY]</span>' : ''}<br>
         <span style="font-size: 11px;">
           Pos: (${entity.position.x}, ${entity.position.y}, ${entity.position.z})<br>
-          Hidden: ${entity.hidden ? '❌' : '✅'} | 
-          Shader: ${entity.hasShaderEntity ? '✅' : '❌'}<br>
+          Hidden: ${entity.hidden ? 'YES' : 'NO'} | 
+          Shader: ${entity.hasShaderEntity ? 'YES' : 'NO'}<br>
           ${entity.textureRef ? `Texture: <span style="color: #90EE90;">${entity.textureRef}</span><br>` : ''}
-          ${entity.bufferId !== undefined ? `Buffer ID: <span style="color: #FFB6C1;">${entity.bufferId}</span>` : '<span style="color: #FF6B6B;">No Buffer</span>'}
+          ${entity.bufferId !== undefined ? `Buffer ID: <span style="color: #FFB6C1;">${entity.bufferId}</span><br>` : '<span style="color: #FF6B6B;">No Buffer</span><br>'}
+          ${entity.features.length > 0 ? `Features: <span style="color: #FFD700;">${entity.features.join(', ')}</span>` : '<span style="color: #888;">No Features</span>'}
         </span>
       </div>
     `).join('');
 
-    // Only update if content has changed
-    if (container.innerHTML !== entitiesHtml) {
-      container.innerHTML = entitiesHtml;
-      // Restore scroll position
-      container.scrollTop = scrollTop;
-    }
+    container.innerHTML = entitiesHtml;
+    container.scrollTop = scrollTop;
   }
 
   private updateErrorDisplay(lastError?: string): void {
     const errorDiv = this.debugElement.querySelector('#debug-error') as HTMLElement;
     const errorContent = this.debugElement.querySelector('#error-content') as HTMLElement;
-    
+
     if (lastError && errorDiv && errorContent) {
       errorDiv.style.display = 'block';
       errorContent.textContent = lastError;
     } else if (errorDiv) {
       errorDiv.style.display = 'none';
     }
-  }
-
-  private updateDisplay(): void {
-
   }
 
   public toggle(): void {
@@ -510,7 +501,7 @@ export default class EngineDebugger {
     const posX = this.debugElement.querySelector('#cam-pos-x') as HTMLInputElement;
     const posY = this.debugElement.querySelector('#cam-pos-y') as HTMLInputElement;
     const posZ = this.debugElement.querySelector('#cam-pos-z') as HTMLInputElement;
-    
+
     posX?.addEventListener('change', (e) => this.setCameraPosition('x', (e.target as HTMLInputElement).value));
     posY?.addEventListener('change', (e) => this.setCameraPosition('y', (e.target as HTMLInputElement).value));
     posZ?.addEventListener('change', (e) => this.setCameraPosition('z', (e.target as HTMLInputElement).value));
@@ -519,7 +510,7 @@ export default class EngineDebugger {
     const rotX = this.debugElement.querySelector('#cam-rot-x') as HTMLInputElement;
     const rotY = this.debugElement.querySelector('#cam-rot-y') as HTMLInputElement;
     const rotZ = this.debugElement.querySelector('#cam-rot-z') as HTMLInputElement;
-    
+
     rotX?.addEventListener('change', (e) => this.setCameraRotation('ax', (e.target as HTMLInputElement).value));
     rotY?.addEventListener('change', (e) => this.setCameraRotation('ay', (e.target as HTMLInputElement).value));
     rotZ?.addEventListener('change', (e) => this.setCameraRotation('az', (e.target as HTMLInputElement).value));
@@ -528,7 +519,7 @@ export default class EngineDebugger {
     const originX = this.debugElement.querySelector('#cam-origin-x') as HTMLInputElement;
     const originY = this.debugElement.querySelector('#cam-origin-y') as HTMLInputElement;
     const originZ = this.debugElement.querySelector('#cam-origin-z') as HTMLInputElement;
-    
+
     originX?.addEventListener('change', (e) => this.setCameraOrigin('x', (e.target as HTMLInputElement).value));
     originY?.addEventListener('change', (e) => this.setCameraOrigin('y', (e.target as HTMLInputElement).value));
     originZ?.addEventListener('change', (e) => this.setCameraOrigin('z', (e.target as HTMLInputElement).value));
@@ -537,7 +528,7 @@ export default class EngineDebugger {
     const resetBtn = this.debugElement.querySelector('#reset-camera-btn') as HTMLButtonElement;
     const lookAtBtn = this.debugElement.querySelector('#look-at-origin-btn') as HTMLButtonElement;
     const resetOriginBtn = this.debugElement.querySelector('#reset-origin-btn') as HTMLButtonElement;
-    
+
     resetBtn?.addEventListener('click', () => this.resetCamera());
     lookAtBtn?.addEventListener('click', () => this.lookAtOrigin());
     resetOriginBtn?.addEventListener('click', () => this.resetCameraOrigin());
@@ -579,10 +570,10 @@ export default class EngineDebugger {
 
   private setCameraPosition(axis: string, value: string): void {
     if (!this.engineHelper || !this.engineHelper.camera) return;
-    
+
     const numValue = parseFloat(value);
     if (isNaN(numValue)) return;
-    
+
     const camera = this.engineHelper.camera.getActiveCamera();
     switch (axis) {
       case 'x':
@@ -600,10 +591,10 @@ export default class EngineDebugger {
 
   private setCameraRotation(axis: string, value: string): void {
     if (!this.engineHelper || !this.engineHelper.camera) return;
-    
+
     const numValue = parseFloat(value);
     if (isNaN(numValue)) return;
-    
+
     const camera = this.engineHelper.camera.getActiveCamera();
     switch (axis) {
       case 'ax':
@@ -621,10 +612,10 @@ export default class EngineDebugger {
 
   private setCameraOrigin(axis: string, value: string): void {
     if (!this.engineHelper || !this.engineHelper.camera) return;
-    
+
     const numValue = parseFloat(value);
     if (isNaN(numValue)) return;
-    
+
     const camera = this.engineHelper.camera.getActiveCamera();
     switch (axis) {
       case 'x':
@@ -645,7 +636,7 @@ export default class EngineDebugger {
 
   private resetCamera(): void {
     if (!this.engineHelper || !this.engineHelper.camera) return;
-    
+
     const camera = this.engineHelper.camera.getActiveCamera();
     camera.center(0, 2, 5);
     camera.position.ax = 0;
@@ -657,7 +648,7 @@ export default class EngineDebugger {
 
   private lookAtOrigin(): void {
     if (!this.engineHelper || !this.engineHelper.camera) return;
-    
+
     const camera = this.engineHelper.camera.getActiveCamera();
     camera.lookAt(0, 0, 0);
     camera.updateProjectionView();
@@ -666,7 +657,7 @@ export default class EngineDebugger {
 
   private resetCameraOrigin(): void {
     if (!this.engineHelper || !this.engineHelper.camera) return;
-    
+
     const camera = this.engineHelper.camera.getActiveCamera();
     camera.position.originX = 0;
     camera.position.originY = 0;

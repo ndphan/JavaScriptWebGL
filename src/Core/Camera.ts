@@ -1,4 +1,4 @@
-import { mat4, quat, vec3 } from "gl-matrix";
+import { mat4, quat, vec3, vec4 } from "gl-matrix";
 import ModelPosition from "./EngineEntity/ModelPosition";
 import { EngineEvent } from "./Events";
 import Coordinate from "./Data/Coordinate";
@@ -33,9 +33,9 @@ export class BaseCamera extends ModelPosition {
 
   protected zoomScale: Coordinate = { x: 2, y: 2, z: 2 };
   protected baseTranslate: Coordinate = { x: -1, y: -1, z: 0 };
-  protected fov: number;
-  protected near: number;
-  protected far: number;
+  public fov: number;
+  public near: number;
+  public far: number;
   protected cameraOptions: CameraOptions;
 
   protected _isUpdateView = true;
@@ -67,10 +67,7 @@ export class BaseCamera extends ModelPosition {
     y?: number,
     z?: number
   ) {
-    if (this.interval) {
-      clearInterval(this.interval);
-      this.interval = undefined;
-    }
+    this.clearPan();
     this.steps = time;
     this._moveTime = time;
     if (x !== undefined) {
@@ -107,10 +104,7 @@ export class BaseCamera extends ModelPosition {
           this.position.x = this.tx;
           this.position.y = this.ty;
           this.position.z = this.tz;
-          if (this.interval) {
-            clearInterval(this.interval);
-            this.interval = undefined;
-          }
+          this.clearPan();
         } else {
           this.position.x += (this.dx * time) / this._moveTime;
           this.position.y += (this.dy * time) / this._moveTime;
@@ -121,10 +115,7 @@ export class BaseCamera extends ModelPosition {
         this.position.x = this.tx;
         this.position.y = this.ty;
         this.position.z = this.tz;
-        if (this.interval) {
-          clearInterval(this.interval);
-          this.interval = undefined;
-        }
+        this.clearPan();
         this.updateProjectionView();
       }
       this.timer.start();
@@ -133,6 +124,30 @@ export class BaseCamera extends ModelPosition {
 
   isOutOfBound(bound: Rect3d, pos: Rect3d): boolean {
     return false;
+  }
+
+  worldToScreen(worldX: number, worldY: number, worldZ: number): { x: number, y: number, visible: boolean } {
+    if (!this.frustum || !this.viewMatrix) {
+      return { x: 0.5, y: 0.5, visible: false };
+    }
+
+    const mvp = mat4.multiply(mat4.create(), this.frustum, this.viewMatrix);
+    const clipSpace = vec4.transformMat4(
+      vec4.create(),
+      vec4.fromValues(worldX, worldY, worldZ, 1.0),
+      mvp
+    );
+
+    if (clipSpace[3] <= 0) {
+      return { x: 0, y: 0, visible: false };
+    }
+
+    const ndc = vec4.scale(vec4.create(), clipSpace, 1.0 / clipSpace[3]);
+    const screenX = (ndc[0] + 1.0) / 2.0;
+    const screenY = (ndc[1] + 1.0) / 2.0;
+    const visible = screenX >= 0 && screenX <= 1 && screenY >= 0 && screenY <= 1 && ndc[2] >= -1 && ndc[2] <= 1;
+
+    return { x: screenX, y: screenY, visible };
   }
 
   updateProjectionView = () => {
@@ -183,8 +198,8 @@ export class BaseCamera extends ModelPosition {
   };
 
   frustumMatrix = (): mat4 => {
-    const left = this.cameraOptions.left ?? -this.aspect ?? -1;
-    const right = this.cameraOptions.right ?? this.aspect ?? 1;
+    const left = this.cameraOptions.left ?? -this.aspect;
+    const right = this.cameraOptions.right ?? this.aspect;
     const bottom = this.cameraOptions.bottom ?? -1;
     const top = this.cameraOptions.top ?? 1;
 
@@ -213,12 +228,6 @@ export class BaseCamera extends ModelPosition {
     if (this.cameraOptions?.projection === 'frustum') {
       this.frustum = this.frustumMatrix();
     } else {
-      console.log("panda2", {
-        fov: this.degreesToRadians(this.fov),
-        aspect: this.aspect,
-        near: this.near,
-        far: this.far
-      })
       this.frustum = this.perspective();
     }
   };
@@ -369,6 +378,39 @@ export class BaseCamera extends ModelPosition {
     // Reset roll (az) to 0
     this.position.az = 0;
 
+    this.rotateOrigin(this.position.x, this.position.y, this.position.z);
+
+    this.updateProjectionView();
+  }
+
+  /**
+   * Third-person camera that follows a target from behind
+   * @param targetX Target's X position
+   * @param targetY Target's Y position
+   * @param targetZ Target's Z position
+   * @param targetRotation Target's rotation in radians
+   * @param distance Distance behind target
+   * @param height Height above target
+   */
+  followBehind(
+    targetX: number,
+    targetY: number,
+    targetZ: number,
+    targetRotation: number,
+    distance: number = 8,
+    height: number = 3
+  ) {
+    // Calculate camera position behind the target based on target rotation
+    const cameraX = targetX - Math.sin(targetRotation) * distance;
+    const cameraZ = targetZ - Math.cos(targetRotation) * distance;
+    const cameraY = targetY + height;
+
+    // Position camera
+    this.center(cameraX, cameraY, cameraZ);
+    
+    // Match camera rotation to target
+    this.position.ay = targetRotation * (180 / Math.PI);
+    
     this.updateProjectionView();
   }
 }
@@ -449,14 +491,12 @@ class Camera {
     canvas: HTMLCanvasElement,
     renderMode?: '2d' | '3d'
   ) {
-    // Set render mode, default to 2D unless 3D is explicitly requested
     this.renderMode = renderMode || cameraOptions.renderMode || '2d';
 
     if (this.renderMode === '3d') {
       this.camera3d.setupCamera(cameraOptions, aspectRatio || 1, canvas);
-    } else {
-      this.camera2d.setupCamera(cameraOptions, aspectRatio || 1, canvas);
     }
+    this.camera2d.setupCamera(cameraOptions, aspectRatio || 1, canvas);
 
     this.height = canvas.height;
     this.width = canvas.width;
@@ -467,10 +507,9 @@ class Camera {
       if (this.camera3d.isUpdateView()) {
         this.camera3d.commitProjectionView();
       }
-    } else {
-      if (this.camera2d.isUpdateView()) {
-        this.camera2d.commitProjectionView();
-      }
+    }
+    if (this.camera2d.isUpdateView()) {
+      this.camera2d.commitProjectionView();
     }
   }
 

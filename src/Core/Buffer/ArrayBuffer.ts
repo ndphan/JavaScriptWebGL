@@ -16,6 +16,7 @@ class ArrayBuffer {
   maxSize: number;
   private isBuffered = false;
   private ctx: WebGLRenderingContext;
+  private static readonly MAX_BUFFER_SIZE = 10000000; // 10M floats (~40MB)
 
   constructor(ctx: WebGLRenderingContext) {
     this.bufferid = ctx.createBuffer()!;
@@ -32,13 +33,12 @@ class ArrayBuffer {
     if (this.deleted) {
       return;
     }
-    this.isBuffered = true;
     this.bind();
 
     if (!this.isBuffered) {
-      this.maxSize = 200000;
-    } else {
-      this.maxSize = this.bufferArray.length * 2.0;
+      const doubled = this.bufferArray.length * 2;
+      const capped = Math.min(doubled, ArrayBuffer.MAX_BUFFER_SIZE);
+      this.maxSize = Math.max(capped, this.bufferArray.length);
     }
 
     const buffer = new Float32Array(this.maxSize);
@@ -46,6 +46,8 @@ class ArrayBuffer {
     buffer.set(this.bufferArray);
 
     this.ctx.bufferData(this.ctx.ARRAY_BUFFER, buffer, this.ctx.STATIC_DRAW);
+
+    this.isBuffered = true;
   }
 
   length() {

@@ -15,7 +15,7 @@ class EntityBasicProgram {
 
   updatePerspective(projectionMatrix: mat4) {
     this.program.bindProgram();
-    this.program.glSetProjectMatrix(projectionMatrix);
+    this.program.glSetProjectMatrix(projectionMatrix as Float32List);
   }
 
   delete() {
@@ -58,7 +58,7 @@ class EntityBasicProgram {
     this.program.arrayBuffer.bind();
     this.program.bindAttributePointers();
     this.program.bindProgram();
-    this.program.glSetViewMatrix(camera.viewMatrix);
+    this.program.glSetViewMatrix(camera.viewMatrix as Float32List);
     if (!this.ctx.isEnabled(this.ctx.CULL_FACE)) {
       this.ctx.enable(this.ctx.CULL_FACE);
     }

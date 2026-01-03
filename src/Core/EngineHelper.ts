@@ -1,4 +1,5 @@
-import { EngineEvent } from "./Events";
+import { vec3 } from "gl-matrix";
+import { ModelPosition } from "..";
 import { AppSubscription } from "./App";
 import Camera from "./Camera";
 import NotificationQueue from "./Common/NotificationQueue";
@@ -7,17 +8,17 @@ import FontMetaData from "./Data/FontMetaData";
 import Light from "./Data/Light";
 import ModelData from "./Data/ModelData";
 import PlaneType from "./Data/PlaneType";
+import Rect3d from "./Data/Rect3d";
 import { ShaderType } from "./Data/RenderOption";
 import TextureVertexModel from "./Data/TextureVertexModel";
-import EngineObjectHelper from "./EngineEntity/EngineObjectHelper";
-import { ShaderEntity } from "./EngineEntity/ShaderEntity";
-import Font, { FontReference } from "./Font/Font";
-import { RendererNotification, RendererSubscription } from "./Renderer";
-import { CollisionDetection } from "./Physics/CollisionDetection";
-import Rect3d from "./Data/Rect3d";
 import EngineObject from "./EngineEntity/EngineObject";
-import { ModelPosition } from "..";
+import EngineObjectHelper from "./EngineEntity/EngineObjectHelper";
 import Position from "./EngineEntity/Position";
+import { ShaderEntity } from "./EngineEntity/ShaderEntity";
+import { EngineEvent } from "./Events";
+import Font, { FontReference } from "./Font/Font";
+import { CollisionDetection } from "./Physics/CollisionDetection";
+import { RendererNotification, RendererSubscription } from "./Renderer";
 
 export default class EngineHelper {
   notificationQueue: NotificationQueue;
@@ -32,7 +33,7 @@ export default class EngineHelper {
   time: number;
   cacheId = 0;
   fps: number;
-
+  
   constructor(
     notificationQueue: NotificationQueue,
     subscriberPool: SubscriberPool,
@@ -64,6 +65,11 @@ export default class EngineHelper {
       model = model.slice(0);
     }
 
+    if (this.camera.renderMode === '3d' && shaderProgram === ShaderType.THREE_DIMENSION) {
+      this.renderWithCulling(entity, model);
+      return;
+    }
+
     this.notificationQueue.pushPayload(
       RendererNotification.renderEntity(entity, model)
     );
@@ -71,6 +77,123 @@ export default class EngineHelper {
 
   renderCopy(entity: EngineObject, pos: ModelPosition) {
     this.render(entity.shaderEntity.renderCopy(pos));
+  }
+
+    /**
+   * Distance-based culling - objects beyond a certain distance are not rendered
+   * @param entity The engine object to test
+   * @param cameraPosition Camera position
+   * @param maxDistance Maximum rendering distance
+   * @returns true if the object should be rendered
+   */
+  isEntityWithinDistance(entity: EngineObject, cameraPosition: vec3, maxDistance: number): boolean {
+    if (!entity || !entity.position) {
+      return true;
+    }
+
+    const entityPos = vec3.fromValues(
+      entity.position.x || 0,
+      entity.position.y || 0,
+      entity.position.z || 0
+    );
+
+    const distance = vec3.distance(cameraPosition, entityPos);
+    return distance <= maxDistance;
+  }
+
+
+  /**
+   * Render an EngineObject with frustum and distance culling
+   * @param entity The EngineObject to render
+   * @returns true if the entity was rendered, false if culled
+   */
+  renderWithCulling(entity: ShaderEntity, model: Float32List): boolean {
+    if (!entity) {
+      return false;
+    }
+
+    const entityPosition = entity.modelPosition();
+    
+    const entitySize = Math.max(
+      entityPosition.width || 1,
+      entityPosition.height || 1,
+      entityPosition.length || 1
+    );
+    
+    // If entity is very large (> 100 units), likely a sky/background object - always render
+    if (entitySize > 100) {
+      this.notificationQueue.pushPayload(
+        RendererNotification.renderEntity(entity, model)
+      );
+      return true;
+    }
+
+    const camera3d = this.camera.camera3d;
+    
+    const cameraPos = vec3.fromValues(
+      camera3d.position.x || 0,
+      camera3d.position.y || 0,
+      camera3d.position.z || 0
+    );
+    
+    const entityPos3d = vec3.fromValues(
+      entityPosition.x || 0,
+      entityPosition.y || 0,
+      entityPosition.z || 0
+    );
+    
+    const yawRad = camera3d.degreesToRadians(camera3d.position.ay);
+    const pitchRad = camera3d.degreesToRadians(camera3d.position.ax);
+    
+    const cameraForward = vec3.fromValues(
+      Math.sin(yawRad) * Math.cos(pitchRad),
+      -Math.sin(pitchRad),
+      -Math.cos(yawRad) * Math.cos(pitchRad)
+    );
+    vec3.normalize(cameraForward, cameraForward);
+    
+    const toEntity = vec3.create();
+    vec3.subtract(toEntity, entityPos3d, cameraPos);
+    const distance = vec3.length(toEntity);
+    
+    if (distance < camera3d.near) {
+      this.notificationQueue.pushPayload(
+        RendererNotification.renderEntity(entity, model)
+      );
+      return true;
+    }
+    
+    if (distance > camera3d.far) {
+      return false;
+    }
+    
+    vec3.normalize(toEntity, toEntity);
+    
+    const dot = vec3.dot(cameraForward, toEntity);
+    
+    if (dot <= 0) {
+      return false;
+    }
+    
+    const angle = Math.acos(Math.max(0, Math.min(1, dot)));
+    
+    const fov = camera3d.fov;
+    const fovRadians = (fov * Math.PI) / 180;
+    const halfFov = fovRadians / 2;
+    
+    const angularSize = Math.atan(entitySize / Math.max(distance, 1));
+    const padding = angularSize + 0.3;
+    
+    const effectiveHalfFov = halfFov + padding;
+    
+    if (angle > effectiveHalfFov) {
+      return false;
+    }
+
+    this.notificationQueue.pushPayload(
+      RendererNotification.renderEntity(entity, model)
+    );
+    return true;
   }
 
   setLighting(light: Light) {

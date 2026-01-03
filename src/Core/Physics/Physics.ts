@@ -268,6 +268,11 @@ export default class Physics {
         }
       }
     }
+    
+    if (simulationCount === 0 && this.simulationLoop !== undefined) {
+      clearInterval(this.simulationLoop);
+      this.simulationLoop = undefined;
+    }
   }
 
   static runSimulation(
