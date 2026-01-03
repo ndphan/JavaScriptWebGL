@@ -205,6 +205,7 @@ export class FontReference {
   isDirtyPos: boolean;
   isDirtyText: boolean;
   isTop: boolean;
+  isLeftAlign: boolean;
   displayRect: Rect2d;
   render(engineHelper: EngineHelper) {
     engineHelper.writeFont(this);
@@ -225,6 +226,11 @@ export class FontReference {
   }
   setTop(isTop: boolean): FontReference {
     this.isTop = isTop;
+    return this;
+  }
+  setLeft(isLeft: boolean): FontReference {
+    this.isLeftAlign = isLeft;
+    this.isDirtyPos = true;
     return this;
   }
   translate(dx: number, dy: number): FontReference {
@@ -445,7 +451,7 @@ class Font implements EngineEntity {
     const fontSize = Font.fontHeight(fontRef.fontSize);
     const totalWidth = this.calcTotalTextWidth(fontRef);
     let maxHeight = 0;
-    let carryWidth = -totalWidth / 2.0;
+    let carryWidth = fontRef.isLeftAlign ? 0 : -totalWidth / 2.0;
     const fonts: RenderFont[] = [];
     for (let charIdx = 0; charIdx < text.length; charIdx++) {
       const charCode = text.charCodeAt(charIdx);
