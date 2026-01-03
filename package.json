@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "start": "webpack serve --mode development --config webpack.config.js",
+    "dev": "webpack serve --mode development --config webpack.config.example.js",
     "lint": "eslint --fix --ignore-pattern node_modules/ --ext .ts src/**",
     "build": "tsc --outDir dist --declaration --emitDeclarationOnly false && webpack --mode production --config webpack.config.js",
     "build:dev": "webpack --mode development --config webpack.config.js",
