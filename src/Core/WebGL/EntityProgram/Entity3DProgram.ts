@@ -121,6 +121,7 @@ class Entity3DProgram {
       if (this.ctx.isEnabled(this.ctx.DEPTH_TEST)) {
         this.ctx.disable(this.ctx.DEPTH_TEST);
       }
+      this.ctx.uniform1i(this.program.isLightingEnabledUniform.ref, 0);
     } else {
       if (!this.ctx.isEnabled(this.ctx.CULL_FACE)) {
         this.ctx.enable(this.ctx.CULL_FACE);
@@ -128,6 +129,7 @@ class Entity3DProgram {
       if (!this.ctx.isEnabled(this.ctx.DEPTH_TEST)) {
         this.ctx.enable(this.ctx.DEPTH_TEST);
       }
+      this.ctx.uniform1i(this.program.isLightingEnabledUniform.ref, this.program.isLightingEnabled ? 1 : 0);
     }
 
     for (let index = 0; index < entities.length; index++) {
