@@ -33,13 +33,9 @@ class ArrayBuffer {
     if (this.deleted) {
       return;
     }
-    const wasBuffered = this.isBuffered;
-    this.isBuffered = true;
     this.bind();
 
-    if (!wasBuffered) {
-      this.maxSize = 200000;
-    } else {
+    if (!this.isBuffered) {
       const doubled = this.bufferArray.length * 2;
       const capped = Math.min(doubled, ArrayBuffer.MAX_BUFFER_SIZE);
       this.maxSize = Math.max(capped, this.bufferArray.length);
@@ -50,6 +46,8 @@ class ArrayBuffer {
     buffer.set(this.bufferArray);
 
     this.ctx.bufferData(this.ctx.ARRAY_BUFFER, buffer, this.ctx.STATIC_DRAW);
+
+    this.isBuffered = true;
   }
 
   length() {
