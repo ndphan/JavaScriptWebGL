@@ -19,6 +19,8 @@ export interface DebugEntityInfo {
   hasShaderEntity: boolean;
   textureRef?: string;
   bufferId?: number;
+  features: string[];
+  isLowPriority: boolean;
 }
 
 export interface DebugInfo {
@@ -107,7 +109,7 @@ export default class EngineDebugger {
   private createStaticStructure(): void {
     this.debugElement.innerHTML = `
       <div style="margin-top: 25px;">
-        <h3 style="margin: 0 0 10px 0; color: #4CAF50; font-size: 14px;">🎮 Engine Debugger</h3>
+        <h3 style="margin: 0 0 10px 0; color: #4CAF50; font-size: 14px;">Engine Debugger</h3>
         
         <div id="debug-performance" style="margin-bottom: 10px;">
           <strong style="color: #FFD700;">Performance:</strong><br>
@@ -115,7 +117,7 @@ export default class EngineDebugger {
         </div>
 
         <div id="debug-camera-controls" style="margin-bottom: 15px; border: 1px solid #444; padding: 8px; border-radius: 4px;">
-          <strong style="color: #FFD700;">📹 Camera Controls:</strong><br>
+          <strong style="color: #FFD700;">Camera Controls:</strong><br>
           <div style="margin: 8px 0;">
             <strong>Position:</strong><br>
             <div style="display: flex; gap: 5px; margin: 5px 0;">
@@ -192,14 +194,14 @@ export default class EngineDebugger {
         </div>
 
         <div id="debug-entities" style="margin-bottom: 10px;">
-          <strong style="color: #FFD700;">📦 Entities (<span id="entity-count">0</span>):</strong><br>
+          <strong style="color: #FFD700;">Entities (<span id="entity-count">0</span>):</strong><br>
           <div id="entities-container" style="max-height: 180px; overflow-y: auto; overflow-x: hidden; border: 1px solid #444; padding: 5px; margin-top: 5px; background: rgba(0,0,0,0.3);">
             <!-- Entities will be populated here -->
           </div>
         </div>
 
         <div id="debug-error" style="margin-bottom: 10px; display: none;">
-          <strong style="color: #FF4444;">❌ Last Error:</strong><br>
+          <strong style="color: #FF4444;">Last Error:</strong><br>
           <span id="error-content" style="color: #FF4444; font-size: 11px; word-break: break-word;"></span>
         </div>
       </div>
@@ -280,7 +282,9 @@ export default class EngineDebugger {
       hidden: entity ? entity.hidden : true,
       hasShaderEntity: entity ? !!entity.shaderEntity : false,
       textureRef: entity?.shaderEntity?.rendererTextureRef,
-      bufferId: entity?.shaderEntity?.rendererBufferId
+      bufferId: entity?.shaderEntity?.rendererBufferId,
+      features: entity?.features?.map(f => f.constructor.name) || [],
+      isLowPriority: entity?.isLowPriority || false
     };
   }
 
@@ -439,14 +443,15 @@ export default class EngineDebugger {
 
     // Generate new content
     const entitiesHtml = entities.map((entity, index) => `
-      <div style="margin-bottom: 5px; padding: 4px; border-left: 3px solid ${entity.hidden ? '#FF4444' : '#4CAF50'}; background: rgba(255,255,255,0.05); border-radius: 2px;">
-        <strong style="color: #87CEEB;">${index}: ${entity.type}</strong><br>
+      <div style="margin-bottom: 5px; padding: 4px; border-left: 3px solid ${entity.hidden ? '#FF4444' : entity.isLowPriority ? '#FFA500' : '#4CAF50'}; background: rgba(255,255,255,0.05); border-radius: 2px;">
+        <strong style="color: #87CEEB;">${index}: ${entity.type}</strong>${entity.isLowPriority ? ' <span style="color: #FFA500; font-size: 10px;">[LOW PRIORITY]</span>' : ''}<br>
         <span style="font-size: 11px;">
           Pos: (${entity.position.x}, ${entity.position.y}, ${entity.position.z})<br>
-          Hidden: ${entity.hidden ? '❌' : '✅'} | 
-          Shader: ${entity.hasShaderEntity ? '✅' : '❌'}<br>
+          Hidden: ${entity.hidden ? 'YES' : 'NO'} | 
+          Shader: ${entity.hasShaderEntity ? 'YES' : 'NO'}<br>
           ${entity.textureRef ? `Texture: <span style="color: #90EE90;">${entity.textureRef}</span><br>` : ''}
-          ${entity.bufferId !== undefined ? `Buffer ID: <span style="color: #FFB6C1;">${entity.bufferId}</span>` : '<span style="color: #FF6B6B;">No Buffer</span>'}
+          ${entity.bufferId !== undefined ? `Buffer ID: <span style="color: #FFB6C1;">${entity.bufferId}</span><br>` : '<span style="color: #FF6B6B;">No Buffer</span><br>'}
+          ${entity.features.length > 0 ? `Features: <span style="color: #FFD700;">${entity.features.join(', ')}</span>` : '<span style="color: #888;">No Features</span>'}
         </span>
       </div>
     `).join('');
