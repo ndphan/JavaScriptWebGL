@@ -256,6 +256,7 @@ export default class Events {
       isDown: type === Events.DOWN || type === Events.KEY_DOWN,
       isUp: type === Events.UP || type === Events.KEY_UP,
       code: evt instanceof KeyboardEvent ? evt.code : undefined,
+      keyDown: this.keyDownMap,
     };
   };
 
