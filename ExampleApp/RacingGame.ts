@@ -1,18 +1,18 @@
 import {
   App,
+  Coordinate,
   EngineEvent,
   EngineObject,
   Events,
+  FontReference,
+  Light,
+  Moveable,
   Object3d,
   ObjectManager,
   Plane3d,
   PlaneType,
   Rect3d,
-  ResourceResolver,
-  FontReference,
-  Coordinate,
-  Light,
-  Moveable
+  ResourceResolver
 } from "synaren-engine";
 import CameraFollower from "../src/Core/EngineEntity/CameraFollower";
 import Cube from "./Cube";
@@ -58,27 +58,27 @@ export default class RacingGame extends ObjectManager {
   waypoints: Waypoint[] = [
     // Start/Finish line
     { x: 0, z: 0 },
-    
+
     // First sector - right turn
     { x: 150, z: 0 },
     { x: 250, z: 100 },
     { x: 250, z: 200 },
-    
+
     // Second sector - top straight and left turn
     { x: 200, z: 300 },
     { x: 50, z: 350 },
     { x: -100, z: 300 },
-    
+
     // Third sector - left side and hairpin
     { x: -200, z: 200 },
     { x: -250, z: 50 },
     { x: -200, z: -100 },
-    
+
     // Fourth sector - bottom straight and return
     { x: -50, z: -150 },
     { x: 100, z: -100 },
     { x: 0, z: -50 },
-    
+
     // Complete the loop back to start
     { x: 0, z: 0 }
   ];
@@ -139,40 +139,40 @@ export default class RacingGame extends ObjectManager {
 
   createSimpleCrowd() {
     // Create minimal crowd dynamically based on waypoints for performance
-    const crowdPositions: {x: number, z: number}[] = [];
-    
+    const crowdPositions: { x: number, z: number }[] = [];
+
     // Calculate the center point of the track
     const centerX = this.waypoints.reduce((sum, wp) => sum + wp.x, 0) / this.waypoints.length;
     const centerZ = this.waypoints.reduce((sum, wp) => sum + wp.z, 0) / this.waypoints.length;
-    
+
     // Place crowd members around key waypoints (every 5th waypoint to reduce crowd)
     for (let i = 0; i < this.waypoints.length; i += 5) {
       const waypoint = this.waypoints[i];
-      
+
       // Calculate direction from waypoint to track center
       const dx = centerX - waypoint.x;
       const dz = centerZ - waypoint.z;
       const distance = Math.sqrt(dx * dx + dz * dz);
-      
+
       if (distance > 0) {
         // Normalize direction
         const normalizedDx = dx / distance;
         const normalizedDz = dz / distance;
-        
+
         // Place crowd members on the inside of the track (toward center)
         const crowdDistance = 15; // Distance from waypoint toward center
         const crowdX = waypoint.x + normalizedDx * crowdDistance;
         const crowdZ = waypoint.z + normalizedDz * crowdDistance;
-        
+
         crowdPositions.push({ x: crowdX, z: crowdZ });
-        
+
         // Add only one variation around each main position (was 2)
         crowdPositions.push(
           { x: crowdX + (Math.random() - 0.5) * 12, z: crowdZ + (Math.random() - 0.5) * 12 }
         );
       }
     }
-    
+
     // Add minimal crowd in the calculated center area (reduced from 8 to 4)
     for (let i = 0; i < 4; i++) {
       crowdPositions.push({
@@ -187,10 +187,10 @@ export default class RacingGame extends ObjectManager {
           new Rect3d(pos.x, 1.5, pos.z, 2, 2, 2),
           "low_poly_girl"
         );
-        
+
         crowdMember.scale(1, 1, 1);
         crowdMember.angleY(Math.random() * 360);
-        
+
         this.crowd.push(crowdMember);
         this.addEntity(crowdMember);
       } catch (error) {
@@ -204,22 +204,22 @@ export default class RacingGame extends ObjectManager {
 
   createTrees() {
     // Create minimal trees dynamically based on waypoints for performance
-    const treePositions: {x: number, z: number}[] = [];
-    
+    const treePositions: { x: number, z: number }[] = [];
+
     // Calculate track bounds from waypoints
     const minX = Math.min(...this.waypoints.map(wp => wp.x));
     const maxX = Math.max(...this.waypoints.map(wp => wp.x));
     const minZ = Math.min(...this.waypoints.map(wp => wp.z));
     const maxZ = Math.max(...this.waypoints.map(wp => wp.z));
-    
+
     // Calculate track center
     const centerX = (minX + maxX) / 2;
     const centerZ = (minZ + maxZ) / 2;
-    
+
     // Create fewer perimeter trees around the track bounds (increased spacing)
     const perimeterPadding = 60;
     const treeSpacing = 50; // Increased from 25 to 50 for fewer trees
-    
+
     // North and South perimeter (fewer trees)
     for (let x = minX - perimeterPadding; x <= maxX + perimeterPadding; x += treeSpacing) {
       treePositions.push(
@@ -227,7 +227,7 @@ export default class RacingGame extends ObjectManager {
         { x: x, z: maxZ + perimeterPadding }   // South
       );
     }
-    
+
     // East and West perimeter (fewer trees)
     for (let z = minZ - perimeterPadding; z <= maxZ + perimeterPadding; z += treeSpacing) {
       treePositions.push(
@@ -235,28 +235,28 @@ export default class RacingGame extends ObjectManager {
         { x: maxX + perimeterPadding, z: z }   // East
       );
     }
-    
+
     // Create minimal trees around waypoints (every 4th waypoint instead of every 2nd)
     for (let i = 0; i < this.waypoints.length - 1; i += 4) { // Reduced frequency
       const current = this.waypoints[i];
       const next = this.waypoints[i + 1];
-      
+
       // Calculate perpendicular direction for placing trees beside the track
       const dx = next.x - current.x;
       const dz = next.z - current.z;
       const length = Math.sqrt(dx * dx + dz * dz);
-      
+
       if (length > 0) {
         // Normalize direction vector
         const normalizedDx = dx / length;
         const normalizedDz = dz / length;
-        
+
         // Perpendicular vectors for track sides
         const perpX = -normalizedDz;
         const perpZ = normalizedDx;
-        
+
         const treeDistance = 25 + Math.random() * 10; // 25-35 units from track
-        
+
         // Only one tree per side (not both sides)
         treePositions.push({
           x: current.x + perpX * treeDistance,
@@ -264,7 +264,7 @@ export default class RacingGame extends ObjectManager {
         });
       }
     }
-    
+
     // Create fewer forest clusters (reduced from 8 to 4 clusters)
     const clusterCenters = [
       { x: centerX + 120, z: centerZ + 120 },
@@ -272,7 +272,7 @@ export default class RacingGame extends ObjectManager {
       { x: centerX + 120, z: centerZ - 120 },
       { x: centerX - 120, z: centerZ - 120 }
     ];
-    
+
     clusterCenters.forEach(cluster => {
       // Create fewer trees per cluster (3-5 instead of 8-12)
       const treesPerCluster = 3 + Math.floor(Math.random() * 3);
@@ -283,13 +283,13 @@ export default class RacingGame extends ObjectManager {
         });
       }
     });
-    
+
     // Filter out trees that are too close to the racing line
     const filteredTreePositions = treePositions.filter(treePos => {
       // Check distance to all waypoints
       return this.waypoints.every(waypoint => {
         const distance = Math.sqrt(
-          Math.pow(treePos.x - waypoint.x, 2) + 
+          Math.pow(treePos.x - waypoint.x, 2) +
           Math.pow(treePos.z - waypoint.z, 2)
         );
         return distance > 12; // Minimum 12 units from racing line
@@ -302,12 +302,12 @@ export default class RacingGame extends ObjectManager {
           new Rect3d(pos.x, 0.5, pos.z, 6, 6, 6), // Trees at ground level
           "low_poly_tree"
         );
-        
+
         // Make trees bigger and more varied
         const scale = 2.5 + Math.random() * 2.0; // Scale between 2.5 and 4.5 (bigger trees)
         tree.scale(scale, scale, scale);
         tree.angleY(Math.random() * 360);
-        
+
         this.trees.push(tree);
         this.addEntity(tree);
       } catch (error) {
@@ -320,7 +320,7 @@ export default class RacingGame extends ObjectManager {
     console.log(`Filtered ${treePositions.length - filteredTreePositions.length} trees too close to racing line`);
   }
 
- 
+
   createPlayerCar() {
     this.playerCar = new Object3d(
       new Rect3d(this.playerPosition.x, this.playerPosition.y, this.playerPosition.z, 1.5, 1.5, 1.5),
@@ -328,6 +328,7 @@ export default class RacingGame extends ObjectManager {
     );
     this.playerCar.scale(1.5, 1.5, 1.5); // Bigger player car - was 0.5, now 0.8
     this.playerCar.angleY(90); // Start facing forward (0 degrees)
+    this.playerCar.addFeature(new CameraFollower(this.engineHelper.camera, { y: -3, x: 0, z: -2 }, true));
     this.addEntity(this.playerCar);
   }
 
@@ -336,8 +337,8 @@ export default class RacingGame extends ObjectManager {
 
     for (let i = 0; i < 4; i++) {
       // Create simple bot name text (may not render if font system has issues)
-      let nameText: any = { center: () => {}, render: () => {} }; // Default fallback
-      
+      let nameText: any = { center: () => { }, render: () => { } }; // Default fallback
+
       try {
         nameText = FontReference.newFont(
           new Coordinate(0.1 + (i * 0.2), 0.9, 0),
@@ -411,12 +412,12 @@ export default class RacingGame extends ObjectManager {
         new Rect3d(pos.x, 1.7, pos.z, 2, 2, 2),
         "low_poly_girl"
       );
-      
+
       // Vary the scale and rotation for diversity
       const scale = 0.8 + Math.random() * 0.4; // Scale between 0.8 and 1.2
       crowdMember.scale(scale, scale, scale);
       crowdMember.angleY(Math.random() * 360); // Random rotation
-      
+
       this.crowd.push(crowdMember);
       this.addEntity(crowdMember);
     });
@@ -429,51 +430,51 @@ export default class RacingGame extends ObjectManager {
       // Create bigger tiles to visualize the waypoint path
       for (let i = 0; i < this.waypoints.length - 1; i++) { // -1 to avoid duplicate at start/end
         const waypoint = this.waypoints[i];
-        
+
         // Create a bigger cube tile at each waypoint
         const tile = new Cube(
           new Rect3d(waypoint.x, 0.2, waypoint.z, 5, 0.2, 5), // Bigger tiles: 5x5 instead of 3x3
           "sky",
           ["sky", "sky", "sky", "sky", "sky", "sky"]
         );
-        
+
         this.waypointTiles.push(tile);
         this.addEntity(tile);
         tile.init(this.engineHelper);
       }
-      
+
       // Create path connection tiles between waypoints
       for (let i = 0; i < this.waypoints.length - 1; i++) {
         const current = this.waypoints[i];
         const next = this.waypoints[i + 1];
-        
+
         // Calculate distance and direction between waypoints
         const dx = next.x - current.x;
         const dz = next.z - current.z;
         const distance = Math.sqrt(dx * dx + dz * dz);
-        
+
         // Create bigger tiles along the path between waypoints
         const tilesPerSegment = Math.floor(distance / 4); // One tile every 4 units (was 3)
         for (let j = 1; j < tilesPerSegment; j++) {
           const progress = j / tilesPerSegment;
           const x = current.x + dx * progress;
           const z = current.z + dz * progress;
-          
+
           const pathTile = new Cube(
             new Rect3d(x, 0.1, z, 4, 0.1, 4), // Bigger path tiles: 4x4 instead of 3x3
             "ground",
             ["ground", "ground", "ground", "ground", "ground", "ground"]
           );
-          
+
           this.waypointTiles.push(pathTile);
           this.addEntity(pathTile);
           pathTile.init(this.engineHelper);
         }
       }
-      
+
       // Create course walls around the track edges
       this.createCourseWalls();
-      
+
       console.log(`Created ${this.waypointTiles.length} bigger waypoint path tiles and course walls`);
     } catch (error) {
       console.error('Error creating waypoint tiles:', error);
@@ -485,20 +486,20 @@ export default class RacingGame extends ObjectManager {
     const wallHeight = 2;
     const wallThickness = 1;
     const trackWidth = 8; // Distance from track center to wall
-    
+
     // Calculate bounding box from waypoints
     let minX = Math.min(...this.waypoints.map(wp => wp.x));
     let maxX = Math.max(...this.waypoints.map(wp => wp.x));
     let minZ = Math.min(...this.waypoints.map(wp => wp.z));
     let maxZ = Math.max(...this.waypoints.map(wp => wp.z));
-    
+
     // Add padding around the track
     const padding = 15;
     minX -= padding;
     maxX += padding;
     minZ -= padding;
     maxZ += padding;
-    
+
     // Create outer boundary walls based on waypoint extents
     const outerWalls = [
       // North wall (top)
@@ -518,7 +519,7 @@ export default class RacingGame extends ObjectManager {
           "rock", // Use a distinct texture for walls
           ["rock", "rock", "rock", "rock", "rock", "rock"]
         );
-        
+
         this.trackBarriers.push(wallCube);
         this.addEntity(wallCube);
         wallCube.init(this.engineHelper);
@@ -531,31 +532,31 @@ export default class RacingGame extends ObjectManager {
     for (let i = 0; i < this.waypoints.length - 1; i++) {
       const current = this.waypoints[i];
       const next = this.waypoints[i + 1];
-      
+
       // Calculate perpendicular direction for track width
       const dx = next.x - current.x;
       const dz = next.z - current.z;
       const length = Math.sqrt(dx * dx + dz * dz);
-      
+
       if (length > 0) {
         // Normalize direction vector
         const normalizedDx = dx / length;
         const normalizedDz = dz / length;
-        
+
         // Perpendicular vectors for track sides
         const perpX = -normalizedDz;
         const perpZ = normalizedDx;
-        
+
         // Create barriers on both sides of track segments at turns
         if (i % 3 === 0) { // Only at some waypoints to avoid cluttering
           // Left side barrier
           const leftBarrierX = current.x + perpX * trackWidth;
           const leftBarrierZ = current.z + perpZ * trackWidth;
-          
+
           // Right side barrier  
           const rightBarrierX = current.x - perpX * trackWidth;
           const rightBarrierZ = current.z - perpZ * trackWidth;
-          
+
           [
             { x: leftBarrierX, z: leftBarrierZ },
             { x: rightBarrierX, z: rightBarrierZ }
@@ -566,7 +567,7 @@ export default class RacingGame extends ObjectManager {
                 "rock",
                 ["rock", "rock", "rock", "rock", "rock", "rock"]
               );
-              
+
               this.trackBarriers.push(barrierCube);
               this.addEntity(barrierCube);
               barrierCube.init(this.engineHelper);
@@ -620,14 +621,13 @@ export default class RacingGame extends ObjectManager {
     // Move position based on current rotation and speed
     const forwardX = Math.sin(this.playerRotation);
     const forwardZ = Math.cos(this.playerRotation);
-    
+
     this.playerPosition.x -= forwardX * this.playerSpeed;
     this.playerPosition.z -= forwardZ * this.playerSpeed;
-    
+
     // Update player car position and rotation
     if (this.playerCar) {
-      this.playerCar.center(this.playerPosition.x, this.playerPosition.y, this.playerPosition.z);
-      this.playerCar.angleY(this.playerRotation * (180 / Math.PI));
+      this.playerCar.angleY(180 + this.playerRotation * (180 / Math.PI));
     }
 
     // Check waypoint progress
@@ -639,25 +639,25 @@ export default class RacingGame extends ObjectManager {
 
     this.bots.forEach((bot, index) => {
       const baseWaypoint = this.waypoints[bot.currentWaypoint];
-      
+
       // Add variance to target waypoint to prevent bots from clustering
       const lateralOffset = (index - 1.5) * 3; // Spread bots across track width (-4.5 to 4.5)
       const randomVariance = (Math.sin(Date.now() * 0.002 + index * 3) * 2); // Small random movement
-      
+
       // Calculate perpendicular direction for lateral positioning
       const nextWaypointIndex = (bot.currentWaypoint + 1) % this.waypoints.length;
       const nextWaypoint = this.waypoints[nextWaypointIndex];
       const trackDx = nextWaypoint.x - baseWaypoint.x;
       const trackDz = nextWaypoint.z - baseWaypoint.z;
       const trackLength = Math.sqrt(trackDx * trackDx + trackDz * trackDz);
-      
+
       let perpX = 0, perpZ = 0;
       if (trackLength > 0) {
         // Perpendicular to track direction for lateral offset
         perpX = -trackDz / trackLength;
         perpZ = trackDx / trackLength;
       }
-      
+
       // Create varied target waypoint
       const targetWaypoint = {
         x: baseWaypoint.x + perpX * (lateralOffset + randomVariance),
@@ -676,7 +676,7 @@ export default class RacingGame extends ObjectManager {
 
       // Check if reached base waypoint (use original waypoint for progression)
       const baseDistance = Math.sqrt(
-        Math.pow(bot.position.x - baseWaypoint.x, 2) + 
+        Math.pow(bot.position.x - baseWaypoint.x, 2) +
         Math.pow(bot.position.z - baseWaypoint.z, 2)
       );
       if (baseDistance < 5) { // Larger threshold for more reliable waypoint detection
@@ -689,12 +689,12 @@ export default class RacingGame extends ObjectManager {
         // Normalize direction vector
         const normalizedDx = dx / distance;
         const normalizedDz = dz / distance;
-        
+
         // Add left-right variance to prevent bots driving on top of each other
         const lateralVariance = (Math.sin(Date.now() * 0.001 + index * 2) * 0.3) + (index - 1.5) * 0.1; // Different pattern per bot
         const perpX = -normalizedDz; // Perpendicular to direction
         const perpZ = normalizedDx;
-        
+
         // Move bot towards target waypoint with lateral variance
         bot.position.x += (normalizedDx * bot.speed) + (perpX * lateralVariance * 0.05);
         bot.position.z += (normalizedDz * bot.speed) + (perpZ * lateralVariance * 0.05);
@@ -706,7 +706,7 @@ export default class RacingGame extends ObjectManager {
         // Update the Moveable car's position to match bot position
         bot.car.center(bot.position.x, bot.position.y, bot.position.z);
         bot.car.angleY(bot.rotation);
-        
+
         // Also update the internal Object3d position for proper rendering
         if (bot.car.entities.length > 0) {
           const carObject = bot.car.entities[0];
@@ -756,7 +756,7 @@ export default class RacingGame extends ObjectManager {
 
   render() {
     this.entities.forEach((ent: EngineObject, index: number) => ent.render(this.engineHelper));
-    
+
     // Temporarily disable font rendering to focus on bot movement
     // TODO: Re-enable when font system is stable
     // if (this.gameStarted) {
@@ -783,19 +783,17 @@ export default class RacingGame extends ObjectManager {
     this.entities.forEach((ent: EngineObject) => ent.update(this.engineHelper));
 
     // Update camera - fixed position behind player with rotating view
-    if (this.playerCar) {
-      const cameraOffset = 8;
-      const cameraHeight = 3;
-      
-      // Camera position follows player with fixed offset (no rotation)
-      const cameraX = this.playerPosition.x;
-      const cameraZ = this.playerPosition.z - cameraOffset;
-      const cameraY = this.playerPosition.y + cameraHeight;
+    const cameraOffset = 0;
+    const cameraHeight = 3;
 
-      this.engineHelper.camera.camera3d.center(cameraX, cameraY, cameraZ);
-      this.engineHelper.camera.camera3d.position.ay = -this.playerRotation * (180 / Math.PI);
-      this.engineHelper.camera.camera3d.updateProjectionView();
-    }
+    // Camera position follows player with fixed offset (no rotation)
+    const cameraX = this.playerPosition.x;
+    const cameraZ = this.playerPosition.z - cameraOffset;
+    const cameraY = this.playerPosition.y + cameraHeight;
+
+    this.engineHelper.camera.camera3d.center(cameraX, cameraY, cameraZ);
+    this.engineHelper.camera.camera3d.position.ay = -this.playerRotation * (180 / Math.PI);
+    this.engineHelper.camera.camera3d.updateProjectionView();
   }
 
   event(event: EngineEvent) {
@@ -842,17 +840,17 @@ export default class RacingGame extends ObjectManager {
     this.engineHelper.camera.camera3d.lookAt(0, 0, 0);
     this.engineHelper.camera.camera3d.updateProjectionView();
     this.engineHelper.camera.camera3d.commitProjectionView();
-    
+
     // Create game objects
     this.createGameObjects();
     super.init();
-    
+
     // Create waypoint tiles for visual debugging
     this.createWaypointTiles();
-    
+
     console.log('Racing Game initialized! Press SPACE to start racing!');
     console.log('Controls: W/S - Accelerate/Brake, A/D - Turn Left/Right');
-    
+
     // Auto-start the race after 2 seconds
     setTimeout(() => {
       if (!this.gameStarted) {
