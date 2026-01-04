@@ -16,6 +16,7 @@ module.exports = {
     },
     rules: {
         "no-console": 0,
+        "quotes": ["error", "double", { "avoidEscape": true }],
         // sonarjs rules to detect duplicates and identical code patterns
         'sonarjs/no-duplicated-branches': 'error',
         'sonarjs/no-identical-functions': 'error',

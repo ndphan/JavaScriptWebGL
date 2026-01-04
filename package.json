@@ -14,16 +14,20 @@
     "lint": "eslint --fix --ignore-pattern node_modules/ --ext .ts src/",
     "check-duplicates": "jscpd --reporters console,html,json --min-lines 5 src/",
     "quality:check": "yarn tsc --noEmit && yarn lint --max-warnings=0 && yarn check-duplicates && yarn test:coverage",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
+    "lint:staged": "lint-staged",
+    "agent:run": "yarn quality:check",
     "build": "tsc --outDir dist --declaration --emitDeclarationOnly false && webpack --mode production --config webpack.config.js",
     "build:dev": "webpack --mode development --config webpack.config.js",
     "build:example": "webpack --mode production --config webpack.config.example.js",
     "serve:example": "webpack serve --mode development --config webpack.config.example.js",
     "link": "yarn build && yarn link",
     "unlink": "yarn unlink",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:verbose": "jest --verbose"
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch --runInBand",
+    "test:coverage": "jest --coverage --runInBand",
+    "test:verbose": "jest --verbose --runInBand"
   },
   "dependencies": {
     "gl-matrix": "^3.4.3"
@@ -58,6 +62,7 @@
     "jest-puppeteer": "^11.0.0",
     "jest-webgl-canvas-mock": "^2.5.3",
     "jscpd": "^3.4.0",
+    "lint-staged": "^14.0.0",
     "postcss-preset-env": "^8.5.1",
     "prettier": "^2.8.4",
     "prettier-eslint": "^15.0.1",
@@ -75,6 +80,12 @@
     "webpack-dev-server": "^5.2.2",
     "webpack-glob": "^2.0.2",
     "wscat": "^5.2.0"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,tsx,js,jsx,json,md}": [
+      "prettier --write",
+      "eslint --fix --ext .ts,.tsx,.js,.jsx"
+    ]
   },
   "browserslist": {
     "production": [

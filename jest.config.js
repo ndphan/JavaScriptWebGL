@@ -10,7 +10,15 @@ module.exports = {
     '!src/**/index.ts',
   ],
   coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
+  coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
+  coverageThreshold: {
+    global: {
+      branches: 33,
+      functions: 58,
+      lines: 63,
+      statements: 62
+    }
+  },
   setupFiles: ['jest-webgl-canvas-mock'],
   setupFilesAfterEnv: ['<rootDir>/__tests__/setup/jest.setup.ts'],
   moduleNameMapper: {
