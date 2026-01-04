@@ -1,6 +1,7 @@
 import { CrystalCollectorGame, createCrystalCollectorApp } from "./CrystalCollectorGame";
 import { ExampleWorld, createExampleApp } from "./ExampleApp";
 import { createRacingGame } from "./RacingGame";
+import { createEndlessRunnerApp } from "./Endless";
 
 // Game registry
 const games = {
@@ -18,6 +19,11 @@ const games = {
     name: '3D Racing Game',
     description: 'Race against AI bots on a 3D track with realistic physics!',
     createFunction: createRacingGame
+  },
+  'endless-runner': {
+    name: 'Endless Horde Runner',
+    description: 'Survive endless waves of enemies in this fast-paced runner!',
+    createFunction: createEndlessRunnerApp
   }
 };
 
