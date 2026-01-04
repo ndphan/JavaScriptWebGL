@@ -255,15 +255,13 @@ export default class EndlessRunnerWorld extends ObjectManager {
         case 'KeyA':
         case 'ArrowLeft':
           if (!this.botEnabled) {
-            this.player.moveRight();
-            this.actionLog.push({frame: this.frameCount, action: 'moveRight', lane: this.player.currentLane});
+            this.player.moveLeft();
           }
           break;
         case 'KeyD':
         case 'ArrowRight':
           if (!this.botEnabled) {
-            this.player.moveLeft();
-            this.actionLog.push({frame: this.frameCount, action: 'moveLeft', lane: this.player.currentLane});
+            this.player.moveRight();
           }
           break;
         case 'Space':
@@ -272,6 +270,20 @@ export default class EndlessRunnerWorld extends ObjectManager {
         case 'KeyB':
           this.botEnabled = !this.botEnabled;
           this.showMessage(`Bot: ${this.botEnabled ? 'ON' : 'OFF'}`);
+          break;
+      }
+    }
+    
+    if (event.eventType === Events.KEY_UP) {
+      const code = (event as any).code;
+      switch (code) {
+        case 'KeyA':
+        case 'ArrowLeft':
+        case 'KeyD':
+        case 'ArrowRight':
+          if (!this.botEnabled) {
+            this.player.stopMove();
+          }
           break;
       }
     }
@@ -365,7 +377,7 @@ export default class EndlessRunnerWorld extends ObjectManager {
         .setFontSize(18)
         .setTop(true)
         .setLeft(true),
-      message: FontReference.newFont(new Coordinate(0.5, 0.5, 0), "hud-message")
+      message: FontReference.newFont(new Coordinate(0.5, 0.90, 0), "hud-message")
         .setText("")
         .setFontSize(24)
         .setTop(true)

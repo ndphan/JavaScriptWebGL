@@ -13,6 +13,11 @@ export default class Player extends EntityManager {
   height = 0.8;
   currentLane: number = 2;
   cube: Plane3d | null = null;
+  velocityX: number = 0;
+  acceleration: number = 0.005;
+  maxSpeed: number = 0.08;
+  friction: number = 0.92;
+  moveDirection: number = 0;
 
   constructor() {
     super();
@@ -26,7 +31,38 @@ export default class Player extends EntityManager {
     super.init(engineHelper);
   }
 
-  update(engineHelper: EngineHelper) {}
+  update(engineHelper: EngineHelper) {
+    // Apply acceleration based on move direction
+    if (this.moveDirection !== 0) {
+      this.velocityX += this.moveDirection * this.acceleration;
+    }
+    
+    // Apply friction
+    this.velocityX *= this.friction;
+    
+    // Clamp velocity
+    this.velocityX = Math.max(-this.maxSpeed, Math.min(this.maxSpeed, this.velocityX));
+    
+    // Update position
+    const newX = this.sprite.position.x + this.velocityX;
+    const minX = LANES[0];
+    const maxX = LANES[LANES.length - 1];
+    const clampedX = Math.max(minX, Math.min(maxX, newX));
+    
+    this.sprite.center(clampedX, 1, this.sprite.position.z);
+    
+    // Update current lane based on position
+    let closestLane = 0;
+    let minDist = Math.abs(clampedX - LANES[0]);
+    for (let i = 1; i < LANES.length; i++) {
+      const dist = Math.abs(clampedX - LANES[i]);
+      if (dist < minDist) {
+        minDist = dist;
+        closestLane = i;
+      }
+    }
+    this.currentLane = closestLane;
+  }
 
   clampToBoundary() {
     const boundX = 1.0 - this.width / 2;
@@ -49,17 +85,15 @@ export default class Player extends EntityManager {
   }
 
   moveLeft() {
-    if (this.currentLane > 0) {
-      this.currentLane--;
-      this.sprite.center(LANES[this.currentLane], 1, this.sprite.position.z);
-    }
+    this.moveDirection = 1;
   }
 
   moveRight() {
-    if (this.currentLane < LANES.length - 1) {
-      this.currentLane++;
-      this.sprite.center(LANES[this.currentLane], 1, this.sprite.position.z);
-    }
+    this.moveDirection = -1;
+  }
+  
+  stopMove() {
+    this.moveDirection = 0;
   }
 
   takeDamage(amount: number): boolean {

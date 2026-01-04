@@ -54,9 +54,9 @@ export function generateWave(difficulty: number, waveCount: number): Chunk {
       for (let j = 0; j < lanesInFormation; j++) {
         spawns.push({
           time,
-          type: waveType === 'reward' ? 'powerup' : 'enemy',
+          type: 'enemy',
           lane: baseLane + j,
-          zOffset: Math.random() * 6 - 3 // Each enemy gets unique offset between -3 and +3
+          zOffset: Math.random() * 6 - 3
         });
       }
       i += lanesInFormation - 1;
@@ -64,11 +64,21 @@ export function generateWave(difficulty: number, waveCount: number): Chunk {
       const lane = Math.floor(Math.random() * LANES.length);
       spawns.push({
         time,
-        type: waveType === 'reward' ? 'powerup' : 'enemy',
+        type: 'enemy',
         lane,
         zOffset: Math.random() * 6 - 3
       });
     }
+  }
+  
+  // Add single powerup if reward wave
+  if (waveType === 'reward') {
+    spawns.push({
+      time: duration * 0.5,
+      type: 'powerup',
+      lane: Math.floor(Math.random() * LANES.length),
+      zOffset: 0
+    });
   }
   
   return { duration, spawns };
