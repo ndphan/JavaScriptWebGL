@@ -1,43 +1,37 @@
-import { EntityManager, Rect3d, EngineHelper } from "synaren-engine";
-import Cube from "../../../Cube";
+import { EntityManager, Rect3d, EngineHelper, PlaneType } from "synaren-engine";
+import Plane3d from "../../../../src/Entity/Plane3d";
 import { LANES } from "../data/waves";
 
 export default class Enemy extends EntityManager {
   speed: number;
   health: number;
   damage: number;
-  laneIndex: number;
-  cube: Cube;
+  sprite: Plane3d;
   isDestroyed: boolean = false;
+  width = 0.8;
+  height = 0.8;
+  laneIndex: number;
+  cube: Plane3d | null = null;
 
   constructor(laneIndex: number, startZ: number, difficulty: number) {
     super();
     this.laneIndex = laneIndex;
-    this.speed = 1 + difficulty * 0.2;
+    this.speed = 0.15 + difficulty * 0.01;
     this.health = Math.floor(1 + difficulty * 0.3);
     this.damage = 1;
-    
-    this.setRect(new Rect3d(LANES[laneIndex], 1, startZ, 0.9, 0.9, 0.9));
   }
 
   init(engineHelper: EngineHelper) {
-    this.cube = new Cube(
-      this.getRect(),
-      "assets/atlas.png",
-      ["rock", "rock", "rock", "rock", "rock", "rock"]
-    );
-    this.entities.push(this.cube);
-    this.cube.init(engineHelper);
+    this.sprite = new Plane3d(new Rect3d(LANES[this.laneIndex], 1, 10, this.width, this.height, 0.1), engineHelper.newVertexModel("rock", PlaneType.XY));
+    this.sprite.init(engineHelper);
+    this.entities.push(this.sprite);
+    this.cube = this.sprite;
     super.init(engineHelper);
   }
 
   update(engineHelper: EngineHelper) {
-    if (this.isDestroyed) return;
-    
-    this.position.z -= this.speed * (1/60);
-    
-    if (this.cube) {
-      this.cube.center(LANES[this.laneIndex], 1, this.position.z);
+    if (!this.isDestroyed) {
+      this.sprite.translate(0, 0, -this.speed);
     }
   }
 
@@ -51,12 +45,12 @@ export default class Enemy extends EntityManager {
   }
 
   isOffScreen(): boolean {
-    return this.position.z < -10;
+    return this.sprite.position.z < -5;
   }
 
   render(engineHelper: EngineHelper) {
-    if (!this.isDestroyed && this.cube) {
-      this.cube.render(engineHelper);
+    if (!this.isDestroyed) {
+      this.sprite.render(engineHelper);
     }
   }
 }

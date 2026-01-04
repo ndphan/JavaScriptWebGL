@@ -1,5 +1,5 @@
-import { EntityManager, Rect3d, EngineHelper } from "synaren-engine";
-import Cube from "../../../Cube";
+import { EntityManager, Rect3d, EngineHelper, PlaneType } from "synaren-engine";
+import Plane3d from "../../../../src/Entity/Plane3d";
 import { LANES } from "../data/waves";
 
 export default class Player extends EntityManager {
@@ -7,44 +7,33 @@ export default class Player extends EntityManager {
   fireRate: number = 0.3;
   damage: number = 1;
   health: number = 3;
-  currentLane: number = 2; // center lane
   lastShotTime: number = 0;
-  cube: Cube;
+  sprite: Plane3d;
+  width = 0.8;
+  height = 0.8;
+  currentLane: number = 2;
+  cube: Plane3d | null = null;
 
   constructor() {
     super();
-    this.setRect(new Rect3d(LANES[this.currentLane], 1, -1, 0.9, 0.9, 0.9)); // Player at z=-1, closer to camera
   }
 
   init(engineHelper: EngineHelper) {
-    this.cube = new Cube(
-      this.getRect(),
-      "assets/atlas.png",
-      ["wood", "wood", "wood", "wood", "wood", "wood"]
-    );
-    this.entities.push(this.cube);
-    this.cube.init(engineHelper);
+    this.sprite = new Plane3d(new Rect3d(LANES[this.currentLane], 1, 0, this.width, this.height, 0.1), engineHelper.newVertexModel("wood", PlaneType.XY));
+    this.sprite.init(engineHelper);
+    this.entities.push(this.sprite);
+    this.cube = this.sprite;
     super.init(engineHelper);
   }
 
-  update(engineHelper: EngineHelper) {
-    // Player doesn't move forward - enemies come to player
-    // Update cube position when changing lanes
-    if (this.cube) {
-      this.cube.center(LANES[this.currentLane], 1, this.position.z);
-    }
-  }
+  update(engineHelper: EngineHelper) {}
 
-  moveLeft() {
-    if (this.currentLane > 0) {
-      this.currentLane--;
-    }
-  }
-
-  moveRight() {
-    if (this.currentLane < LANES.length - 1) {
-      this.currentLane++;
-    }
+  clampToBoundary() {
+    const boundX = 1.0 - this.width / 2;
+    const boundY = 1.0 - this.height / 2;
+    const x = Math.max(-boundX, Math.min(boundX, this.sprite.position.x));
+    const y = Math.max(-boundY, Math.min(boundY, this.sprite.position.y));
+    this.sprite.center(x, y, 0);
   }
 
   canShoot(currentTime: number): boolean {
@@ -59,14 +48,28 @@ export default class Player extends EntityManager {
     return false;
   }
 
+  moveLeft() {
+    if (this.currentLane > 0) {
+      this.currentLane--;
+      this.sprite.center(LANES[this.currentLane], 1, this.sprite.position.z);
+    }
+  }
+
+  moveRight() {
+    if (this.currentLane < LANES.length - 1) {
+      this.currentLane++;
+      this.sprite.center(LANES[this.currentLane], 1, this.sprite.position.z);
+    }
+  }
+
   takeDamage(amount: number): boolean {
     this.health -= amount;
     return this.health <= 0;
   }
 
   render(engineHelper: EngineHelper) {
-    if (this.cube) {
-      this.cube.render(engineHelper);
+    if (this.sprite) {
+      this.sprite.render(engineHelper);
     }
   }
 }

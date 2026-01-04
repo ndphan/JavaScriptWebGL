@@ -83,7 +83,7 @@ export default class EndlessRunnerWorld extends ObjectManager {
     // Create player
     this.player = new Player();
     this.addEntity(this.player);
-    console.log('Player created at position:', this.player.position);
+    console.log('Player created at position:', this.player.sprite?.position || 'sprite not initialized');
 
     // Setup lighting
     this.engineHelper.setLighting(
@@ -121,9 +121,16 @@ export default class EndlessRunnerWorld extends ObjectManager {
         entity.update(this.engineHelper);
       }
     });
+    
+    if (this.frameCount % 60 === 0) {
+      console.log('Active entities:', this.gameEntities.length, 'Projectiles:', this.projectiles.length);
+    }
 
     // Update projectiles
     this.projectiles.forEach(proj => proj.update(this.engineHelper));
+
+    // Remove destroyed/off-screen projectiles
+    this.projectiles = this.projectiles.filter(proj => !proj.isDestroyed && !proj.isOffScreen());
 
     // Check projectile collisions
     this.projectiles.forEach(proj => {
@@ -153,7 +160,11 @@ export default class EndlessRunnerWorld extends ObjectManager {
 
     // Remove off-screen entities
     this.gameEntities = this.gameEntities.filter(entity => {
-      return !((entity.isOffScreen && entity.isOffScreen()) || entity.isDestroyed);
+      const offscreen = entity.isOffScreen && entity.isOffScreen();
+      if (offscreen || entity.isDestroyed) {
+        console.log('Removing entity:', entity.constructor.name, 'destroyed:', entity.isDestroyed, 'offscreen:', offscreen, 'z:', entity.sprite?.position.z);
+      }
+      return !(offscreen || entity.isDestroyed);
     });
 
     // Check collisions
@@ -285,21 +296,9 @@ export default class EndlessRunnerWorld extends ObjectManager {
   }
 
   private spawnProjectile() {
-    // Reuse off-screen projectile
-    const offscreen = this.projectiles.find(p => p.isDestroyed || p.isOffScreen());
-    if (offscreen) {
-      offscreen.isDestroyed = false;
-      offscreen.laneIndex = this.player.currentLane;
-      offscreen.position.z = this.player.position.z;
-      if (offscreen.cube) {
-        offscreen.cube.center(LANES[this.player.currentLane], 1, this.player.position.z);
-      }
-      return;
-    }
-    
     if (this.projectiles.length >= 20) return;
     
-    const projectile = new Projectile(this.player.currentLane, this.player.position.z);
+    const projectile = new Projectile(this.player.currentLane, this.player.sprite?.position.z || 0);
     projectile.init(this.engineHelper);
     this.projectiles.push(projectile);
   }
@@ -310,13 +309,13 @@ export default class EndlessRunnerWorld extends ObjectManager {
       score: this.score,
       gameOver: this.gameOver,
       player: {
-        position: { x: this.player.position.x, y: this.player.position.y, z: this.player.position.z },
+        position: { x: this.player.sprite?.position.x || 0, y: this.player.sprite?.position.y || 0, z: this.player.sprite?.position.z || 0 },
         lane: this.player.currentLane,
         health: this.player.health,
         speedMultiplier: this.player.speedMultiplier,
         hasCube: !!this.player.cube,
         cubePosition: this.player.cube ? { x: this.player.cube.position.x, y: this.player.cube.position.y, z: this.player.cube.position.z } : null,
-        cubePlanes: this.player.cube?.planes?.length || 0
+        cubePlanes: 0
       },
       camera: {
         position: { x: this.engineHelper.camera.camera3d.position.x, y: this.engineHelper.camera.camera3d.position.y, z: this.engineHelper.camera.camera3d.position.z }
@@ -326,13 +325,12 @@ export default class EndlessRunnerWorld extends ObjectManager {
         const base: any = {
           index: i,
           type,
-          position: { x: entity.position.x, y: entity.position.y, z: entity.position.z },
+          position: { x: entity.sprite?.position.x || 0, y: entity.sprite?.position.y || 0, z: entity.sprite?.position.z || 0 },
           destroyed: entity.isDestroyed
         };
         if (entity instanceof Enemy || entity instanceof Boss) {
           base.health = entity.health;
           base.lane = entity.laneIndex;
-          base.hasCube = !!entity.cube;
         }
         return base;
       }),

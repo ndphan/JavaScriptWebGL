@@ -47,6 +47,7 @@ export default class SpawnSystem {
         const enemy = new Enemy(spawn.lane, spawnZ, this.difficulty);
         enemy.init(engineHelper);
         gameEntities.push(enemy);
+        console.log('Spawned enemy at lane', spawn.lane, 'z:', spawnZ);
         break;
       case 'powerup':
         const powerupTypes: PowerupType[] = ["speed", "fireRate", "score"];
@@ -54,11 +55,13 @@ export default class SpawnSystem {
         const powerup = new Powerup(spawn.lane, spawnZ, randomType);
         powerup.init(engineHelper);
         gameEntities.push(powerup);
+        console.log('Spawned powerup at lane', spawn.lane, 'z:', spawnZ);
         break;
       case 'boss':
         const boss = new Boss(spawn.lane, spawnZ, this.difficulty);
         boss.init(engineHelper);
         gameEntities.push(boss);
+        console.log('Spawned boss at lane', spawn.lane, 'z:', spawnZ);
         break;
     }
   }

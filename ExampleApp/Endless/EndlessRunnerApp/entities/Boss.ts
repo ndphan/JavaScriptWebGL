@@ -1,5 +1,5 @@
-import { EntityManager, Rect3d, EngineHelper } from "synaren-engine";
-import Cube from "../../../Cube";
+import { EntityManager, Rect3d, EngineHelper, PlaneType } from "synaren-engine";
+import Plane3d from "../../../../src/Entity/Plane3d";
 import { LANES } from "../data/waves";
 
 export default class Boss extends EntityManager {
@@ -7,10 +7,13 @@ export default class Boss extends EntityManager {
   maxHealth: number;
   damage: number;
   speed: number;
-  laneIndex: number;
-  cube: Cube;
+  sprite: Plane3d;
   isDestroyed: boolean = false;
   phase: number = 1;
+  width = 1.2;
+  height = 1.2;
+  laneIndex: number;
+  cube: Plane3d | null = null;
 
   constructor(laneIndex: number, startZ: number, difficulty: number) {
     super();
@@ -18,33 +21,23 @@ export default class Boss extends EntityManager {
     this.maxHealth = Math.floor(5 + difficulty * 2);
     this.health = this.maxHealth;
     this.damage = 2;
-    this.speed = 1.5 + difficulty * 0.2;
-    
-    this.setRect(new Rect3d(LANES[laneIndex], 0.5, startZ, 1.2, 1.2, 1.2));
+    this.speed = 0.1 + difficulty * 0.01;
   }
 
   init(engineHelper: EngineHelper) {
-    this.cube = new Cube(
-      this.getRect(),
-      "assets/atlas.png",
-      ["grass", "grass", "grass", "grass", "grass", "grass"]
-    );
-    this.entities.push(this.cube);
-    this.cube.init(engineHelper);
+    this.sprite = new Plane3d(new Rect3d(LANES[this.laneIndex], 1, 10, this.width, this.height, 0.1), engineHelper.newVertexModel("grass", PlaneType.XY));
+    this.sprite.init(engineHelper);
+    this.entities.push(this.sprite);
+    this.cube = this.sprite;
     super.init(engineHelper);
   }
 
   update(engineHelper: EngineHelper) {
-    if (this.isDestroyed) return;
-    
-    const healthPercent = this.health / this.maxHealth;
-    this.phase = healthPercent > 0.66 ? 1 : healthPercent > 0.33 ? 2 : 3;
-    
-    const phaseSpeedMultiplier = this.phase === 3 ? 1.5 : this.phase === 2 ? 1.2 : 1.0;
-    this.position.z -= this.speed * phaseSpeedMultiplier * (1/60);
-    
-    if (this.cube) {
-      this.cube.center(LANES[this.laneIndex], 0.5, this.position.z);
+    if (!this.isDestroyed) {
+      const healthPercent = this.health / this.maxHealth;
+      this.phase = healthPercent > 0.66 ? 1 : healthPercent > 0.33 ? 2 : 3;
+      const phaseSpeedMultiplier = this.phase === 3 ? 1.5 : this.phase === 2 ? 1.2 : 1.0;
+      this.sprite.translate(0, 0, -this.speed * phaseSpeedMultiplier);
     }
   }
 
@@ -58,12 +51,12 @@ export default class Boss extends EntityManager {
   }
 
   isOffScreen(): boolean {
-    return this.position.z < -10;
+    return this.sprite.position.z < -5;
   }
 
   render(engineHelper: EngineHelper) {
-    if (!this.isDestroyed && this.cube) {
-      this.cube.render(engineHelper);
+    if (!this.isDestroyed) {
+      this.sprite.render(engineHelper);
     }
   }
 }

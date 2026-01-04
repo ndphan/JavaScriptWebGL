@@ -12,6 +12,9 @@ export default class Plane2d extends ModelObject2d {
   setLayer(layer: number) {
     this.position.z = -layer;
   }
+  setTop(isTop: boolean) {
+    this.shaderEntity.isTop = isTop;
+  }
   render(engineHelper: EngineHelper) {
     engineHelper.render(this.shaderEntity);
   }

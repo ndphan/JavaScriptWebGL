@@ -23,12 +23,12 @@ export default class BotSystem {
 
   private decideAction(player: Player, entities: any[]): string | null {
     const playerLane = player.currentLane;
-    const playerZ = player.position.z;
+    const playerZ = player.sprite?.position.z || 0;
     
     // Check for immediate threats in current lane
     const immediateThreats = entities.filter(entity => {
       if (entity instanceof Enemy || entity instanceof Boss) {
-        const entityZ = entity.position.z;
+        const entityZ = entity.sprite?.position.z || 0;
         const entityLane = entity.laneIndex;
         return entityLane === playerLane && 
                entityZ > playerZ && 
@@ -46,7 +46,7 @@ export default class BotSystem {
     // Check for safe powerups
     const safePowerups = entities.filter(entity => {
       if (entity instanceof Powerup && !entity.isDestroyed) {
-        const entityZ = entity.position.z;
+        const entityZ = entity.sprite?.position.z || 0;
         const entityLane = entity.laneIndex;
         
         // Check if powerup is reachable and no enemies are blocking
@@ -54,8 +54,8 @@ export default class BotSystem {
           const blockingEnemies = entities.filter(blocker => {
             if (blocker instanceof Enemy || blocker instanceof Boss) {
               return blocker.laneIndex === entityLane && 
-                     blocker.position.z > playerZ && 
-                     blocker.position.z < entityZ &&
+                     (blocker.sprite?.position.z || 0) > playerZ && 
+                     (blocker.sprite?.position.z || 0) < entityZ &&
                      !blocker.isDestroyed;
             }
             return false;
@@ -70,8 +70,8 @@ export default class BotSystem {
     // Move to collect safe powerup
     if (safePowerups.length > 0) {
       const closestPowerup = safePowerups.reduce((closest, current) => {
-        const closestDist = Math.abs(closest.position.z - playerZ);
-        const currentDist = Math.abs(current.position.z - playerZ);
+        const closestDist = Math.abs((closest.sprite?.position.z || 0) - playerZ);
+        const currentDist = Math.abs((current.sprite?.position.z || 0) - playerZ);
         return currentDist < closestDist ? current : closest;
       });
 
@@ -88,7 +88,7 @@ export default class BotSystem {
     // Check for enemies ahead that can be shot
     const shootableEnemies = entities.filter(entity => {
       if (entity instanceof Enemy || entity instanceof Boss) {
-        const entityZ = entity.position.z;
+        const entityZ = entity.sprite?.position.z || 0;
         const entityLane = entity.laneIndex;
         return entityLane === playerLane && 
                entityZ > playerZ && 
@@ -105,7 +105,7 @@ export default class BotSystem {
     // Dodge incoming enemies by moving to safest lane
     const incomingEnemies = entities.filter(entity => {
       if (entity instanceof Enemy || entity instanceof Boss) {
-        const entityZ = entity.position.z;
+        const entityZ = entity.sprite?.position.z || 0;
         return entityZ > playerZ && entityZ < playerZ + 12 && !entity.isDestroyed;
       }
       return false;

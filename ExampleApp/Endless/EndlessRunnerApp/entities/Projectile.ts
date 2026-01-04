@@ -1,49 +1,42 @@
-import { EntityManager, Rect3d, EngineHelper } from "synaren-engine";
-import Cube from "../../../Cube";
+import { EntityManager, Rect3d, EngineHelper, PlaneType } from "synaren-engine";
+import Plane3d from "../../../../src/Entity/Plane3d";
 import { LANES } from "../data/waves";
 
 export default class Projectile extends EntityManager {
-  speed: number = 10;
-  laneIndex: number;
-  cube: Cube;
+  speed: number = 0.3;
+  sprite: Plane3d;
   isDestroyed: boolean = false;
+  width = 0.5;
+  height = 0.5;
+  laneIndex: number;
+  cube: Plane3d | null = null;
 
   constructor(laneIndex: number, startZ: number) {
     super();
     this.laneIndex = laneIndex;
-    this.setRect(new Rect3d(LANES[laneIndex], 1, startZ, 0.2, 0.2, 0.2));
   }
 
   init(engineHelper: EngineHelper) {
-    this.cube = new Cube(
-      this.getRect(),
-      "assets/atlas.png",
-      ["paper", "paper", "paper", "paper", "paper", "paper"]
-    );
-    this.entities.push(this.cube);
-    this.cube.init(engineHelper);
+    this.sprite = new Plane3d(new Rect3d(LANES[this.laneIndex], 1, 0, this.width, this.height, 0.1), engineHelper.newVertexModel("paper", PlaneType.XY));
+    this.sprite.init(engineHelper);
+    this.entities.push(this.sprite);
+    this.cube = this.sprite;
     super.init(engineHelper);
   }
 
   update(engineHelper: EngineHelper) {
-    const dt = 1/60;
-    if (this.isDestroyed) return;
-    
-    // Move forward (positive Z direction)
-    this.position.z += this.speed * dt;
-    
-    if (this.cube) {
-      this.cube.center(LANES[this.laneIndex], 1, this.position.z);
+    if (!this.isDestroyed) {
+      this.sprite.translate(0, 0, this.speed);
     }
   }
 
   isOffScreen(): boolean {
-    return this.position.z > 20;
+    return this.sprite.position.z > 15;
   }
 
   render(engineHelper: EngineHelper) {
-    if (!this.isDestroyed && !this.isOffScreen() && this.cube) {
-      this.cube.render(engineHelper);
+    if (!this.isDestroyed) {
+      this.sprite.render(engineHelper);
     }
   }
 }

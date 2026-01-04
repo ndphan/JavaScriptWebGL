@@ -3,7 +3,7 @@ import Enemy from "../entities/Enemy";
 import Powerup from "../entities/Powerup";
 import Boss from "../entities/Boss";
 import Projectile from "../entities/Projectile";
-import { LANES } from "../data/waves";
+import { CollisionDetection } from "../../../../src/Core/Physics/CollisionDetection";
 
 export default class CollisionSystem {
   
@@ -35,7 +35,7 @@ export default class CollisionSystem {
     return { hitEnemies, hitPowerups, hitBosses };
   }
 
-  checkProjectileCollisions(projectile: Projectile, entities: any[]): any | null {
+  checkProjectileCollisions(projectile: Projectile, entities: (Enemy | Boss | Powerup)[]): Enemy | Boss | null {
     for (const entity of entities) {
       if ((entity instanceof Enemy || entity instanceof Boss) && !entity.isDestroyed) {
         if (this.checkCollision(projectile, entity, 0.8)) {
@@ -46,10 +46,9 @@ export default class CollisionSystem {
     return null;
   }
 
-  private checkCollision(entity1: any, entity2: any, radius: number): boolean {
-    const dx = entity1.position.x - entity2.position.x;
-    const dz = entity1.position.z - entity2.position.z;
-    const distance = Math.sqrt(dx * dx + dz * dz);
-    return distance < radius;
+  private checkCollision(entity1: Player | Projectile, entity2: Enemy | Boss | Powerup, radius: number): boolean {
+    const pos1 = entity1.sprite?.position || entity1.position;
+    const pos2 = entity2.sprite?.position || entity2.position;
+    return CollisionDetection.getLength(pos1.x, pos1.z, pos2.x, pos2.z) < radius;
   }
 }

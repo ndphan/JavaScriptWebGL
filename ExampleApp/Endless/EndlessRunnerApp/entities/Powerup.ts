@@ -1,5 +1,5 @@
-import { EntityManager, Rect3d, EngineHelper } from "synaren-engine";
-import Cube from "../../../Cube";
+import { EntityManager, Rect3d, EngineHelper, PlaneType } from "synaren-engine";
+import Plane3d from "../../../../src/Entity/Plane3d";
 import { LANES } from "../data/waves";
 
 export type PowerupType = "speed" | "fireRate" | "score";
@@ -7,42 +7,29 @@ export type PowerupType = "speed" | "fireRate" | "score";
 export default class Powerup extends EntityManager {
   type: PowerupType;
   riskValue: number;
-  laneIndex: number;
-  cube: Cube;
+  sprite: Plane3d;
   isDestroyed: boolean = false;
+  width = 0.6;
+  height = 0.6;
+  laneIndex: number;
 
   constructor(laneIndex: number, startZ: number, type: PowerupType) {
     super();
     this.laneIndex = laneIndex;
     this.type = type;
     this.riskValue = 0.2;
-    
-    this.setRect(new Rect3d(LANES[laneIndex], 0.5, startZ, 0.5, 0.5, 0.5));
   }
 
   init(engineHelper: EngineHelper) {
-    const texture = this.type === "speed" ? "sky" : 
-                   this.type === "fireRate" ? "cloth" : "paper";
-    
-    this.cube = new Cube(
-      this.getRect(),
-      "assets/atlas.png",
-      [texture, texture, texture, texture, texture, texture]
-    );
-    this.entities.push(this.cube);
-    this.cube.init(engineHelper);
+    this.sprite = new Plane3d(new Rect3d(LANES[this.laneIndex], 1, 10, this.width, this.height, 0.1), engineHelper.newVertexModel("sky", PlaneType.XY));
+    this.sprite.init(engineHelper);
+    this.entities.push(this.sprite);
     super.init(engineHelper);
   }
 
   update(engineHelper: EngineHelper) {
-    if (this.isDestroyed) return;
-    
-    this.position.z -= 2 * (1/60);
-    this.position.ay += 2;
-    
-    if (this.cube) {
-      this.cube.center(LANES[this.laneIndex], 0.5, this.position.z);
-      this.cube.angleY(this.position.ay);
+    if (!this.isDestroyed) {
+      this.sprite.translate(0, 0, -0.1);
     }
   }
 
@@ -51,12 +38,12 @@ export default class Powerup extends EntityManager {
   }
 
   isOffScreen(): boolean {
-    return this.position.z < -10;
+    return this.sprite.position.z < -5;
   }
 
   render(engineHelper: EngineHelper) {
-    if (!this.isDestroyed && this.cube) {
-      this.cube.render(engineHelper);
+    if (!this.isDestroyed) {
+      this.sprite.render(engineHelper);
     }
   }
 }
