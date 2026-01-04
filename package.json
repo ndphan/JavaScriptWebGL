@@ -37,7 +37,6 @@
     "@babel/plugin-transform-runtime": "^7.21.0",
     "@babel/preset-env": "^7.20.2",
     "@babel/runtime": "^7.21.0",
-    "@playwright/test": "^1.57.0",
     "@types/gl": "^6.0.5",
     "@types/gl-matrix": "^3.2.0",
     "@types/jest": "latest",
