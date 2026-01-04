@@ -40,7 +40,8 @@ export default class SpawnSystem {
   }
 
   private spawnEntity(spawn: SpawnEvent, gameEntities: any[], engineHelper: EngineHelper) {
-    const spawnZ = 10; // Spawn closer to player
+    const baseSpawnZ = 25;
+    const spawnZ = baseSpawnZ + (spawn.zOffset || 0);
 
     switch (spawn.type) {
       case 'enemy':

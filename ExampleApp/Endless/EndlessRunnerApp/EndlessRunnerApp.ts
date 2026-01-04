@@ -62,7 +62,7 @@ export default class EndlessRunnerWorld extends ObjectManager {
   init() {
     // Setup camera behind and above player looking further ahead
     this.engineHelper.camera.camera3d.center(0, 3, -4);
-    this.engineHelper.camera.camera3d.lookAt(0, 1, 5);
+    this.engineHelper.camera.camera3d.lookAt(0, 1, 15);
     this.engineHelper.camera.camera3d.updateProjectionView();
 
     // Create sky with camera follower
@@ -75,7 +75,7 @@ export default class EndlessRunnerWorld extends ObjectManager {
 
     // Create ground (give a small non-zero height to avoid degenerate bounding box)
     this.ground = new Ground3d(
-      new Rect3d(0.0, 0.0, 0.0, 50, 0.1, 100),
+      new Rect3d(0.0, 0.0, 0.0, 50, 0.1, 200),
       "grass"
     );
     this.addEntity(this.ground);

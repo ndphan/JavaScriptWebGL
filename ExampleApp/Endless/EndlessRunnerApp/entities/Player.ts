@@ -4,7 +4,7 @@ import { LANES } from "../data/waves";
 
 export default class Player extends EntityManager {
   speedMultiplier: number = 1.0;
-  fireRate: number = 0.3;
+  fireRate: number = 0.5;
   damage: number = 1;
   health: number = 3;
   lastShotTime: number = 0;

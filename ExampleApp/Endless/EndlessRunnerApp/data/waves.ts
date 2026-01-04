@@ -2,6 +2,7 @@ export interface SpawnEvent {
   time: number;
   type: 'enemy' | 'powerup' | 'boss';
   lane: number;
+  zOffset?: number;
 }
 
 export interface Chunk {
@@ -28,27 +29,46 @@ export function generateWave(difficulty: number, waveCount: number): Chunk {
       spawns: [{
         time: 2,
         type: 'boss' as const,
-        lane: 1 // center lanes
+        lane: 1,
+        zOffset: 0
       }]
     };
   }
 
   const waveType = selectWaveType(difficulty, waveCount);
-  const enemyCount = Math.floor(Math.min(2 + difficulty * 1.5, 12));
+  const enemyCount = Math.floor(Math.min(10 + difficulty * 3, 40));
   const duration = Math.max(5, 10 - difficulty * 0.5);
-  const spawnInterval = Math.max(0.2, 1.2 - difficulty * 0.1);
+  const spawnInterval = Math.max(0.1, 0.5 - difficulty * 0.03);
   
   const spawns: SpawnEvent[] = [];
   
+  // Spawn enemies in formations across multiple lanes
   for (let i = 0; i < enemyCount; i++) {
     const time = i * spawnInterval;
-    const lane = Math.floor(Math.random() * LANES.length);
     
-    spawns.push({
-      time,
-      type: waveType === 'reward' ? 'powerup' : 'enemy',
-      lane
-    });
+    // Every 2nd enemy, spawn across 4-5 lanes simultaneously
+    if (i % 2 === 0 && i < enemyCount - 4) {
+      const baseLane = Math.floor(Math.random() * 2);
+      const lanesInFormation = Math.min(4 + Math.floor(difficulty / 2), 5);
+      
+      for (let j = 0; j < lanesInFormation; j++) {
+        spawns.push({
+          time,
+          type: waveType === 'reward' ? 'powerup' : 'enemy',
+          lane: baseLane + j,
+          zOffset: Math.random() * 6 - 3 // Each enemy gets unique offset between -3 and +3
+        });
+      }
+      i += lanesInFormation - 1;
+    } else {
+      const lane = Math.floor(Math.random() * LANES.length);
+      spawns.push({
+        time,
+        type: waveType === 'reward' ? 'powerup' : 'enemy',
+        lane,
+        zOffset: Math.random() * 6 - 3
+      });
+    }
   }
   
   return { duration, spawns };

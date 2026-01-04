@@ -12,17 +12,19 @@ export default class Enemy extends EntityManager {
   height = 0.8;
   laneIndex: number;
   cube: Plane3d | null = null;
+  startZ: number;
 
   constructor(laneIndex: number, startZ: number, difficulty: number) {
     super();
     this.laneIndex = laneIndex;
-    this.speed = 0.15 + difficulty * 0.01;
-    this.health = Math.floor(1 + difficulty * 0.3);
+    this.startZ = startZ;
+    this.speed = 0.12 + difficulty * 0.008;
+    this.health = Math.floor(1 + difficulty * 0.5);
     this.damage = 1;
   }
 
   init(engineHelper: EngineHelper) {
-    this.sprite = new Plane3d(new Rect3d(LANES[this.laneIndex], 1, 10, this.width, this.height, 0.1), engineHelper.newVertexModel("rock", PlaneType.XY));
+    this.sprite = new Plane3d(new Rect3d(LANES[this.laneIndex], 1, this.startZ, this.width, this.height, 0.1), engineHelper.newVertexModel("rock", PlaneType.XY));
     this.sprite.init(engineHelper);
     this.entities.push(this.sprite);
     this.cube = this.sprite;
@@ -45,7 +47,7 @@ export default class Enemy extends EntityManager {
   }
 
   isOffScreen(): boolean {
-    return this.sprite.position.z < -5;
+    return this.sprite.position.z < -10;
   }
 
   render(engineHelper: EngineHelper) {

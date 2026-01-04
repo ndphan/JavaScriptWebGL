@@ -6,8 +6,8 @@ export default class Projectile extends EntityManager {
   speed: number = 0.3;
   sprite: Plane3d;
   isDestroyed: boolean = false;
-  width = 0.5;
-  height = 0.5;
+  width = 0.25;
+  height = 0.25;
   laneIndex: number;
   cube: Plane3d | null = null;
 
@@ -31,7 +31,7 @@ export default class Projectile extends EntityManager {
   }
 
   isOffScreen(): boolean {
-    return this.sprite.position.z > 15;
+    return this.sprite.position.z > 25;
   }
 
   render(engineHelper: EngineHelper) {

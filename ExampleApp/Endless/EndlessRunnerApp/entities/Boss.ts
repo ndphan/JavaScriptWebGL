@@ -14,18 +14,20 @@ export default class Boss extends EntityManager {
   height = 1.2;
   laneIndex: number;
   cube: Plane3d | null = null;
+  startZ: number;
 
   constructor(laneIndex: number, startZ: number, difficulty: number) {
     super();
     this.laneIndex = laneIndex;
-    this.maxHealth = Math.floor(5 + difficulty * 2);
+    this.startZ = startZ;
+    this.maxHealth = Math.floor(8 + difficulty * 3);
     this.health = this.maxHealth;
     this.damage = 2;
-    this.speed = 0.1 + difficulty * 0.01;
+    this.speed = 0.08 + difficulty * 0.01;
   }
 
   init(engineHelper: EngineHelper) {
-    this.sprite = new Plane3d(new Rect3d(LANES[this.laneIndex], 1, 10, this.width, this.height, 0.1), engineHelper.newVertexModel("grass", PlaneType.XY));
+    this.sprite = new Plane3d(new Rect3d(LANES[this.laneIndex], 1, this.startZ, this.width, this.height, 0.1), engineHelper.newVertexModel("grass", PlaneType.XY));
     this.sprite.init(engineHelper);
     this.entities.push(this.sprite);
     this.cube = this.sprite;
@@ -51,7 +53,7 @@ export default class Boss extends EntityManager {
   }
 
   isOffScreen(): boolean {
-    return this.sprite.position.z < -5;
+    return this.sprite.position.z < -10;
   }
 
   render(engineHelper: EngineHelper) {

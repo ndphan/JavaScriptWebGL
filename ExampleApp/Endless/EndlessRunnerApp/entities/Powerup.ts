@@ -12,16 +12,18 @@ export default class Powerup extends EntityManager {
   width = 0.6;
   height = 0.6;
   laneIndex: number;
+  startZ: number;
 
   constructor(laneIndex: number, startZ: number, type: PowerupType) {
     super();
     this.laneIndex = laneIndex;
+    this.startZ = startZ;
     this.type = type;
     this.riskValue = 0.2;
   }
 
   init(engineHelper: EngineHelper) {
-    this.sprite = new Plane3d(new Rect3d(LANES[this.laneIndex], 1, 10, this.width, this.height, 0.1), engineHelper.newVertexModel("sky", PlaneType.XY));
+    this.sprite = new Plane3d(new Rect3d(LANES[this.laneIndex], 1, this.startZ, this.width, this.height, 0.1), engineHelper.newVertexModel("sky", PlaneType.XY));
     this.sprite.init(engineHelper);
     this.entities.push(this.sprite);
     super.init(engineHelper);
@@ -29,7 +31,7 @@ export default class Powerup extends EntityManager {
 
   update(engineHelper: EngineHelper) {
     if (!this.isDestroyed) {
-      this.sprite.translate(0, 0, -0.1);
+      this.sprite.translate(0, 0, -0.06);
     }
   }
 
@@ -38,7 +40,7 @@ export default class Powerup extends EntityManager {
   }
 
   isOffScreen(): boolean {
-    return this.sprite.position.z < -5;
+    return this.sprite.position.z < -10;
   }
 
   render(engineHelper: EngineHelper) {
