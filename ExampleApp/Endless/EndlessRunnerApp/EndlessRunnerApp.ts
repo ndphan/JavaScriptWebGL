@@ -16,6 +16,7 @@ import Player from "./entities/Player";
 import Enemy from "./entities/Enemy";
 import Powerup from "./entities/Powerup";
 import Boss from "./entities/Boss";
+import Projectile from "./entities/Projectile";
 import WaveSystem from "./systems/WaveSystem";
 import SpawnSystem from "./systems/SpawnSystem";
 import CollisionSystem from "./systems/CollisionSystem";
@@ -24,6 +25,7 @@ import BotSystem from "./systems/BotSystem";
 export default class EndlessRunnerWorld extends ObjectManager {
   player: Player;
   gameEntities: any[] = []; // Renamed to avoid conflict
+  projectiles: Projectile[] = [];
   waveSystem: WaveSystem;
   spawnSystem: SpawnSystem;
   collisionSystem: CollisionSystem;
@@ -87,7 +89,7 @@ export default class EndlessRunnerWorld extends ObjectManager {
     console.log("🏃 Endless Runner Loaded!");
     console.log("📋 Controls:");
     console.log("   • A/D or Left/Right arrows to move between lanes");
-    console.log("   • Space to shoot");
+    console.log("   • Auto-fire enabled (based on fire rate)");
     console.log("   • B to toggle bot mode");
     console.log("   • Avoid enemies, collect powerups!");
   }
@@ -120,6 +122,41 @@ export default class EndlessRunnerWorld extends ObjectManager {
       }
     });
 
+    // Update projectiles
+    this.projectiles.forEach(proj => proj.update(this.engineHelper));
+
+    // Check projectile collisions
+    this.projectiles.forEach(proj => {
+      if (proj.isDestroyed) return;
+      
+      this.gameEntities.forEach(entity => {
+        if (entity.isDestroyed) return;
+        
+        const dx = proj.position.x - entity.position.x;
+        const dz = proj.position.z - entity.position.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        
+        if (dist < 0.8) {
+          proj.isDestroyed = true;
+          
+          if (entity instanceof Enemy && entity.takeDamage(this.player.damage)) {
+            this.score += 5;
+            console.log('💥 Enemy destroyed! +5 points');
+          } else if (entity instanceof Boss && entity.takeDamage(this.player.damage)) {
+            this.score += 25;
+            console.log('👑 Boss defeated! +25 points');
+          } else if (entity instanceof Powerup) {
+            entity.collect();
+            this.applyPowerup(entity);
+            console.log(`⚡ Powerup collected: ${entity.type}`);
+          }
+        }
+      });
+    });
+
+    // Remove off-screen projectiles
+    this.projectiles = this.projectiles.filter(p => !p.isDestroyed && !p.isOffScreen());
+
     // Log game state every 60 frames (1 second at 60fps)
     if (this.frameCount % 60 === 0) {
       this.logGameState();
@@ -144,7 +181,9 @@ export default class EndlessRunnerWorld extends ObjectManager {
       enemy.isDestroyed = true;
       if (this.player.takeDamage(enemy.damage)) {
         this.gameOver = true;
-        console.log("💀 Game Over! Final Score:", this.score);
+        this.logFinalStats();
+      } else {
+        console.log(`❤️ Hit by enemy! Health: ${this.player.health}`);
       }
     });
 
@@ -152,7 +191,9 @@ export default class EndlessRunnerWorld extends ObjectManager {
     collisions.hitBosses.forEach(boss => {
       if (this.player.takeDamage(boss.damage)) {
         this.gameOver = true;
-        console.log("💀 Game Over! Final Score:", this.score);
+        this.logFinalStats();
+      } else {
+        console.log(`💀 Hit by boss! Health: ${this.player.health}`);
       }
     });
 
@@ -172,6 +213,13 @@ export default class EndlessRunnerWorld extends ObjectManager {
       }
     }
 
+    // Auto-fire at rate of fire
+    const currentTime = Date.now() / 1000;
+    if (this.player.canShoot(currentTime)) {
+      this.player.lastShotTime = currentTime;
+      this.spawnProjectile();
+    }
+
     super.update();
   }
 
@@ -179,18 +227,23 @@ export default class EndlessRunnerWorld extends ObjectManager {
     switch (powerup.type) {
       case "speed":
         this.player.speedMultiplier += 0.2;
-        // Risk: increase enemy speed slightly
+        this.score += 10;
+        // Risk: increase ALL enemy speeds
         this.gameEntities.forEach(entity => {
-          if (entity instanceof Enemy) {
-            entity.speed *= 1.1;
+          if (entity instanceof Enemy || entity instanceof Boss) {
+            entity.speed *= 1.15;
           }
         });
+        console.log('🚀 Speed boost! But enemies are faster too...');
         break;
       case "fireRate":
         this.player.fireRate = Math.max(0.1, this.player.fireRate - 0.05);
+        this.score += 10;
+        console.log('🔫 Fire rate increased!');
         break;
       case "score":
         this.score += 50;
+        console.log('💰 Bonus score +50!');
         break;
     }
   }
@@ -219,10 +272,7 @@ export default class EndlessRunnerWorld extends ObjectManager {
           }
           break;
         case 'Space':
-          if (!this.botEnabled && this.player.shoot(Date.now() / 1000)) {
-            this.handleShooting();
-            this.actionLog.push({frame: this.frameCount, action: 'shoot', lane: this.player.currentLane});
-          }
+          // Space key removed - auto-fire enabled
           break;
         case 'KeyB':
           this.botEnabled = !this.botEnabled;
@@ -230,6 +280,7 @@ export default class EndlessRunnerWorld extends ObjectManager {
           break;
       }
     }
+    
     return undefined;
   }
 
@@ -240,6 +291,7 @@ export default class EndlessRunnerWorld extends ObjectManager {
     shootingCollisions.hitEnemies.forEach(enemy => {
       if (enemy.takeDamage(this.player.damage)) {
         this.score += 5;
+        console.log('💥 Enemy destroyed! +5 points');
       }
     });
 
@@ -247,7 +299,22 @@ export default class EndlessRunnerWorld extends ObjectManager {
     shootingCollisions.hitBosses.forEach(boss => {
       if (boss.takeDamage(this.player.damage)) {
         this.score += 25;
+        console.log('👑 Boss defeated! +25 points');
       }
+    });
+
+    // Hit powerups - Risk/Reward mechanic
+    const powerupHits = this.gameEntities.filter(entity => 
+      entity instanceof Powerup && !entity.isDestroyed &&
+      entity.laneIndex === this.player.currentLane &&
+      entity.position.z > this.player.position.z &&
+      entity.position.z < this.player.position.z + 15
+    );
+
+    powerupHits.forEach((powerup: Powerup) => {
+      powerup.collect();
+      this.applyPowerup(powerup);
+      console.log(`⚡ Powerup collected: ${powerup.type}`);
     });
   }
 
@@ -261,10 +328,16 @@ export default class EndlessRunnerWorld extends ObjectManager {
         break;
       case 'shoot':
         if (this.player.shoot(Date.now() / 1000)) {
-          this.handleShooting();
+          this.spawnProjectile();
         }
         break;
     }
+  }
+
+  private spawnProjectile() {
+    const projectile = new Projectile(this.player.currentLane, this.player.position.z);
+    projectile.init(this.engineHelper);
+    this.projectiles.push(projectile);
   }
 
   private logGameState() {
@@ -309,6 +382,21 @@ export default class EndlessRunnerWorld extends ObjectManager {
     console.log('GAME_STATE:', JSON.stringify(gameState, null, 2));
   }
 
+  private logFinalStats() {
+    const survivalTime = (this.frameCount / 60).toFixed(1);
+    const enemiesKilled = Math.floor(this.score / 5);
+    console.log('\n💀 GAME OVER!');
+    console.log('='.repeat(40));
+    console.log(`🎯 Final Score: ${this.score}`);
+    console.log(`⏱️ Survival Time: ${survivalTime}s`);
+    console.log(`💥 Enemies Killed: ~${enemiesKilled}`);
+    console.log(`🌊 Wave Reached: ${this.waveSystem.getWaveCount()}`);
+    console.log(`📈 Final Difficulty: ${this.waveSystem.getDifficulty().toFixed(2)}`);
+    console.log(`🎮 Total Actions: ${this.actionLog.length}`);
+    console.log('='.repeat(40));
+    console.log('Action Log:', JSON.stringify(this.actionLog, null, 2));
+  }
+
   render() {
     this.entities.forEach((ent: any) => ent.render(this.engineHelper));
     this.gameEntities.forEach(entity => {
@@ -316,6 +404,7 @@ export default class EndlessRunnerWorld extends ObjectManager {
         entity.render(this.engineHelper);
       }
     });
+    this.projectiles.forEach(proj => proj.render(this.engineHelper));
   }
 
   loadResources() {
