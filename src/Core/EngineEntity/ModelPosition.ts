@@ -316,7 +316,7 @@ export default class ModelPosition {
   };
 
   degreesToRadians(degrees: number) {
-    return Math.round(glMatrix.toRadian(degrees) * 100) / 100;
+    return glMatrix.toRadian(degrees);
   }
   setRect(rect: Rect3d) {
     this.scaleRect(rect);
