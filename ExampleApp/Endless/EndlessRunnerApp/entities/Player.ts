@@ -7,7 +7,7 @@ export default class Player extends EntityManager {
   fireRate: number = 0.3;
   damage: number = 1;
   health: number = 3;
-  currentLane: number = 1; // center lane
+  currentLane: number = 2; // center lane
   lastShotTime: number = 0;
   cube: Cube;
 

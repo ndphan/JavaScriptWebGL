@@ -42,7 +42,7 @@ export default class Projectile extends EntityManager {
   }
 
   render(engineHelper: EngineHelper) {
-    if (!this.isDestroyed && this.cube) {
+    if (!this.isDestroyed && !this.isOffScreen() && this.cube) {
       this.cube.render(engineHelper);
     }
   }

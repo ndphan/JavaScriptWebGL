@@ -13,11 +13,11 @@ export default class Enemy extends EntityManager {
   constructor(laneIndex: number, startZ: number, difficulty: number) {
     super();
     this.laneIndex = laneIndex;
-    this.speed = 1 + difficulty * 0.2; // Slower speed
+    this.speed = 1 + difficulty * 0.2;
     this.health = Math.floor(1 + difficulty * 0.3);
     this.damage = 1;
     
-    this.setRect(new Rect3d(LANES[laneIndex], 1, startZ, 0.9, 0.9, 0.9)); // Same size as player
+    this.setRect(new Rect3d(LANES[laneIndex], 1, startZ, 0.9, 0.9, 0.9));
   }
 
   init(engineHelper: EngineHelper) {
@@ -32,16 +32,12 @@ export default class Enemy extends EntityManager {
   }
 
   update(engineHelper: EngineHelper) {
-    const dt = 1/60; // Fixed timestep
     if (this.isDestroyed) return;
     
-    // Move toward player at z=0 (negative Z direction)
-    this.position.z -= this.speed * dt;
+    this.position.z -= this.speed * (1/60);
     
-    // Update cube position with slight X wobble
-    const wobble = Math.sin(Date.now() * 0.003) * 0.1;
     if (this.cube) {
-      this.cube.center(LANES[this.laneIndex] + wobble, 1, this.position.z);
+      this.cube.center(LANES[this.laneIndex], 1, this.position.z);
     }
   }
 

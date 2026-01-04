@@ -7,10 +7,13 @@ import {
   Events,
   Light,
   Rect3d,
-  ResourceResolver
+  ResourceResolver,
+  FontReference,
+  Coordinate
 } from "synaren-engine";
 import Sphere from "../../Sphere";
 import Ground3d from "../../Ground3d";
+import CameraFollower from "../../../src/Core/EngineEntity/CameraFollower";
 
 import Player from "./entities/Player";
 import Enemy from "./entities/Enemy";
@@ -21,6 +24,7 @@ import WaveSystem from "./systems/WaveSystem";
 import SpawnSystem from "./systems/SpawnSystem";
 import CollisionSystem from "./systems/CollisionSystem";
 import BotSystem from "./systems/BotSystem";
+import { LANES } from "./data/waves";
 
 export default class EndlessRunnerWorld extends ObjectManager {
   player: Player;
@@ -38,6 +42,14 @@ export default class EndlessRunnerWorld extends ObjectManager {
   botEnabled: boolean = false;
   frameCount: number = 0;
   actionLog: Array<{frame: number, action: string, lane: number}> = [];
+  hud: {
+    health: FontReference;
+    score: FontReference;
+    wave: FontReference;
+    message: FontReference;
+  } | null = null;
+  messageTimer: number = 0;
+  messageText: string = "";
 
   constructor() {
     super();
@@ -53,11 +65,12 @@ export default class EndlessRunnerWorld extends ObjectManager {
     this.engineHelper.camera.camera3d.lookAt(0, 1, 5);
     this.engineHelper.camera.camera3d.updateProjectionView();
 
-    // Create sky
+    // Create sky with camera follower
     this.sky = new Sphere(
       new Rect3d(0.0, 2.0, 0.0, 100.0, 100.0, 100.0),
       "background"
     );
+    this.sky.addFeature(new CameraFollower(this.engineHelper.camera));
     this.addEntity(this.sky);
 
     // Create ground
@@ -76,7 +89,7 @@ export default class EndlessRunnerWorld extends ObjectManager {
     this.engineHelper.setLighting(
       new Light({
         pos: [0.0, 10, 0],
-        in: [1.0, 1.0, 1.0],
+        in: [0.2, 0.2, 0.2],
         attenuation: 0.015,
         ambientCoeff: 0.4,
         at: [0.0, 0.0, 10.0]
@@ -85,13 +98,6 @@ export default class EndlessRunnerWorld extends ObjectManager {
 
     super.init();
     this.lastUpdateTime = Date.now() / 1000;
-    
-    console.log("🏃 Endless Runner Loaded!");
-    console.log("📋 Controls:");
-    console.log("   • A/D or Left/Right arrows to move between lanes");
-    console.log("   • Auto-fire enabled (based on fire rate)");
-    console.log("   • B to toggle bot mode");
-    console.log("   • Avoid enemies, collect powerups!");
   }
 
   update() {
@@ -99,18 +105,12 @@ export default class EndlessRunnerWorld extends ObjectManager {
     
     if (this.gameOver) return;
 
-    this.frameCount++;
-
-    // Camera stays fixed behind and above player looking ahead
-    this.engineHelper.camera.camera3d.center(0, 3, -4);
-    this.engineHelper.camera.camera3d.lookAt(0, 1, 5);
-    this.engineHelper.camera.camera3d.updateProjectionView();
-
-    // Update sky to follow camera
-    const { x, y, z } = this.engineHelper.camera.camera3d.position;
-    if (this.sky) {
-      this.sky.center(x, y, z);
+    // Initialize HUD on first update when engine is ready
+    if (!this.hud) {
+      this.initHUD();
     }
+
+    this.frameCount++;
 
     // Update wave system
     this.waveSystem.update(this.engineHelper, this.gameEntities, this.player.speedMultiplier * 5);
@@ -129,33 +129,25 @@ export default class EndlessRunnerWorld extends ObjectManager {
     this.projectiles.forEach(proj => {
       if (proj.isDestroyed) return;
       
-      this.gameEntities.forEach(entity => {
-        if (entity.isDestroyed) return;
+      const hitEntity = this.collisionSystem.checkProjectileCollisions(proj, this.gameEntities);
+      if (hitEntity) {
+        proj.isDestroyed = true;
         
-        const dx = proj.position.x - entity.position.x;
-        const dz = proj.position.z - entity.position.z;
-        const dist = Math.sqrt(dx * dx + dz * dz);
-        
-        if (dist < 0.8) {
-          proj.isDestroyed = true;
-          
-          if (entity instanceof Enemy && entity.takeDamage(this.player.damage)) {
-            this.score += 5;
-            console.log('💥 Enemy destroyed! +5 points');
-          } else if (entity instanceof Boss && entity.takeDamage(this.player.damage)) {
-            this.score += 25;
-            console.log('👑 Boss defeated! +25 points');
-          } else if (entity instanceof Powerup) {
-            entity.collect();
-            this.applyPowerup(entity);
-            console.log(`⚡ Powerup collected: ${entity.type}`);
-          }
+        if (hitEntity instanceof Enemy && hitEntity.takeDamage(this.player.damage)) {
+          this.score += 5;
+          this.showMessage("Enemy destroyed +5");
+        } else if (hitEntity instanceof Boss && hitEntity.takeDamage(this.player.damage)) {
+          this.score += 25;
+          this.showMessage("Boss defeated +25");
+        } else if (hitEntity instanceof Powerup) {
+          hitEntity.collect();
+          this.applyPowerup(hitEntity);
         }
-      });
+      }
     });
 
-    // Remove off-screen projectiles
-    this.projectiles = this.projectiles.filter(p => !p.isDestroyed && !p.isOffScreen());
+    // Remove off-screen projectiles (keep for reuse, just mark)
+    // No filtering needed - reuse in place
 
     // Log game state every 60 frames (1 second at 60fps)
     if (this.frameCount % 60 === 0) {
@@ -164,13 +156,7 @@ export default class EndlessRunnerWorld extends ObjectManager {
 
     // Remove off-screen entities
     this.gameEntities = this.gameEntities.filter(entity => {
-      if (entity.isOffScreen && entity.isOffScreen()) {
-        return false;
-      }
-      if (entity.isDestroyed) {
-        return false;
-      }
-      return true;
+      return !((entity.isOffScreen && entity.isOffScreen()) || entity.isDestroyed);
     });
 
     // Check collisions
@@ -181,9 +167,9 @@ export default class EndlessRunnerWorld extends ObjectManager {
       enemy.isDestroyed = true;
       if (this.player.takeDamage(enemy.damage)) {
         this.gameOver = true;
-        this.logFinalStats();
+        this.showMessage("GAME OVER");
       } else {
-        console.log(`❤️ Hit by enemy! Health: ${this.player.health}`);
+        this.showMessage(`Hit! Health: ${this.player.health}`);
       }
     });
 
@@ -191,9 +177,9 @@ export default class EndlessRunnerWorld extends ObjectManager {
     collisions.hitBosses.forEach(boss => {
       if (this.player.takeDamage(boss.damage)) {
         this.gameOver = true;
-        this.logFinalStats();
+        this.showMessage("GAME OVER");
       } else {
-        console.log(`💀 Hit by boss! Health: ${this.player.health}`);
+        this.showMessage(`Boss hit! Health: ${this.player.health}`);
       }
     });
 
@@ -220,6 +206,7 @@ export default class EndlessRunnerWorld extends ObjectManager {
       this.spawnProjectile();
     }
 
+    this.updateHUD();
     super.update();
   }
 
@@ -234,16 +221,16 @@ export default class EndlessRunnerWorld extends ObjectManager {
             entity.speed *= 1.15;
           }
         });
-        console.log('🚀 Speed boost! But enemies are faster too...');
+        this.showMessage("Speed boost!");
         break;
       case "fireRate":
         this.player.fireRate = Math.max(0.1, this.player.fireRate - 0.05);
         this.score += 10;
-        console.log('🔫 Fire rate increased!');
+        this.showMessage("Fire rate up!");
         break;
       case "score":
         this.score += 50;
-        console.log('💰 Bonus score +50!');
+        this.showMessage("Bonus +50!");
         break;
     }
   }
@@ -276,46 +263,12 @@ export default class EndlessRunnerWorld extends ObjectManager {
           break;
         case 'KeyB':
           this.botEnabled = !this.botEnabled;
-          console.log(`🤖 Bot mode: ${this.botEnabled ? 'ON' : 'OFF'}`);
+          this.showMessage(`Bot: ${this.botEnabled ? 'ON' : 'OFF'}`);
           break;
       }
     }
     
     return undefined;
-  }
-
-  private handleShooting() {
-    const shootingCollisions = this.collisionSystem.checkShootingCollisions(this.player, this.gameEntities);
-    
-    // Hit enemies
-    shootingCollisions.hitEnemies.forEach(enemy => {
-      if (enemy.takeDamage(this.player.damage)) {
-        this.score += 5;
-        console.log('💥 Enemy destroyed! +5 points');
-      }
-    });
-
-    // Hit bosses
-    shootingCollisions.hitBosses.forEach(boss => {
-      if (boss.takeDamage(this.player.damage)) {
-        this.score += 25;
-        console.log('👑 Boss defeated! +25 points');
-      }
-    });
-
-    // Hit powerups - Risk/Reward mechanic
-    const powerupHits = this.gameEntities.filter(entity => 
-      entity instanceof Powerup && !entity.isDestroyed &&
-      entity.laneIndex === this.player.currentLane &&
-      entity.position.z > this.player.position.z &&
-      entity.position.z < this.player.position.z + 15
-    );
-
-    powerupHits.forEach((powerup: Powerup) => {
-      powerup.collect();
-      this.applyPowerup(powerup);
-      console.log(`⚡ Powerup collected: ${powerup.type}`);
-    });
   }
 
   private executeBotAction(action: string) {
@@ -335,6 +288,20 @@ export default class EndlessRunnerWorld extends ObjectManager {
   }
 
   private spawnProjectile() {
+    // Reuse off-screen projectile
+    const offscreen = this.projectiles.find(p => p.isDestroyed || p.isOffScreen());
+    if (offscreen) {
+      offscreen.isDestroyed = false;
+      offscreen.laneIndex = this.player.currentLane;
+      offscreen.position.z = this.player.position.z;
+      if (offscreen.cube) {
+        offscreen.cube.center(LANES[this.player.currentLane], 1, this.player.position.z);
+      }
+      return;
+    }
+    
+    if (this.projectiles.length >= 20) return;
+    
     const projectile = new Projectile(this.player.currentLane, this.player.position.z);
     projectile.init(this.engineHelper);
     this.projectiles.push(projectile);
@@ -382,19 +349,57 @@ export default class EndlessRunnerWorld extends ObjectManager {
     console.log('GAME_STATE:', JSON.stringify(gameState, null, 2));
   }
 
-  private logFinalStats() {
-    const survivalTime = (this.frameCount / 60).toFixed(1);
-    const enemiesKilled = Math.floor(this.score / 5);
-    console.log('\n💀 GAME OVER!');
-    console.log('='.repeat(40));
-    console.log(`🎯 Final Score: ${this.score}`);
-    console.log(`⏱️ Survival Time: ${survivalTime}s`);
-    console.log(`💥 Enemies Killed: ~${enemiesKilled}`);
-    console.log(`🌊 Wave Reached: ${this.waveSystem.getWaveCount()}`);
-    console.log(`📈 Final Difficulty: ${this.waveSystem.getDifficulty().toFixed(2)}`);
-    console.log(`🎮 Total Actions: ${this.actionLog.length}`);
-    console.log('='.repeat(40));
-    console.log('Action Log:', JSON.stringify(this.actionLog, null, 2));
+  private initHUD() {
+    try {
+      const left = 0.02;
+      const top = 0.1;
+      const line = 0.06;
+      
+      this.hud = {
+        health: FontReference.newFont(new Coordinate(left, top, 0), "hud-health")
+          .setText(`Health: ${this.player.health}`)
+          .setFontSize(18)
+          .setTop(true)
+          .setLeft(true),
+        score: FontReference.newFont(new Coordinate(left, top + line, 0), "hud-score")
+          .setText(`Score: ${this.score}`)
+          .setFontSize(18)
+          .setTop(true)
+          .setLeft(true),
+        wave: FontReference.newFont(new Coordinate(left, top + line * 2, 0), "hud-wave")
+          .setText(`Wave: ${this.waveSystem.getWaveCount()}`)
+          .setFontSize(18)
+          .setTop(true)
+          .setLeft(true),
+        message: FontReference.newFont(new Coordinate(0.5, 0.5, 0), "hud-message")
+          .setText("")
+          .setFontSize(24)
+          .setTop(true)
+      };
+    } catch (e) {
+      console.warn('HUD init failed, will retry');
+      this.hud = null;
+    }
+  }
+
+  private updateHUD() {
+    if (!this.hud) return;
+    
+    this.hud.health.setText(`Health: ${this.player.health}`);
+    this.hud.score.setText(`Score: ${this.score}`);
+    this.hud.wave.setText(`Wave: ${this.waveSystem.getWaveCount()}`);
+    
+    if (this.messageTimer > 0) {
+      this.messageTimer--;
+      this.hud.message.setText(this.messageText);
+    } else {
+      this.hud.message.setText("");
+    }
+  }
+
+  private showMessage(msg: string) {
+    this.messageText = msg;
+    this.messageTimer = 120;
   }
 
   render() {
@@ -405,6 +410,17 @@ export default class EndlessRunnerWorld extends ObjectManager {
       }
     });
     this.projectiles.forEach(proj => proj.render(this.engineHelper));
+    
+    if (this.hud) {
+      try {
+        this.hud.health.render(this.engineHelper);
+        this.hud.score.render(this.engineHelper);
+        this.hud.wave.render(this.engineHelper);
+        this.hud.message.render(this.engineHelper);
+      } catch (e) {
+        // Font not ready yet
+      }
+    }
   }
 
   loadResources() {

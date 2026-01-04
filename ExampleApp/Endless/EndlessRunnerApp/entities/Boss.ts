@@ -20,7 +20,6 @@ export default class Boss extends EntityManager {
     this.damage = 2;
     this.speed = 1.5 + difficulty * 0.2;
     
-    // Larger hitbox for boss
     this.setRect(new Rect3d(LANES[laneIndex], 0.5, startZ, 1.2, 1.2, 1.2));
   }
 
@@ -31,34 +30,22 @@ export default class Boss extends EntityManager {
       ["grass", "grass", "grass", "grass", "grass", "grass"]
     );
     this.entities.push(this.cube);
+    this.cube.init(engineHelper);
     super.init(engineHelper);
   }
 
   update(engineHelper: EngineHelper) {
-    const dt = 1/60; // Fixed timestep
     if (this.isDestroyed) return;
     
-    // Update phase based on health
     const healthPercent = this.health / this.maxHealth;
     this.phase = healthPercent > 0.66 ? 1 : healthPercent > 0.33 ? 2 : 3;
     
-    // Move toward player with phase-based speed
     const phaseSpeedMultiplier = this.phase === 3 ? 1.5 : this.phase === 2 ? 1.2 : 1.0;
-    this.position.z -= this.speed * phaseSpeedMultiplier * dt;
+    this.position.z -= this.speed * phaseSpeedMultiplier * (1/60);
     
-    // Boss movement pattern - side to side in later phases
-    if (this.phase >= 2) {
-      const sideMovement = Math.sin(Date.now() * 0.002) * 0.3;
-      if (this.cube) {
-        this.cube.center(LANES[this.laneIndex] + sideMovement, 0.5, this.position.z);
-      }
-    } else {
-      if (this.cube) {
-        this.cube.center(LANES[this.laneIndex], 0.5, this.position.z);
-      }
+    if (this.cube) {
+      this.cube.center(LANES[this.laneIndex], 0.5, this.position.z);
     }
-    
-    super.update(engineHelper);
   }
 
   takeDamage(amount: number): boolean {

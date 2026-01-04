@@ -9,7 +9,7 @@ export interface Chunk {
   spawns: SpawnEvent[];
 }
 
-export const LANES = [-1.0, -0.3, 0.3, 1.0];
+export const LANES = [-1.5, -0.9, -0.3, 0.3, 0.9, 1.5];
 
 export const WAVE_WEIGHTS = {
   horde: 4,

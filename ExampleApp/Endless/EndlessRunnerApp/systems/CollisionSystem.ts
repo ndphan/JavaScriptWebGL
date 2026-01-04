@@ -2,6 +2,7 @@ import Player from "../entities/Player";
 import Enemy from "../entities/Enemy";
 import Powerup from "../entities/Powerup";
 import Boss from "../entities/Boss";
+import Projectile from "../entities/Projectile";
 import { LANES } from "../data/waves";
 
 export default class CollisionSystem {
@@ -17,15 +18,15 @@ export default class CollisionSystem {
 
     entities.forEach(entity => {
       if (entity instanceof Enemy && !entity.isDestroyed) {
-        if (this.checkCollision(player, entity)) {
+        if (this.checkCollision(player, entity, 0.8)) {
           hitEnemies.push(entity);
         }
       } else if (entity instanceof Powerup && !entity.isDestroyed) {
-        if (this.checkCollision(player, entity)) {
+        if (this.checkCollision(player, entity, 0.7)) {
           hitPowerups.push(entity);
         }
       } else if (entity instanceof Boss && !entity.isDestroyed) {
-        if (this.checkCollision(player, entity)) {
+        if (this.checkCollision(player, entity, 1.2)) {
           hitBosses.push(entity);
         }
       }
@@ -34,67 +35,22 @@ export default class CollisionSystem {
     return { hitEnemies, hitPowerups, hitBosses };
   }
 
-  checkShootingCollisions(player: Player, entities: any[]): {
-    hitEnemies: Enemy[];
-    hitBosses: Boss[];
-  } {
-    const hitEnemies: Enemy[] = [];
-    const hitBosses: Boss[] = [];
-    const playerLaneX = LANES[player.currentLane];
-    const playerZ = player.position.z;
-
-    entities.forEach(entity => {
-      if (entity instanceof Enemy && !entity.isDestroyed) {
-        const entityLaneX = LANES[entity.laneIndex];
-        const entityZ = entity.position.z;
-        
-        // Check if enemy is in same lane and ahead of player
-        if (Math.abs(playerLaneX - entityLaneX) < 0.5 && entityZ > playerZ && entityZ < playerZ + 15) {
-          hitEnemies.push(entity);
-        }
-      } else if (entity instanceof Boss && !entity.isDestroyed) {
-        const entityLaneX = LANES[entity.laneIndex];
-        const entityZ = entity.position.z;
-        
-        // Boss has larger hitbox
-        if (Math.abs(playerLaneX - entityLaneX) < 1.0 && entityZ > playerZ && entityZ < playerZ + 15) {
-          hitBosses.push(entity);
+  checkProjectileCollisions(projectile: Projectile, entities: any[]): any | null {
+    for (const entity of entities) {
+      if ((entity instanceof Enemy || entity instanceof Boss || entity instanceof Powerup) && !entity.isDestroyed) {
+        if (this.checkCollision(projectile, entity, 0.8)) {
+          return entity;
         }
       }
-    });
-
-    return { hitEnemies, hitBosses };
+    }
+    return null;
   }
 
-  private checkCollision(player: Player, entity: Enemy | Powerup | Boss): boolean {
-    const playerX = LANES[player.currentLane];
-    const playerZ = player.position.z;
-    
-    let entityX: number;
-    let entityZ: number;
-    let radius: number;
-
-    if (entity instanceof Enemy) {
-      entityX = LANES[entity.laneIndex];
-      entityZ = entity.position.z;
-      radius = 0.8;
-    } else if (entity instanceof Powerup) {
-      entityX = LANES[entity.laneIndex];
-      entityZ = entity.position.z;
-      radius = 0.7;
-    } else if (entity instanceof Boss) {
-      entityX = LANES[entity.laneIndex];
-      entityZ = entity.position.z;
-      radius = 1.2;
-    } else {
-      return false;
-    }
-
-    // Simple distance check in XZ plane
-    const dx = playerX - entityX;
-    const dz = playerZ - entityZ;
-    const distance = Math.sqrt(dx * dx + dz * dz);
-    
+  private checkCollision(entity1: any, entity2: any, radius: number): boolean {
+    const dx = entity1.position.x - entity2.position.x;
+    const dy = entity1.position.y - entity2.position.y;
+    const dz = entity1.position.z - entity2.position.z;
+    const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
     return distance < radius;
   }
 }

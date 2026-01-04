@@ -15,7 +15,7 @@ export default class Powerup extends EntityManager {
     super();
     this.laneIndex = laneIndex;
     this.type = type;
-    this.riskValue = 0.2; // Increases enemy speed when collected
+    this.riskValue = 0.2;
     
     this.setRect(new Rect3d(LANES[laneIndex], 0.5, startZ, 0.5, 0.5, 0.5));
   }
@@ -30,26 +30,20 @@ export default class Powerup extends EntityManager {
       [texture, texture, texture, texture, texture, texture]
     );
     this.entities.push(this.cube);
+    this.cube.init(engineHelper);
     super.init(engineHelper);
   }
 
   update(engineHelper: EngineHelper) {
-    const dt = 1/60; // Fixed timestep
     if (this.isDestroyed) return;
     
-    // Move toward player (negative Z direction)
-    this.position.z -= 2 * dt;
-    
-    // Rotate for visual appeal
+    this.position.z -= 2 * (1/60);
     this.position.ay += 2;
     
-    // Update cube position and rotation
     if (this.cube) {
       this.cube.center(LANES[this.laneIndex], 0.5, this.position.z);
       this.cube.angleY(this.position.ay);
     }
-    
-    super.update(engineHelper);
   }
 
   collect(): void {
