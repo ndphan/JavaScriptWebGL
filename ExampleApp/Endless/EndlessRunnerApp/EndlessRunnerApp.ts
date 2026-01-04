@@ -73,9 +73,9 @@ export default class EndlessRunnerWorld extends ObjectManager {
     this.sky.addFeature(new CameraFollower(this.engineHelper.camera));
     this.addEntity(this.sky);
 
-    // Create ground
+    // Create ground (give a small non-zero height to avoid degenerate bounding box)
     this.ground = new Ground3d(
-      new Rect3d(0.0, 0.0, 0.0, 50, 0, 100),
+      new Rect3d(0.0, 0.0, 0.0, 50, 0.1, 100),
       "grass"
     );
     this.addEntity(this.ground);
@@ -347,36 +347,31 @@ export default class EndlessRunnerWorld extends ObjectManager {
   }
 
   private initHUD() {
-    try {
-      const left = 0.02;
-      const top = 0.1;
-      const line = 0.06;
-      
-      this.hud = {
-        health: FontReference.newFont(new Coordinate(left, top, 0), "hud-health")
-          .setText(`Health: ${this.player.health}`)
-          .setFontSize(18)
-          .setTop(true)
-          .setLeft(true),
-        score: FontReference.newFont(new Coordinate(left, top + line, 0), "hud-score")
-          .setText(`Score: ${this.score}`)
-          .setFontSize(18)
-          .setTop(true)
-          .setLeft(true),
-        wave: FontReference.newFont(new Coordinate(left, top + line * 2, 0), "hud-wave")
-          .setText(`Wave: ${this.waveSystem.getWaveCount()}`)
-          .setFontSize(18)
-          .setTop(true)
-          .setLeft(true),
-        message: FontReference.newFont(new Coordinate(0.5, 0.5, 0), "hud-message")
-          .setText("")
-          .setFontSize(24)
-          .setTop(true)
-      };
-    } catch (e) {
-      console.warn('HUD init failed, will retry');
-      this.hud = null;
-    }
+    const left = 0.02;
+    const top = 0.1;
+    const line = 0.06;
+
+    this.hud = {
+      health: FontReference.newFont(new Coordinate(left, top, 0), "hud-health")
+        .setText(`Health: ${this.player.health}`)
+        .setFontSize(18)
+        .setTop(true)
+        .setLeft(true),
+      score: FontReference.newFont(new Coordinate(left, top + line, 0), "hud-score")
+        .setText(`Score: ${this.score}`)
+        .setFontSize(18)
+        .setTop(true)
+        .setLeft(true),
+      wave: FontReference.newFont(new Coordinate(left, top + line * 2, 0), "hud-wave")
+        .setText(`Wave: ${this.waveSystem.getWaveCount()}`)
+        .setFontSize(18)
+        .setTop(true)
+        .setLeft(true),
+      message: FontReference.newFont(new Coordinate(0.5, 0.5, 0), "hud-message")
+        .setText("")
+        .setFontSize(24)
+        .setTop(true)
+    };
   }
 
   private updateHUD() {
@@ -407,7 +402,7 @@ export default class EndlessRunnerWorld extends ObjectManager {
       }
     });
     this.projectiles.forEach(proj => proj.render(this.engineHelper));
-    
+
     if (this.hud) {
       try {
         this.hud.health.render(this.engineHelper);
@@ -415,7 +410,7 @@ export default class EndlessRunnerWorld extends ObjectManager {
         this.hud.wave.render(this.engineHelper);
         this.hud.message.render(this.engineHelper);
       } catch (e) {
-        // Font not ready yet
+        // Font not ready
       }
     }
   }
@@ -423,6 +418,13 @@ export default class EndlessRunnerWorld extends ObjectManager {
   loadResources() {
     console.log('Loading Endless Runner resources...');
     
+    // Load font
+    this.engineHelper
+      .getResource("assets/paprika.fnt")
+      .then(ResourceResolver.bmFontResolver(this.engineHelper))
+      .then(() => console.log('✓ Font loaded'))
+      .catch(err => console.error('Font error:', err));
+
     // Reuse existing resources from ExampleApp
     this.engineHelper
       .getResource("assets/sphere.txt")
