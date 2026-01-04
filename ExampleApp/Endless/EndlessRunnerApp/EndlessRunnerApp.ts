@@ -139,9 +139,6 @@ export default class EndlessRunnerWorld extends ObjectManager {
         } else if (hitEntity instanceof Boss && hitEntity.takeDamage(this.player.damage)) {
           this.score += 25;
           this.showMessage("Boss defeated +25");
-        } else if (hitEntity instanceof Powerup) {
-          hitEntity.collect();
-          this.applyPowerup(hitEntity);
         }
       }
     });
