@@ -91,5 +91,9 @@ export default class Cube extends EntityManager {
     this.rotateOriginRect(this.getRect());
 
     super.init(engineHelper);
+
+    this.angleX(this.position.ax);
+    this.angleY(this.position.ay);
+    this.angleZ(this.position.az);
   }
 }

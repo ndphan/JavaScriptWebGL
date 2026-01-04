@@ -532,15 +532,60 @@ export default class RacingGame extends ObjectManager {
           const x = current.x + dx * progress;
           const z = current.z + dz * progress;
 
+          // Create the path tile
           const pathTile = new Cube(
             new Rect3d(x, 0.1, z, 4, 0.1, 4), // Bigger path tiles: 4x4 instead of 3x3
             "ground",
             ["ground", "ground", "ground", "ground", "ground", "ground"]
           );
 
+          // Compute yaw so tile faces the segment direction
+          const yawDeg = Math.atan2(dx, dz) * (180 / Math.PI);
+          pathTile.angleY(yawDeg);
+
           this.waypointTiles.push(pathTile);
           this.addEntity(pathTile);
           pathTile.init(this.engineHelper);
+        }
+
+        // Create one pair of rails for this waypoint segment (centered on segment)
+        if (distance > 0) {
+          const normDx = dx / distance;
+          const normDz = dz / distance;
+          const perpX = -normDz;
+          const perpZ = normDx;
+
+          const midpointX = current.x + dx * 0.5;
+          const midpointZ = current.z + dz * 0.5;
+
+          const trackOffset = 3.0; // distance from center line to rail
+          const railWidth = 0.5;
+          const railHeight = 1.0;
+          const railDepth = Math.max(distance, 1.0);
+
+          const leftRail = new Cube(
+            new Rect3d(midpointX + perpX * trackOffset, railHeight / 2, midpointZ + perpZ * trackOffset, railWidth, railHeight, railDepth),
+            "rock",
+            ["rock", "rock", "rock", "rock", "rock", "rock"]
+          );
+
+          const rightRail = new Cube(
+            new Rect3d(midpointX - perpX * trackOffset, railHeight / 2, midpointZ - perpZ * trackOffset, railWidth, railHeight, railDepth),
+            "rock",
+            ["rock", "rock", "rock", "rock", "rock", "rock"]
+          );
+
+          const yawDegSeg = Math.atan2(dx, dz) * (180 / Math.PI);
+
+          this.trackBarriers.push(leftRail);
+          this.addEntity(leftRail);
+          leftRail.init(this.engineHelper);
+          leftRail.angleY(yawDegSeg);
+
+          this.trackBarriers.push(rightRail);
+          this.addEntity(rightRail);
+          rightRail.init(this.engineHelper);
+          rightRail.angleY(yawDegSeg);
         }
       }
 
